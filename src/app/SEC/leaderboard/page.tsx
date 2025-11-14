@@ -237,66 +237,109 @@ export default function SalesChampionLeaderboardPage() {
               </p>
             </div>
             <div className="bg-white rounded-b-2xl overflow-hidden">
-              {/* Table Header */}
-              <div className="grid grid-cols-[50px,1fr,55px,55px,65px] gap-2 px-3 py-2.5 border-b border-gray-200 bg-gray-50">
-                <span className="text-[11px] font-semibold text-gray-600">Rank</span>
-                <span className="text-[11px] font-semibold text-gray-600">Store</span>
-                <span className="text-[11px] font-semibold text-gray-600 text-right">ADLD</span>
-                <span className="text-[11px] font-semibold text-gray-600 text-right">Combo</span>
-                <span className="text-[11px] font-semibold text-gray-600 text-right">Total</span>
-              </div>
-              
-              {/* Table Rows */}
-              {leaderboardRows.map((row, idx) => (
-                <div
-                  key={row.rank + row.store}
-                  className="grid grid-cols-[50px,1fr,55px,55px,65px] gap-2 px-3 py-3 border-b border-gray-100 items-start"
-                >
-                  {/* Rank Column */}
-                  <div className="flex flex-col gap-0.5">
-                    <div className="flex items-center gap-1">
-                      {row.medal && <span className="text-xs">{row.medal}</span>}
-                      <span className="text-[11px] font-bold text-gray-900">{row.rank}</span>
-                    </div>
-                    <div
-                      className={`text-[9px] font-medium ${
-                        row.movementDir === 'up'
-                          ? 'text-green-500'
-                          : row.movementDir === 'down'
-                          ? 'text-red-500'
-                          : 'text-gray-400'
-                      }`}
+                <table>
+                  {/* Table Header */}
+                  <thead>
+                  <tr className="text-[11px] font-semibold text-gray-700 border-b border-gray-200 bg-gray-50">
+                    <th className="text-left px-2 py-2.5 w-[55px]">
+                      <div className="flex items-center gap-0.5">
+                        <span>Rank</span>
+                        <span className="inline-block w-3 h-3 bg-gray-300 rounded text-[8px] flex items-center justify-center text-gray-600">
+                          ↕
+                        </span>
+                      </div>
+                    </th>
+                    <th className="text-left px-2 py-2.5 border-l border-gray-200">
+                      Store
+                    </th>
+                    <th className="text-right px-2 py-2.5 border-l border-gray-200 w-[60px]">
+                      ADLD
+                    </th>
+                    <th className="text-right px-2 py-2.5 border-l border-gray-200 w-[60px]">
+                      Combo
+                    </th>
+                    <th className="text-right px-2 py-2.5 border-l border-gray-200 w-[75px]">
+                      Total
+                    </th>
+                  </tr>
+                </thead>
+                
+                {/* Table Body */}
+                <tbody>
+                  {leaderboardRows.map((row) => (
+                    <tr
+                      key={row.rank + row.store}
+                      className="border-b border-gray-100"
                     >
-                      {row.movementDir === 'up' && '↑ '}
-                      {row.movementDir === 'down' && '↓ '}
-                      {row.movementDir === 'same' && '↔ '}
-                      {row.movement}
-                    </div>
-                  </div>
-                  
-                  {/* Store Column */}
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold text-gray-900 leading-tight">{row.store}</span>
-                    <span className="text-[10px] text-gray-500 mt-0.5">{row.city}</span>
-                  </div>
-                  
-                  {/* ADLD Column */}
-                  <div className="text-right">
-                    <span className="text-[11px] text-gray-800">{row.adld}</span>
-                  </div>
-                  
-                  {/* Combo Column */}
-                  <div className="text-right">
-                    <span className="text-[11px] text-gray-800">{row.combo}</span>
-                  </div>
-                  
-                  {/* Total Column */}
-                  <div className="text-right flex flex-col items-end">
-                    <span className="text-[12px] font-bold text-emerald-600">{row.total}</span>
-                    <span className="text-[9px] text-gray-500 mt-0.5">{row.sales}</span>
-                  </div>
-                </div>
-              ))}
+                      {/* Rank Column: medal, star, movement */}
+                      <td className="px-1 py-3.5 align-top w-[55px]">
+                        <div className="flex items-center gap-0.5 text-xs">
+                          {row.medal && <span className="text-sm leading-none">{row.medal}</span>}
+                          <svg
+                            className="w-3 h-3 text-yellow-500"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          <span
+                            className={`text-xs font-bold ${
+                              row.movementDir === 'up'
+                                ? 'text-green-600'
+                                : row.movementDir === 'down'
+                                ? 'text-red-600'
+                                : 'text-gray-400'
+                            }`}
+                          >
+                            {row.movementDir === 'up' && '↑'}
+                            {row.movementDir === 'down' && '↓'}
+                            {row.movementDir === 'same' && '—'}
+                          </span>
+                          <span
+                            className={`text-[10px] font-semibold ${
+                              row.movementDir === 'up'
+                                ? 'text-green-600'
+                                : row.movementDir === 'down'
+                                ? 'text-red-600'
+                                : 'text-gray-400'
+                            }`}
+                          >
+                            {row.movement}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Store Column */}
+                      <td className="px-2 py-3.5 align-top border-l border-gray-100">
+                        <div className="flex flex-col">
+                          <span className="text-[12px] font-semibold text-gray-900 leading-snug break-words">
+                            {row.store}
+                          </span>
+                          <span className="text-[10px] text-gray-500 leading-snug mt-0.5">{row.city}</span>
+                        </div>
+                      </td>
+
+                      {/* ADLD Column */}
+                      <td className="px-2 py-3.5 align-top border-l border-gray-100 text-right w-[60px]">
+                        <span className="text-[12px] font-medium text-gray-900">{row.adld}</span>
+                      </td>
+
+                      {/* Combo Column */}
+                      <td className="px-2 py-3.5 align-top border-l border-gray-100 text-right w-[60px]">
+                        <span className="text-[12px] font-medium text-gray-900">{row.combo}</span>
+                      </td>
+
+                      {/* Total Column (green + sales under it) */}
+                      <td className="px-2 py-3.5 align-top border-l border-gray-100 text-right w-[75px]">
+                        <div className="flex flex-col items-end">
+                          <span className="text-[14px] font-bold text-emerald-600 leading-tight">{row.total}</span>
+                          <span className="text-[9px] text-gray-500 leading-tight mt-0.5">{row.sales}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </section>
         </div>
