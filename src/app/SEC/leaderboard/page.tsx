@@ -236,26 +236,30 @@ export default function SalesChampionLeaderboardPage() {
                 Complete leaderboard by total incentives earned
               </p>
             </div>
-            <div className="bg-white rounded-b-2xl overflow-hidden text-xs">
-              <div className="grid grid-cols-[40px,1fr,60px,60px,70px] px-3 py-2 border-b border-gray-200 font-semibold text-gray-600">
-                <span>Rank</span>
-                <span>Store</span>
-                <span className="text-right">ADLD</span>
-                <span className="text-right">Combo</span>
-                <span className="text-right">Total</span>
+            <div className="bg-white rounded-b-2xl overflow-hidden">
+              {/* Table Header */}
+              <div className="grid grid-cols-[50px,1fr,55px,55px,65px] gap-2 px-3 py-2.5 border-b border-gray-200 bg-gray-50">
+                <span className="text-[11px] font-semibold text-gray-600">Rank</span>
+                <span className="text-[11px] font-semibold text-gray-600">Store</span>
+                <span className="text-[11px] font-semibold text-gray-600 text-right">ADLD</span>
+                <span className="text-[11px] font-semibold text-gray-600 text-right">Combo</span>
+                <span className="text-[11px] font-semibold text-gray-600 text-right">Total</span>
               </div>
-              {leaderboardRows.map((row) => (
+              
+              {/* Table Rows */}
+              {leaderboardRows.map((row, idx) => (
                 <div
                   key={row.rank + row.store}
-                  className="grid grid-cols-[40px,1fr,60px,60px,70px] px-3 py-2 border-b border-gray-100 items-center text-gray-800"
+                  className="grid grid-cols-[50px,1fr,55px,55px,65px] gap-2 px-3 py-3 border-b border-gray-100 items-start"
                 >
-                  <div className="flex flex-col text-[11px]">
+                  {/* Rank Column */}
+                  <div className="flex flex-col gap-0.5">
                     <div className="flex items-center gap-1">
-                      {row.medal && <span className="text-sm">{row.medal}</span>}
-                      <span className="font-semibold">{row.rank}</span>
+                      {row.medal && <span className="text-xs">{row.medal}</span>}
+                      <span className="text-[11px] font-bold text-gray-900">{row.rank}</span>
                     </div>
-                    <span
-                      className={`text-[10px] flex items-center gap-0.5 ${
+                    <div
+                      className={`text-[9px] font-medium ${
                         row.movementDir === 'up'
                           ? 'text-green-500'
                           : row.movementDir === 'down'
@@ -263,20 +267,33 @@ export default function SalesChampionLeaderboardPage() {
                           : 'text-gray-400'
                       }`}
                     >
-                      {row.movementDir === 'up' && '↑'}
-                      {row.movementDir === 'down' && '↓'}
-                      {row.movementDir === 'same' && '↔'} {row.movement}
-                    </span>
+                      {row.movementDir === 'up' && '↑ '}
+                      {row.movementDir === 'down' && '↓ '}
+                      {row.movementDir === 'same' && '↔ '}
+                      {row.movement}
+                    </div>
                   </div>
+                  
+                  {/* Store Column */}
                   <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold leading-tight">{row.store}</span>
-                    <span className="text-[10px] text-gray-500">{row.city}</span>
+                    <span className="text-[11px] font-semibold text-gray-900 leading-tight">{row.store}</span>
+                    <span className="text-[10px] text-gray-500 mt-0.5">{row.city}</span>
                   </div>
-                  <span className="text-[11px] text-right">{row.adld}</span>
-                  <span className="text-[11px] text-right">{row.combo}</span>
-                  <div className="text-right text-[11px]">
-                    <p className="font-semibold text-emerald-600">{row.total}</p>
-                    <p className="text-[10px] text-gray-500">{row.sales}</p>
+                  
+                  {/* ADLD Column */}
+                  <div className="text-right">
+                    <span className="text-[11px] text-gray-800">{row.adld}</span>
+                  </div>
+                  
+                  {/* Combo Column */}
+                  <div className="text-right">
+                    <span className="text-[11px] text-gray-800">{row.combo}</span>
+                  </div>
+                  
+                  {/* Total Column */}
+                  <div className="text-right flex flex-col items-end">
+                    <span className="text-[12px] font-bold text-emerald-600">{row.total}</span>
+                    <span className="text-[9px] text-gray-500 mt-0.5">{row.sales}</span>
                   </div>
                 </div>
               ))}
