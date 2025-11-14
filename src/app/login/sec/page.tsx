@@ -1,12 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function SECLogin() {
+  const router = useRouter();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [agreed, setAgreed] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
 
   const handleSendOTP = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +27,128 @@ export default function SECLogin() {
     }
     // Handle OTP sending logic here
     console.log('Sending OTP to:', phoneNumber);
+    setOtpSent(true);
   };
+
+  const handleVerifyOTP = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp) {
+      alert('Please enter your OTP');
+      return;
+    }
+    // Handle OTP verification logic here
+    console.log('Verifying OTP:', otp);
+    
+    // Simulate checking if user is new (in real app, this would come from API)
+    const isNewUser = true; // Replace with actual API check
+    
+    if (isNewUser) {
+      setShowProfileSetup(true);
+    } else {
+      // Navigate to SEC landing page for existing users
+      router.push('/SEC/home');
+    }
+  };
+
+  const handleBackToOTP = () => {
+    setShowProfileSetup(false);
+  };
+
+  const handleProfileNext = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firstName || !lastName) {
+      alert('Please enter both first name and last name');
+      return;
+    }
+    // Handle profile creation here
+    console.log('Profile setup:', { firstName, lastName });
+    // Navigate to SEC Landing Page
+    router.push('/SEC/home');
+  };
+
+  // Show profile setup screen for new users
+  if (showProfileSetup) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="w-full max-w-xl">
+          <div className="mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">
+              What&apos;s your name?
+            </h1>
+            <p className="text-lg text-gray-500">
+              Let us know how to properly address you
+            </p>
+          </div>
+
+          <form onSubmit={handleProfileNext} className="space-y-6">
+            <div>
+              <label
+                htmlFor="firstName"
+                className="block text-base font-medium text-gray-900 mb-2"
+              >
+                First name
+              </label>
+              <input
+                type="text"
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Enter first name"
+                className="w-full px-5 py-4 border-2 border-gray-900 rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-900 text-base text-black placeholder:text-gray-400"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="lastName"
+                className="block text-base font-medium text-gray-900 mb-2"
+              >
+                Last name
+              </label>
+              <input
+                type="text"
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Enter last name"
+                style={{ backgroundColor: '#F5F6F8' }}
+                className="w-full px-5 py-4 border-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-900 text-base text-black placeholder:text-gray-400"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-4">
+              <button
+                type="button"
+                onClick={handleBackToOTP}
+                className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+
+              <button
+                type="submit"
+                className="px-12 py-3.5 bg-black text-white font-medium rounded-full hover:bg-gray-800 transition-colors text-base"
+              >
+                Next
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -32,7 +160,11 @@ export default function SECLogin() {
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">SEC Login</h2>
         </div>
 
-        <form onSubmit={handleSendOTP} className="space-y-6">
+        <form
+          onSubmit={otpSent ? handleVerifyOTP : handleSendOTP}
+          className="space-y-6"
+          autoComplete="off"
+        >
           <div>
             <label
               htmlFor="phone"
@@ -43,7 +175,7 @@ export default function SECLogin() {
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <svg
-                  className="w-6 h-6"
+                  className="w-6 h-6 text-black"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -59,10 +191,13 @@ export default function SECLogin() {
               <input
                 type="tel"
                 id="phone"
+                name="sec-phone"
+                autoComplete="off"
+                inputMode="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="Enter your phone number"
-                className="w-full pl-14 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                className="w-full pl-14 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500"
               />
             </div>
           </div>
@@ -95,11 +230,33 @@ export default function SECLogin() {
             </label>
           </div>
 
+          {otpSent && (
+            <div>
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-600 uppercase mb-3"
+              >
+                OTP
+              </label>
+              <input
+                type="text"
+                id="otp"
+                name="otp"
+                autoComplete="off"
+                inputMode="numeric"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder="Enter your OTP"
+                className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500"
+              />
+            </div>
+          )}
+
           <button
             type="submit"
             className="w-full bg-black text-white font-semibold py-4 rounded-lg hover:bg-gray-800 transition-colors text-lg"
           >
-            Send OTP
+            {otpSent ? 'Verify & Continue' : 'Send OTP'}
           </button>
         </form>
 
