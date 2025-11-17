@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 
-export default function ASELayout({ children }: { children: ReactNode }) {
+export default function ZSELayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   return (
@@ -62,9 +62,9 @@ export default function ASELayout({ children }: { children: ReactNode }) {
           <div className="space-y-1 px-3">
             {/* Home */}
             <Link
-              href="/ASE"
+              href="/ZSE"
               className={`w-full flex items-center space-x-2 rounded-lg py-2 px-3 select-none ${
-                  pathname === '/ASE'
+                  pathname === '/ZSE'
                     ? 'bg-blue-600 text-white font-semibold'
                     : 'text-white hover:bg-white/5'
                 }`}
@@ -90,9 +90,9 @@ export default function ASELayout({ children }: { children: ReactNode }) {
 
             {/* View Leaderboard */}
             <Link
-              href="/ASE/leaderboard"
+              href="/ZSE/leaderboard"
               className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
-                  pathname === '/ASE/leaderboard'
+                  pathname === '/ZSE/leaderboard'
                     ? 'bg-blue-600 text-white font-semibold'
                     : 'text-white hover:bg-white/5'
                 }`}
@@ -147,9 +147,9 @@ export default function ASELayout({ children }: { children: ReactNode }) {
 
             {/* Wallet */}
             <Link
-              href="/ASE/wallet"
+              href="/ZSE/wallet"
               className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
-                  pathname === '/ASE/wallet'
+                  pathname === '/ZSE/wallet'
                     ? 'bg-blue-600 text-white font-semibold'
                     : 'text-white hover:bg-white/5'
                 }`}
@@ -181,9 +181,9 @@ export default function ASELayout({ children }: { children: ReactNode }) {
 
             {/* Profile */}
             <Link
-              href="/ASE/profile"
+              href="/ZSE/profile"
               className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
-                  pathname === '/ASE/profile'
+                  pathname === '/ZSE/profile'
                     ? 'bg-blue-600 text-white font-semibold'
                     : 'text-white hover:bg-white/5'
                 }`}
@@ -220,9 +220,9 @@ export default function ASELayout({ children }: { children: ReactNode }) {
 
             {/* Report */}
             <Link
-              href="/ASE/report"
+              href="/ZSE/report"
               className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
-                  pathname === '/ASE/report'
+                  pathname === '/ZSE/report'
                     ? 'bg-blue-600 text-white font-semibold'
                     : 'text-white hover:bg-white/5'
                 }`}

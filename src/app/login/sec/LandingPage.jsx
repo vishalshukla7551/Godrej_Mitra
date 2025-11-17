@@ -102,23 +102,23 @@ export default function LandingPage({ userName = '' }) {
   };
 
   return (
-    <div className="h-screen bg-white flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-white flex flex-col">
       <SECHeader />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pb-24">
+      <main className="flex-1 pb-[140px]">
         {/* Greeting Section */}
-        <div className="px-5 pt-5 pb-3">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
+        <div className="px-4 pt-4 pb-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
             Hello {userName || 'Guest'},
           </h1>
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 text-xs sm:text-sm">
             Welcome! Choose your action below
           </p>
         </div>
 
         {/* Banner Carousel */}
-        <div className="px-5 mb-4">
+        <div className="px-4 mb-4">
           <div className="relative overflow-hidden rounded-xl">
             <div
               className="flex transition-transform duration-500 ease-in-out"
@@ -130,28 +130,28 @@ export default function LandingPage({ userName = '' }) {
                   className="w-full flex-shrink-0"
                 >
                   <div
-                    className={`bg-gradient-to-br ${banner.gradient} px-5 py-6 rounded-xl h-[180px] flex flex-col justify-center items-center text-center`}
+                    className={`bg-gradient-to-br ${banner.gradient} px-4 py-4 rounded-xl min-h-[160px] flex flex-col justify-center items-center text-center`}
                   >
-                    <p className="text-xs font-bold text-gray-800 mb-0.5">
+                    <p className="text-[10px] sm:text-xs font-bold text-gray-800 mb-0.5">
                       {banner.title}
                     </p>
-                    <h2 className="text-xl font-extrabold text-gray-900 mb-0.5">
+                    <h2 className="text-lg sm:text-xl font-extrabold text-gray-900 mb-0.5">
                       {banner.subtitle}
                     </h2>
-                    <p className="text-xs font-semibold text-gray-800 mb-3">
+                    <p className="text-[10px] sm:text-xs font-semibold text-gray-800 mb-2">
                       {banner.description}
                     </p>
-                    <div className="space-y-1.5 w-full max-w-sm">
+                    <div className="space-y-1.5 w-full max-w-[280px]">
                       {banner.highlights.map((highlight, idx) => (
                         <div
                           key={idx}
-                          className="bg-white/95 rounded-full px-3 py-1.5 text-xs font-semibold text-gray-900"
+                          className="bg-white/95 rounded-full px-3 py-1.5 text-[10px] sm:text-xs font-semibold text-gray-900"
                         >
                           {highlight}
                         </div>
                       ))}
                     </div>
-                    <p className="text-[10px] font-medium text-gray-800 mt-2">
+                    <p className="text-[9px] sm:text-[10px] font-medium text-gray-800 mt-2">
                       {banner.validity}
                     </p>
                   </div>
@@ -161,7 +161,7 @@ export default function LandingPage({ userName = '' }) {
           </div>
 
           {/* Dots Indicator */}
-          <div className="flex justify-center gap-1.5 mt-3">
+          <div className="flex justify-center gap-1.5 mt-2.5">
             {banners.map((_, index) => (
               <button
                 key={index}
@@ -178,7 +178,7 @@ export default function LandingPage({ userName = '' }) {
         </div>
 
         {/* Feature Tiles */}
-        <div className="px-5 grid grid-cols-2 gap-3">
+        <div className="px-4 grid grid-cols-2 gap-3 mb-4">
           {features.map((feature) => (
             <Link
               key={feature.id}
@@ -186,28 +186,28 @@ export default function LandingPage({ userName = '' }) {
               className="block"
             >
               <div
-                className={`bg-gradient-to-br ${feature.bgGradient} rounded-2xl p-4 h-[165px] flex flex-col justify-between relative overflow-hidden`}
+                className={`bg-gradient-to-br ${feature.bgGradient} rounded-2xl p-3.5 min-h-[140px] sm:min-h-[155px] flex flex-col justify-between relative overflow-hidden`}
               >
                 {/* Icon */}
-                <div className={`${feature.iconBg} w-10 h-10 rounded-xl flex items-center justify-center text-xl`}>
+                <div className={`${feature.iconBg} w-9 h-9 rounded-xl flex items-center justify-center text-lg`}>
                   {feature.icon}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 mt-2">
-                  <h3 className="text-white font-bold text-base mb-0.5 leading-tight">
+                  <h3 className="text-white font-bold text-sm sm:text-base mb-0.5 leading-tight">
                     {feature.title}
                   </h3>
-                  <p className="text-white/95 text-xs">
+                  <p className="text-white/95 text-[10px] sm:text-xs">
                     {feature.description}
                   </p>
                 </div>
 
                 {/* Arrow Button */}
-                <div className="absolute top-3 right-3">
-                  <div className="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center">
+                <div className="absolute top-2.5 right-2.5">
+                  <div className="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center">
                     <svg
-                      className="w-3.5 h-3.5 text-white"
+                      className="w-3 h-3 text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

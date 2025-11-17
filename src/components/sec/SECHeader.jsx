@@ -2,7 +2,7 @@
 
 export default function SECHeader() {
   return (
-    <header className="bg-black text-white px-5 py-3 flex justify-end items-center rounded-b-2xl">
+    <header className="bg-black text-white px-5 py-3.5 flex justify-end items-center sticky top-0 z-50 shadow-lg">
       <button className="relative">
         <svg
           className="w-6 h-6 text-white"

@@ -42,8 +42,8 @@ export default function SECFooter() {
     `text-[10px] ${active === tab ? 'font-semibold' : 'font-normal'}`;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-black text-white">
-      <div className="flex justify-around items-center py-2.5">
+    <nav className="fixed bottom-0 left-0 right-0 bg-black text-white z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.3)]">
+      <div className="flex justify-around items-center py-3">
         <Link href="/SEC/home" className={linkClasses('home')}>
           <svg
             className={iconClasses('home')}
@@ -136,11 +136,11 @@ export default function SECFooter() {
       </div>
 
       {/* Powered by Zopper */}
-      <div className="text-center py-1.5 border-t border-gray-800">
-        <p className="text-[10px] text-gray-400">
+      <div className="text-center py-2 border-t border-gray-800">
+        <p className="text-[10px] text-gray-400 leading-tight">
           Powered by Zopper
         </p>
-        <p className="text-[9px] text-gray-500">salesdost.com</p>
+        <p className="text-[9px] text-gray-500 leading-tight">salesdost.com</p>
       </div>
     </nav>
   );
