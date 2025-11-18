@@ -14,19 +14,53 @@ export default function SECLogin() {
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [validationMessage, setValidationMessage] = useState('');
+  const [isValidNumber, setIsValidNumber] = useState<boolean | null>(null);
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    // Keep only digits and enforce a maximum of 10
+    const digitsOnly = inputValue.replace(/\D/g, '').slice(0, 10);
+
+    setPhoneNumber(digitsOnly);
+
+    if (!digitsOnly) {
+      setValidationMessage('');
+      setIsValidNumber(null);
+    } else if (digitsOnly.length < 10) {
+      setValidationMessage('Invalid number');
+      setIsValidNumber(false);
+    } else if (digitsOnly.length === 10) {
+      setValidationMessage('Valid number');
+      setIsValidNumber(true);
+    }
+  };
 
   const handleSendOTP = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const digitsOnly = phoneNumber.replace(/\D/g, '').slice(0, 10);
+
+    if (!digitsOnly || digitsOnly.length < 10) {
+      setPhoneNumber(digitsOnly);
+      setValidationMessage('Invalid number');
+      setIsValidNumber(false);
+      alert('Please enter a 10-digit phone number');
+      return;
+    }
+
+    setPhoneNumber(digitsOnly);
+    setValidationMessage('Valid number');
+    setIsValidNumber(true);
+    alert(`Valid number: ${digitsOnly}`);
+
     if (!agreed) {
       alert('Please agree to the Terms of Service and Privacy Policy');
       return;
     }
-    if (!phoneNumber) {
-      alert('Please enter your phone number');
-      return;
-    }
+
     // Handle OTP sending logic here
-    console.log('Sending OTP to:', phoneNumber);
+    console.log('Sending OTP to:', digitsOnly);
     setOtpSent(true);
   };
 
@@ -195,11 +229,20 @@ export default function SECLogin() {
                 autoComplete="off"
                 inputMode="tel"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                onChange={handlePhoneChange}
                 placeholder="Enter your phone number"
                 className="w-full pl-14 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500"
               />
             </div>
+            {validationMessage && (
+              <p
+                className={`mt-2 text-sm ${
+                  isValidNumber ? 'text-green-600' : 'text-red-600'
+                }`}
+              >
+                {validationMessage}
+              </p>
+            )}
           </div>
 
           <div className="flex items-start">
@@ -254,7 +297,7 @@ export default function SECLogin() {
 
           <button
             type="submit"
-            className="w-full bg-black text-white font-semibold py-4 rounded-lg hover:bg-gray-800 transition-colors text-lg"
+            className="w-full bg-blue-600 text-white font-semibold py-4 rounded-lg hover:bg-blue-700 transition-colors text-lg"
           >
             {otpSent ? 'Verify & Continue' : 'Send OTP'}
           </button>

@@ -42,19 +42,31 @@ const monthlySalesData: MonthlySale[] = [
 ];
 
 const FY_STATS = {
-  'FY-24': {
-    units: '980',
-    totalEarned: '₹28,400',
-    paid: '₹25,000',
-    net: '₹3,400',
-  },
   'FY-25': {
     units: '1,250',
     totalEarned: '₹37,500',
     paid: '₹32,000',
     net: '₹5,500',
   },
-  'FY-26': {
+  'FY-24': {
+    units: '980',
+    totalEarned: '₹28,400',
+    paid: '₹25,000',
+    net: '₹3,400',
+  },
+  'FY-23': {
+    units: '0',
+    totalEarned: '₹0',
+    paid: '₹0',
+    net: '₹0',
+  },
+  'FY-22': {
+    units: '0',
+    totalEarned: '₹0',
+    paid: '₹0',
+    net: '₹0',
+  },
+  'FY-21': {
     units: '0',
     totalEarned: '₹0',
     paid: '₹0',
@@ -94,7 +106,9 @@ const parseDate = (ddmmyyyy: string) => {
 
 const formatMonthYear = (dateStr: string) => {
   const d = parseDate(dateStr);
-  return d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+  const monthName = d.toLocaleDateString('en-IN', { month: 'long' });
+  const yearShort = d.getFullYear().toString().slice(-2);
+  return `${monthName} ${yearShort}`;
 };
 
 const allMonths = Array.from(
@@ -259,7 +273,13 @@ export default function IncentivePassbookPage() {
               setSelectedFY={setSelectedFY}
             />
           ) : (
-            <SpotIncentiveSection />
+            <SpotIncentiveSection
+              rows={filteredMonthlySales}
+              selectedMonth={selectedMonth}
+              setSelectedMonth={setSelectedMonth}
+              selectedFY={selectedFY}
+              setSelectedFY={setSelectedFY}
+            />
           )}
 
           {/* Stats cards (common) */}
@@ -303,34 +323,21 @@ function MonthlyIncentiveSection({
         <p className="text-[11px] text-gray-500 mb-2">Your recorded monthly sales</p>
 
         <div className="flex justify-end mb-2">
-          <button
-            type="button"
-            className="relative inline-flex items-center border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
-          >
-            <span>{selectedMonth === 'All' ? 'All Months' : selectedMonth}</span>
-            <svg
-              className="w-3 h-3 ml-1 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-gray-600">Month</span>
+            <select
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-            {/* Simple month picker: tap cycles through months */}
-            <span
-              className="absolute inset-0"
-              onClick={() => {
-                const idx = ['All', ...allMonths].indexOf(selectedMonth);
-                const next = idx === -1 || idx === allMonths.length ? 0 : idx + 1;
-                setSelectedMonth(['All', ...allMonths][next]);
-              }}
-            />
-          </button>
+              <option value="All">All Months</option>
+              {allMonths.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
@@ -398,37 +405,39 @@ function MonthlyIncentiveSection({
       {/* FY Dropdown */}
       <section className="mb-3">
         <div className="flex justify-end">
-          <button
-            type="button"
-            className="relative inline-flex items-center border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
-            onClick={() => {
-              const idx = allFYs.indexOf(selectedFY);
-              const next = idx === -1 || idx === allFYs.length - 1 ? 0 : idx + 1;
-              setSelectedFY(allFYs[next]);
-            }}
-          >
-            <span>{selectedFY}</span>
-            <svg
-              className="w-3 h-3 ml-1 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-gray-600">Financial Year</span>
+            <select
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
+              value={selectedFY}
+              onChange={(e) => setSelectedFY(e.target.value)}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
+              {allFYs.map((fy) => (
+                <option key={fy} value={fy}>
+                  {fy}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </section>
     </>
   );
 }
 
-function SpotIncentiveSection() {
+function SpotIncentiveSection({
+  rows,
+  selectedMonth,
+  setSelectedMonth,
+  selectedFY,
+  setSelectedFY,
+}: {
+  rows: MonthlySale[];
+  selectedMonth: string;
+  setSelectedMonth: (m: string) => void;
+  selectedFY: string;
+  setSelectedFY: (fy: string) => void;
+}) {
   return (
     <>
       {/* Sales Summary (same table as monthly top) */}
@@ -437,21 +446,20 @@ function SpotIncentiveSection() {
         <p className="text-[11px] text-gray-500 mb-2">Your recorded monthly sales</p>
 
         <div className="flex justify-end mb-2">
-          <div className="relative inline-flex items-center border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700">
-            <span>November 2025</span>
-            <svg
-              className="w-3 h-3 ml-1 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-gray-600">Month</span>
+            <select
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+              <option value="All">All Months</option>
+              {allMonths.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -462,7 +470,7 @@ function SpotIncentiveSection() {
             <span>Combo</span>
             <span className="text-right">Units</span>
           </div>
-          {monthlySalesData.map((row, idx) => (
+          {rows.map((row, idx) => (
             <div
               key={row.date + idx}
               className="grid grid-cols-4 px-3 py-2 border-t border-gray-100 text-gray-800"
@@ -521,21 +529,19 @@ function SpotIncentiveSection() {
       {/* FY Dropdown */}
       <section className="mb-3">
         <div className="flex justify-end">
-          <div className="relative inline-flex items-center border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700">
-            <span>FY-25</span>
-            <svg
-              className="w-3 h-3 ml-1 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-gray-600">Financial Year</span>
+            <select
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
+              value={selectedFY}
+              onChange={(e) => setSelectedFY(e.target.value)}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+              {allFYs.map((fy) => (
+                <option key={fy} value={fy}>
+                  {fy}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </section>

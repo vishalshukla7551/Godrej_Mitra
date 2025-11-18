@@ -33,17 +33,17 @@ export default function SECFooter() {
   const active = getActiveTab();
 
   const linkClasses = (tab) =>
-    `flex flex-col items-center gap-0.5 min-w-[60px] transition-colors ${
+    `flex flex-col items-center gap-0.5 sm:gap-1 min-w-[50px] sm:min-w-[60px] md:min-w-[80px] lg:min-w-[100px] transition-colors ${
       active === tab ? 'text-white' : 'text-gray-400'
     }`;
   const iconClasses = (tab) =>
-    `w-6 h-6 transition-colors ${active === tab ? 'text-white' : 'text-gray-400'}`;
+    `w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 transition-colors ${active === tab ? 'text-white' : 'text-gray-400'}`;
   const labelClasses = (tab) =>
-    `text-[10px] ${active === tab ? 'font-semibold' : 'font-normal'}`;
+    `text-[9px] sm:text-[10px] md:text-xs ${active === tab ? 'font-semibold' : 'font-normal'}`;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-black text-white z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.3)]">
-      <div className="flex justify-around items-center py-3">
+      <div className="flex justify-around items-center py-2.5 sm:py-3 md:py-4">
         <Link href="/SEC/home" className={linkClasses('home')}>
           <svg
             className={iconClasses('home')}
@@ -136,11 +136,11 @@ export default function SECFooter() {
       </div>
 
       {/* Powered by Zopper */}
-      <div className="text-center py-2 border-t border-gray-800">
-        <p className="text-[10px] text-gray-400 leading-tight">
+      <div className="text-center py-1.5 sm:py-2 border-t border-gray-800">
+        <p className="text-[9px] sm:text-[10px] text-gray-400 leading-tight">
           Powered by Zopper
         </p>
-        <p className="text-[9px] text-gray-500 leading-tight">salesdost.com</p>
+        <p className="text-[8px] sm:text-[9px] text-gray-500 leading-tight">salesdost.com</p>
       </div>
     </nav>
   );

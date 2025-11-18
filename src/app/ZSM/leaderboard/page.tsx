@@ -107,13 +107,13 @@ export default function LeaderboardPage() {
   const getRankChangeIcon = (change: number) => {
     if (change > 0) return '↑';
     if (change < 0) return '↓';
-    return '—';
+    return '↓';
   };
 
   const getRankChangeColor = (change: number) => {
     if (change > 0) return 'text-green-500';
     if (change < 0) return 'text-red-500';
-    return 'text-gray-400';
+    return 'text-red-500';
   };
 
   return (
@@ -271,10 +271,10 @@ export default function LeaderboardPage() {
           </div>
           <div>
             <p className="text-white text-xs font-semibold mb-0.5">
-              Croma- A151 -Noida-Mall of India
+              {leaderboardData[1].store}
             </p>
-            <p className="text-white/80 text-xs mb-2">Noida</p>
-            <div className="text-white text-xl font-bold">₹6500</div>
+            <p className="text-white/80 text-xs mb-2">{leaderboardData[1].city}</p>
+            <div className="text-white text-xl font-bold">₹{leaderboardData[1].total}</div>
           </div>
           <div className="absolute bottom-3 right-3 bg-white/20 rounded-lg px-2.5 py-0.5">
             <span className="text-white text-xs font-bold">#2</span>
@@ -321,10 +321,10 @@ export default function LeaderboardPage() {
           </div>
           <div>
             <p className="text-white text-xs font-semibold mb-0.5">
-              Croma- A189 -Noida-Gaur Mall
+              {leaderboardData[0].store}
             </p>
-            <p className="text-white/90 text-xs mb-2">Noida</p>
-            <div className="text-white text-2xl font-bold">₹8500</div>
+            <p className="text-white/90 text-xs mb-2">{leaderboardData[0].city}</p>
+            <div className="text-white text-2xl font-bold">₹{leaderboardData[0].total}</div>
           </div>
           <div className="absolute bottom-3 right-3 bg-white/30 rounded-lg px-3 py-1">
             <span className="text-white text-xs font-bold">CHAMPION</span>
@@ -354,10 +354,10 @@ export default function LeaderboardPage() {
           </div>
           <div>
             <p className="text-white text-xs font-semibold mb-0.5">
-              Croma- A092 -Chhehrauli Sambhaji Nagar-Prozone Mall
+              {leaderboardData[2].store}
             </p>
-            <p className="text-white/80 text-xs mb-2">Chhehrauli Sambhaji Nagar</p>
-            <div className="text-white text-xl font-bold">₹6300</div>
+            <p className="text-white/80 text-xs mb-2">{leaderboardData[2].city}</p>
+            <div className="text-white text-xl font-bold">₹{leaderboardData[2].total}</div>
           </div>
           <div className="absolute bottom-3 right-3 bg-white/20 rounded-lg px-2.5 py-0.5">
             <span className="text-white text-xs font-bold">#3</span>

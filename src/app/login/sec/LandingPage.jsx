@@ -102,24 +102,25 @@ export default function LandingPage({ userName = '' }) {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <SECHeader />
 
       {/* Main Content */}
-      <main className="flex-1 pb-[140px]">
+      <main className="flex-1 pb-[220px] md:pb-[200px] lg:pb-[180px] w-full">
+        {/* Inner constrained container for desktop */}
         {/* Greeting Section */}
-        <div className="px-4 pt-4 pb-2">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pt-4 sm:pt-5 md:pt-6 pb-2 sm:pb-3">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">
             Hello {userName || 'Guest'},
           </h1>
-          <p className="text-gray-500 text-xs sm:text-sm">
+          <p className="text-gray-500 text-xs sm:text-sm md:text-base">
             Welcome! Choose your action below
           </p>
         </div>
 
         {/* Banner Carousel */}
-        <div className="px-4 mb-4">
-          <div className="relative overflow-hidden rounded-xl">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 mb-4 sm:mb-5 md:mb-6">
+          <div className="relative overflow-hidden rounded-xl md:rounded-2xl">
             <div
               className="flex transition-transform duration-500 ease-in-out"
               style={{ transform: `translateX(-${activeSlide * 100}%)` }}
@@ -130,28 +131,28 @@ export default function LandingPage({ userName = '' }) {
                   className="w-full flex-shrink-0"
                 >
                   <div
-                    className={`bg-gradient-to-br ${banner.gradient} px-4 py-4 rounded-xl min-h-[160px] flex flex-col justify-center items-center text-center`}
+                    className={`bg-gradient-to-br ${banner.gradient} px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 lg:py-8 rounded-xl md:rounded-2xl min-h-[160px] sm:min-h-[180px] md:min-h-[220px] lg:min-h-[260px] flex flex-col justify-center items-center text-center`}
                   >
-                    <p className="text-[10px] sm:text-xs font-bold text-gray-800 mb-0.5">
+                    <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-800 mb-0.5 sm:mb-1">
                       {banner.title}
                     </p>
-                    <h2 className="text-lg sm:text-xl font-extrabold text-gray-900 mb-0.5">
+                    <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-gray-900 mb-0.5 sm:mb-1 md:mb-2">
                       {banner.subtitle}
                     </h2>
-                    <p className="text-[10px] sm:text-xs font-semibold text-gray-800 mb-2">
+                    <p className="text-[10px] sm:text-xs md:text-sm font-semibold text-gray-800 mb-2 sm:mb-3 md:mb-4">
                       {banner.description}
                     </p>
-                    <div className="space-y-1.5 w-full max-w-[280px]">
+                    <div className="space-y-1.5 sm:space-y-2 md:space-y-2.5 w-full max-w-[280px] sm:max-w-[320px] md:max-w-[400px] lg:max-w-[500px]">
                       {banner.highlights.map((highlight, idx) => (
                         <div
                           key={idx}
-                          className="bg-white/95 rounded-full px-3 py-1.5 text-[10px] sm:text-xs font-semibold text-gray-900"
+                          className="bg-white/95 rounded-full px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold text-gray-900"
                         >
                           {highlight}
                         </div>
                       ))}
                     </div>
-                    <p className="text-[9px] sm:text-[10px] font-medium text-gray-800 mt-2">
+                    <p className="text-[9px] sm:text-[10px] md:text-xs font-medium text-gray-800 mt-2 sm:mt-3 md:mt-4">
                       {banner.validity}
                     </p>
                   </div>
@@ -161,15 +162,15 @@ export default function LandingPage({ userName = '' }) {
           </div>
 
           {/* Dots Indicator */}
-          <div className="flex justify-center gap-1.5 mt-2.5">
+          <div className="flex justify-center gap-1.5 sm:gap-2 mt-2.5 sm:mt-3 md:mt-4">
             {banners.map((_, index) => (
               <button
                 key={index}
                 onClick={() => handleSlideChange(index)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
+                className={`h-1.5 sm:h-2 md:h-2.5 rounded-full transition-all duration-300 ${
                   activeSlide === index
-                    ? 'w-6 bg-gray-900'
-                    : 'w-1.5 bg-gray-300'
+                    ? 'w-6 sm:w-8 md:w-10 bg-gray-900'
+                    : 'w-1.5 sm:w-2 md:w-2.5 bg-gray-300'
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
@@ -178,36 +179,36 @@ export default function LandingPage({ userName = '' }) {
         </div>
 
         {/* Feature Tiles */}
-        <div className="px-4 grid grid-cols-2 gap-3 mb-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 mb-4">
           {features.map((feature) => (
             <Link
               key={feature.id}
               href={feature.link}
-              className="block"
+              className="block group"
             >
               <div
-                className={`bg-gradient-to-br ${feature.bgGradient} rounded-2xl p-3.5 min-h-[140px] sm:min-h-[155px] flex flex-col justify-between relative overflow-hidden`}
+                className={`bg-gradient-to-br ${feature.bgGradient} rounded-2xl md:rounded-3xl p-3.5 sm:p-4 md:p-5 min-h-[140px] sm:min-h-[155px] md:min-h-[180px] lg:min-h-[200px] flex flex-col justify-between relative overflow-hidden transition-transform duration-300 group-hover:scale-105 group-hover:shadow-xl`}
               >
                 {/* Icon */}
-                <div className={`${feature.iconBg} w-9 h-9 rounded-xl flex items-center justify-center text-lg`}>
+                <div className={`${feature.iconBg} w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-xl md:rounded-2xl flex items-center justify-center text-lg sm:text-xl md:text-2xl lg:text-3xl transition-transform group-hover:scale-110`}>
                   {feature.icon}
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 mt-2">
-                  <h3 className="text-white font-bold text-sm sm:text-base mb-0.5 leading-tight">
+                <div className="flex-1 mt-2 sm:mt-3 md:mt-4">
+                  <h3 className="text-white font-bold text-sm sm:text-base md:text-lg lg:text-xl mb-0.5 sm:mb-1 leading-tight">
                     {feature.title}
                   </h3>
-                  <p className="text-white/95 text-[10px] sm:text-xs">
+                  <p className="text-white/95 text-[10px] sm:text-xs md:text-sm">
                     {feature.description}
                   </p>
                 </div>
 
                 {/* Arrow Button */}
-                <div className="absolute top-2.5 right-2.5">
-                  <div className="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center">
+                <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 md:top-4 md:right-4">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full bg-white/25 flex items-center justify-center transition-all group-hover:bg-white/40">
                     <svg
-                      className="w-3 h-3 text-white"
+                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

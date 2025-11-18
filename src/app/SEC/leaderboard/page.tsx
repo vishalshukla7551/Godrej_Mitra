@@ -1,7 +1,26 @@
 'use client';
 
+import { useState } from 'react';
 import SECHeader from '@/components/sec/SECHeader';
 import SECFooter from '@/components/sec/SECFooter';
+
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+] as const;
+
+const CURRENT_YEAR_SHORT = new Date().getFullYear().toString().slice(-2);
+const MONTH_OPTIONS = MONTHS.map((month) => `${month} ${CURRENT_YEAR_SHORT}`);
 
 const podiumData = [
   {
@@ -159,71 +178,119 @@ const leaderboardRows = [
 ];
 
 export default function SalesChampionLeaderboardPage() {
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    MONTH_OPTIONS[new Date().getMonth()] ?? `November ${CURRENT_YEAR_SHORT}`,
+  );
+
   return (
     <div className="h-screen bg-[#020617] flex flex-col overflow-hidden">
       <SECHeader />
 
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="px-4 pt-4 pb-6">
-          {/* Title */}
-          <section className="mb-4 text-center text-white">
-            <div className="flex justify-center mb-2">
-              <span className="text-2xl">🏆</span>
-            </div>
-            <h1 className="text-lg font-semibold">Sales Champion Leaderboard</h1>
-            <p className="text-xs text-gray-300 mt-1">
-              Who will claim the crown this month?
-            </p>
-            <p className="mt-2 text-[10px] text-gray-400 max-w-xs mx-auto leading-snug">
-              Rank movement is calculated against yesterday 23:59:59 IST.
-              <span className="block mt-1">
-                ↑ = improved rank &nbsp;·&nbsp; ↓ = dropped rank
-              </span>
-            </p>
-          </section>
-
-          {/* Podium */}
-          <section className="mb-5 flex justify-between gap-2">
-            {podiumData.map((card, idx) => (
-              <div
-                key={card.rank}
-                className={`flex-1 rounded-2xl bg-gradient-to-b ${card.bg} text-white px-2 pt-3 pb-3 shadow-md ${
-                  card.highlight ? 'scale-105' : ''
-                }`}
+          {/* Top bar */}
+          <div className="flex items-center justify-end mb-4">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="px-4 py-1.5 rounded-full bg-white/10 text-white text-sm font-medium border border-white/20"
               >
-                <div className="flex justify-between items-start mb-1">
-                  <span className="text-xs font-semibold">#{card.rank}</span>
-                  {card.highlight && <span className="text-lg">👑</span>}
-                </div>
-                <p className="text-[11px] font-semibold leading-tight">
-                  {card.store}
-                </p>
-                <p className="text-[10px] text-gray-200 mb-2">{card.city}</p>
-                <div className="flex justify-between items-end mt-1">
-                  <div>
-                    <p className="text-[10px] text-gray-200">Incentives</p>
-                    <p className="text-sm font-semibold">{card.incentives}</p>
+                Refresh
+              </button>
+              <button
+                type="button"
+                className="px-4 py-1.5 rounded-full bg-white text-purple-700 text-sm font-semibold flex items-center gap-1.5"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export
+              </button>
+            </div>
+          </div>
+
+          {/* Hero */}
+          <div className="text-center text-white mb-5">
+            <div className="mb-2 flex justify-center">
+              <span className="text-4xl">🏆</span>
+            </div>
+            <h1 className="text-2xl font-bold mb-1">
+              Sales Champion Leaderboard
+            </h1>
+            <p className="text-sm text-gray-200 mb-4">
+              Top stores by total incentives
+            </p>
+
+            {/* Month selector - responsive, shows all months */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white text-sm mb-3">
+              <span className="text-xs uppercase tracking-wide text-gray-300">Month</span>
+              <select
+                className="bg-transparent text-white text-sm outline-none border-none pr-4 cursor-pointer"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+              >
+                {MONTH_OPTIONS.map((label) => (
+                  <option
+                    key={label}
+                    value={label}
+                    className="bg-[#020617] text-white"
+                  >
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Rank movement shows real-time changes (vs 30 seconds ago)
+              <br />
+              <span className="text-green-300">↑ Up</span> = improved &nbsp;·&nbsp;
+              <span className="text-red-400">↓ Down</span> = dropped
+            </p>
+          </div>
+
+          {/* Podium - 3 cards side by side, aligned at bottom */}
+          <section className="mb-6 flex gap-3 sm:gap-4 justify-center items-end pb-1">
+            {podiumData.map((card) => (
+              <div key={card.rank} className="relative">
+                {/* Crown ABOVE the card with gentle animation */}
+                {card.highlight && (
+                  <div className="absolute -top-6 sm:-top-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
+                    <span className="text-2xl sm:text-4xl">👑</span>
                   </div>
-                  <p className="text-[10px] text-gray-200">{card.sales}</p>
+                )}
+                
+                {/* The card - responsive sizing, champion taller */}
+                <div
+                  className={`w-[105px] sm:w-[180px] lg:w-[220px] ${card.highlight ? 'h-[105px] sm:h-[180px] lg:h-[200px]' : 'h-[95px] sm:h-[160px] lg:h-[180px]'} rounded-2xl sm:rounded-3xl bg-gradient-to-b ${card.bg} text-white p-3 sm:p-4 lg:p-5 shadow-lg flex flex-col items-center justify-between overflow-hidden`}
+                >
+                  {/* Icon */}
+                  <div className="flex justify-center shrink-0">
+                    <span className="text-xl sm:text-3xl lg:text-4xl">{card.rank === 1 ? '🏆' : card.rank === 2 ? '🥈' : '🥉'}</span>
+                  </div>
+                  
+                  {/* Store name - show for all ranks */}
+                  <div className="text-center px-1 overflow-hidden w-full">
+                    <p className="text-[8px] sm:text-xs lg:text-sm font-semibold leading-tight line-clamp-2 overflow-hidden">
+                      {card.store}
+                    </p>
+                    <p className="text-[7px] sm:text-[10px] lg:text-xs text-white/90 mt-0.5 truncate">{card.city}</p>
+                  </div>
+                  
+                  {/* Amount */}
+                  <p className="text-base sm:text-2xl lg:text-3xl font-bold shrink-0">{card.incentives}</p>
+                  
+                  {/* Bottom badge */}
+                  {card.highlight ? (
+                    <div className="w-full py-0.5 sm:py-1 lg:py-1.5 rounded-full bg-black/20 text-[7px] sm:text-[10px] lg:text-xs font-bold text-center shrink-0">
+                      CHAMPION
+                    </div>
+                  ) : (
+                    <p className="text-xs sm:text-lg lg:text-xl font-bold shrink-0">#{card.rank}</p>
+                  )}
                 </div>
               </div>
             ))}
-          </section>
-
-          {/* Start Your Journey */}
-          <section className="mb-5 bg-[#111827] rounded-2xl px-4 py-4 text-center text-gray-100 shadow-inner">
-            <div className="mb-3 flex justify-center">
-              <div className="w-24 h-10 rounded-lg bg-[#020617] flex items-center justify-center">
-                <div className="w-6 h-6 bg-gradient-to-t from-green-500 to-emerald-300 rounded-sm" />
-              </div>
-            </div>
-            <h2 className="text-sm font-semibold mb-1">Start Your Journey!</h2>
-            <p className="text-[11px] text-gray-300 mb-3">
-              Make your first sale to appear on the leaderboard!
-            </p>
-            <button className="inline-flex items-center justify-center px-5 py-2 rounded-full bg-white text-[12px] font-semibold text-gray-900">
-              Start Selling
-            </button>
           </section>
 
           {/* All Stores Ranking */}
@@ -237,109 +304,91 @@ export default function SalesChampionLeaderboardPage() {
               </p>
             </div>
             <div className="bg-white rounded-b-2xl overflow-hidden">
-                <table>
-                  {/* Table Header */}
+                <table className="w-full">
                   <thead>
-                  <tr className="text-[11px] font-semibold text-gray-700 border-b border-gray-200 bg-gray-50">
-                    <th className="text-left px-2 py-2.5 w-[55px]">
-                      <div className="flex items-center gap-0.5">
-                        <span>Rank</span>
-                        <span className="inline-block w-3 h-3 bg-gray-300 rounded text-[8px] flex items-center justify-center text-gray-600">
-                          ↕
-                        </span>
-                      </div>
-                    </th>
-                    <th className="text-left px-2 py-2.5 border-l border-gray-200">
-                      Store
-                    </th>
-                    <th className="text-right px-2 py-2.5 border-l border-gray-200 w-[60px]">
-                      ADLD
-                    </th>
-                    <th className="text-right px-2 py-2.5 border-l border-gray-200 w-[60px]">
-                      Combo
-                    </th>
-                    <th className="text-right px-2 py-2.5 border-l border-gray-200 w-[75px]">
-                      Total
-                    </th>
-                  </tr>
-                </thead>
-                
-                {/* Table Body */}
-                <tbody>
-                  {leaderboardRows.map((row) => (
-                    <tr
-                      key={row.rank + row.store}
-                      className="border-b border-gray-100"
-                    >
-                      {/* Rank Column: medal, star, movement */}
-                      <td className="px-1 py-3.5 align-top w-[55px]">
-                        <div className="flex items-center gap-0.5 text-xs">
-                          {row.medal && <span className="text-sm leading-none">{row.medal}</span>}
-                          <svg
-                            className="w-3 h-3 text-yellow-500"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                          <span
-                            className={`text-xs font-bold ${
-                              row.movementDir === 'up'
-                                ? 'text-green-600'
-                                : row.movementDir === 'down'
-                                ? 'text-red-600'
-                                : 'text-gray-400'
-                            }`}
-                          >
-                            {row.movementDir === 'up' && '↑'}
-                            {row.movementDir === 'down' && '↓'}
-                            {row.movementDir === 'same' && '—'}
-                          </span>
-                          <span
-                            className={`text-[10px] font-semibold ${
-                              row.movementDir === 'up'
-                                ? 'text-green-600'
-                                : row.movementDir === 'down'
-                                ? 'text-red-600'
-                                : 'text-gray-400'
-                            }`}
-                          >
-                            {row.movement}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Store Column */}
-                      <td className="px-2 py-3.5 align-top border-l border-gray-100">
-                        <div className="flex flex-col">
-                          <span className="text-[12px] font-semibold text-gray-900 leading-snug break-words">
-                            {row.store}
-                          </span>
-                          <span className="text-[10px] text-gray-500 leading-snug mt-0.5">{row.city}</span>
-                        </div>
-                      </td>
-
-                      {/* ADLD Column */}
-                      <td className="px-2 py-3.5 align-top border-l border-gray-100 text-right w-[60px]">
-                        <span className="text-[12px] font-medium text-gray-900">{row.adld}</span>
-                      </td>
-
-                      {/* Combo Column */}
-                      <td className="px-2 py-3.5 align-top border-l border-gray-100 text-right w-[60px]">
-                        <span className="text-[12px] font-medium text-gray-900">{row.combo}</span>
-                      </td>
-
-                      {/* Total Column (green + sales under it) */}
-                      <td className="px-2 py-3.5 align-top border-l border-gray-100 text-right w-[75px]">
-                        <div className="flex flex-col items-end">
-                          <span className="text-[14px] font-bold text-emerald-600 leading-tight">{row.total}</span>
-                          <span className="text-[9px] text-gray-500 leading-tight mt-0.5">{row.sales}</span>
-                        </div>
-                      </td>
+                    <tr className="text-[10px] font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">
+                      <th className="text-left px-2 py-2 w-[40px]">
+                        Rank
+                      </th>
+                      <th className="text-left px-2 py-2">
+                        Store
+                      </th>
+                      <th className="text-right px-2 py-2 w-[50px]">
+                        ADLD
+                      </th>
+                      <th className="text-right px-2 py-2 w-[60px]">
+                        Combo
+                      </th>
+                      <th className="text-right px-2 py-2 w-[60px]">
+                        Total
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {leaderboardRows.map((row) => (
+                      <tr key={row.rank + row.store} className="border-b border-gray-100">
+                        {/* Rank with movement indicator */}
+                        <td className="px-2 py-2.5">
+                          <div className="flex items-center gap-0.5">
+                            <span className="text-sm">{row.medal || '⭐'}</span>
+                            <span
+                              className={`text-xs font-bold ${
+                                row.movementDir === 'up'
+                                  ? 'text-green-600'
+                                  : row.movementDir === 'down'
+                                  ? 'text-red-600'
+                                  : 'text-gray-400'
+                              }`}
+                            >
+                              {row.movementDir === 'up' && '↑'}
+                              {row.movementDir === 'down' && '↓'}
+                              {row.movementDir === 'same' && '↓'}
+                            </span>
+                            <span
+                              className={`text-[9px] font-semibold ${
+                                row.movementDir === 'up'
+                                  ? 'text-green-600'
+                                  : row.movementDir === 'down'
+                                  ? 'text-red-600'
+                                  : 'text-red-600'
+                              }`}
+                            >
+                              {row.movement}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Store name + city */}
+                        <td className="px-2 py-2.5">
+                          <div className="flex flex-col">
+                            <span className="text-[11px] font-semibold text-gray-900 leading-tight">
+                              {row.store}
+                            </span>
+                            <span className="text-[9px] text-gray-500 leading-tight">{row.city}</span>
+                          </div>
+                        </td>
+
+                        {/* ADLD */}
+                        <td className="px-2 py-2.5 text-right">
+                          <span className="text-[11px] font-medium text-gray-900">{row.adld}</span>
+                        </td>
+
+                        {/* Combo */}
+                        <td className="px-2 py-2.5 text-right">
+                          <span className="text-[11px] font-medium text-gray-900">{row.combo}</span>
+                        </td>
+
+                        {/* Total + sales */}
+                        <td className="px-2 py-2.5 text-right">
+                          <div className="flex flex-col items-end">
+                            <span className="text-[13px] font-bold text-emerald-600">{row.total}</span>
+                            <span className="text-[8px] text-gray-500">{row.sales}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
             </div>
           </section>
         </div>
