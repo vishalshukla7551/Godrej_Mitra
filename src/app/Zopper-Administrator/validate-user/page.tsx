@@ -52,7 +52,7 @@ interface AdminUser {
 }
 
 async function fetchUsers(status: "PENDING" | "APPROVED") {
-  const res = await fetch(`/api/user-validate/users?status=${status}`, {
+  const res = await fetch(`/api/zopper-administrator/user-validate/users?status=${status}`, {
     cache: "no-store",
   });
 
@@ -81,7 +81,7 @@ async function approveUser(
     managerId?: string;
   },
 ) {
-  const res = await fetch(`/api/user-validate/users/${id}/validate`, {
+  const res = await fetch(`/api/zopper-administrator/user-validate/users/${id}/validate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ validation: "APPROVED", metadata: metadataOverrides }),
@@ -94,7 +94,7 @@ async function approveUser(
 }
 
 async function deleteUser(id: string) {
-  const res = await fetch(`/api/user-validate/users/${id}`, {
+  const res = await fetch(`/api/zopper-administrator/user-validate/users/${id}`, {
     method: "DELETE",
   });
 
@@ -260,7 +260,7 @@ export default function ZopperUserValidationPage() {
       } else {
         // APPROVED: update role-specific profile
         if (editingUser.role === "ABM" && editingUser.roleProfileId) {
-          const res = await fetch(`/api/user-validate/abm/${editingUser.roleProfileId}`, {
+          const res = await fetch(`/api/zopper-administrator/user-validate/abm/${editingUser.roleProfileId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ storeIds: editStoreIds, zbmId: editManagerId || undefined }),
@@ -270,7 +270,7 @@ export default function ZopperUserValidationPage() {
             throw new Error(data.error || "Failed to update ABM mapping");
           }
         } else if (editingUser.role === "ASE" && editingUser.roleProfileId) {
-          const res = await fetch(`/api/user-validate/ase/${editingUser.roleProfileId}`, {
+          const res = await fetch(`/api/zopper-administrator/user-validate/ase/${editingUser.roleProfileId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ storeIds: editStoreIds, zseId: editManagerId || undefined }),

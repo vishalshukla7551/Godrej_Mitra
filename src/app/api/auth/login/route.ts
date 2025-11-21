@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     const anyUser = user as any;
     const { password: _pw, ...rest } = anyUser;
 
-    const profile =
+    const rawProfile =
       anyUser.abmProfile ||
       anyUser.aseProfile ||
       anyUser.zbmProfile ||
@@ -61,6 +61,9 @@ export async function POST(req: NextRequest) {
       anyUser.zopperAdminProfile ||
       null;
 
+    // Remove userId from the role-specific profile before sending it to the client
+    const { userId: _profileUserId, ...safeProfile } = (rawProfile || {}) as any;
+
     const payload: AuthTokenPayload = {
       userId: rest.id,
       role: rest.role,
@@ -69,12 +72,12 @@ export async function POST(req: NextRequest) {
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
-    // Only expose role + role-specific profile to the client;
+    // Expose role and selected role-specific fields (flattened) to the client;
     // do not expose raw User model fields like id, username, metadata, etc.
     const res = NextResponse.json({
       user: {
         role: rest.role,
-        profile,
+        ...(rawProfile ? safeProfile : {}),
       },
     });
 
