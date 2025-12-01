@@ -281,6 +281,28 @@ export default function ZopperAdministratorPage() {
                   </Link>
                 </div>
               </div>
+
+              {/* Document Management */}
+              <div className="group rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur-sm shadow-sm shadow-slate-950/70 transition-transform transition-shadow hover:-translate-y-1 hover:border-blue-400/60 hover:shadow-xl">
+                <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-white">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/20 text-lg">
+                    📄
+                  </span>
+                  <span>Documents</span>
+                </h2>
+                <p className="mb-3 text-xs text-slate-300">
+                  Manage claim procedure PDFs and documentation.
+                </p>
+                <div className="space-y-3">
+                  <Link
+                    href="/Zopper-Administrator/manage-pdfs"
+                    className="flex items-center justify-between rounded-full bg-gradient-to-r from-blue-500 to-indigo-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm shadow-blue-900/60 transition-transform transition-shadow hover:-translate-y-0.5 hover:shadow-lg"
+                  >
+                    <span>Manage Claim PDFs</span>
+                    <span className="text-lg">→</span>
+                  </Link>
+                </div>
+              </div>
             </div>
           </section>
         </main>
