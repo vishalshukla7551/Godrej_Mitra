@@ -11,12 +11,7 @@ export async function DELETE(
   const { id: userId } = await params;
 
   try {
-    const authUser = await getAuthenticatedUserFromCookies({
-      get: (name: string) => {
-        const value = (req as any)?.cookies?.get?.(name)?.value || undefined;
-        return value ? { value } : undefined;
-      },
-    });
+    const authUser = await getAuthenticatedUserFromCookies();
 
     if (!authUser || authUser.role !== 'ZOPPER_ADMINISTRATOR') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

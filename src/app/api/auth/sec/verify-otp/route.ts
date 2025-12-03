@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import {
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+  signAccessToken,
+  signRefreshToken,
+  AuthTokenPayload,
+} from '@/lib/auth';
 
 // POST /api/auth/sec/verify-otp
 // Body: { phoneNumber: string; otp: string }
-// Verifies the OTP stored in the database for the given phone number.
+// Verifies the OTP stored in the database for the given phone number and issues auth tokens for SEC.
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -37,9 +44,41 @@ export async function POST(req: NextRequest) {
     // Mark as verified and/or delete so it cannot be reused.
     await prisma.otp.delete({ where: { id: record.id } });
 
-    // For now we only confirm OTP success; later you can extend this
-    // to issue auth tokens and return user info similar to /api/auth/login.
-    return NextResponse.json({ success: true });
+    // For simple SEC OTP login we do not require a pre-existing SEC profile.
+    // The SEC identity is the phone number itself.
+    const payload: AuthTokenPayload = {
+      secId: normalized,
+      role: 'SEC' as any,
+    };
+
+    const accessToken = signAccessToken(payload);
+    const refreshToken = signRefreshToken(payload);
+
+    const res = NextResponse.json({
+      success: true,
+      user: {
+        role: 'SEC',
+        phone: normalized,
+      },
+    });
+
+    const isSecure = process.env.NODE_ENV === 'production';
+
+    res.cookies.set(ACCESS_TOKEN_COOKIE, accessToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: isSecure,
+      path: '/',
+    });
+
+    res.cookies.set(REFRESH_TOKEN_COOKIE, refreshToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: isSecure,
+      path: '/',
+    });
+
+    return res;
   } catch (error) {
     console.error('Error in POST /api/auth/sec/verify-otp', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

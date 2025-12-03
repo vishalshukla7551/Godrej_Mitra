@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
+import { GlobalAuthInterceptor } from "@/components/GlobalAuthInterceptor";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -19,6 +20,8 @@ export const metadata: Metadata = {
   description: "Sales incentive management platform",
 };
 
+import { AuthGate } from "@/components/AuthGate";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,7 +32,11 @@ export default function RootLayout({
       <body
         className={`${plusJakartaSans.variable} ${inter.variable} antialiased`}
       >
-        {children}
+        {/* Global client-side 401 handler: if any fetch returns 401, trigger logout */}
+        <GlobalAuthInterceptor />
+        <AuthGate>
+          {children}
+        </AuthGate>
       </body>
     </html>
   );

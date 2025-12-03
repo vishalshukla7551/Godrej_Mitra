@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getHomePathForRole } from '@/lib/roleHomePath';
 
 export default function RoleLogin() {
   const [username, setUsername] = useState('');
@@ -12,6 +13,22 @@ export default function RoleLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  // If already logged in (authUser in localStorage), redirect to role home.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const raw = window.localStorage.getItem('authUser');
+    if (!raw) return;
+    try {
+      const user = JSON.parse(raw) as { role?: string };
+      if (user?.role) {
+        const target = getHomePathForRole(user.role);
+        router.replace(target);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,32 +63,9 @@ export default function RoleLogin() {
         window.localStorage.setItem('authUser', JSON.stringify(data.user));
       }
 
-      // Basic redirect by role; adjust targets as needed.
-      switch (data.user.role) {
-        case 'ABM':
-          router.push('/ABM');
-          break;
-        case 'ASE':
-          router.push('/ASE');
-          break;
-        case 'ZBM':
-          router.push('/ZSM');
-          break;
-        case 'ZSE':
-          router.push('/ZSE');
-          break;
-        case 'SEC':
-          router.push('/SEC/home');
-          break;
-        case 'SAMSUNG_ADMINISTRATOR':
-          router.push('/Samsung-Administrator');
-          break;
-        case 'ZOPPER_ADMINISTRATOR':
-          router.push('/Zopper-Administrator');
-          break;
-        default:
-          router.push('/');
-      }
+      // Redirect by role using shared helper
+      const target = getHomePathForRole(data.user.role);
+      router.push(target);
     } catch (err) {
       console.error('Error logging in', err);
       setError('Something went wrong. Please try again.');

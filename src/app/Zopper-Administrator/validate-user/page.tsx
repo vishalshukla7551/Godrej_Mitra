@@ -170,7 +170,7 @@ export default function ZopperUserValidationPage() {
         console.error("Failed to load master options", e);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const handleApprove = async (user: AdminUser) => {

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getHomePathForRole } from '@/lib/roleHomePath';
 
 export default function SECLogin() {
   const router = useRouter();
@@ -15,6 +16,22 @@ export default function SECLogin() {
   const [isValidNumber, setIsValidNumber] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // If already logged in, redirect away from SEC login.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const raw = window.localStorage.getItem('authUser');
+    if (!raw) return;
+    try {
+      const user = JSON.parse(raw) as { role?: string };
+      if (user?.role) {
+        const target = getHomePathForRole(user.role);
+        router.replace(target);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, [router]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
@@ -113,8 +130,14 @@ export default function SECLogin() {
         return;
       }
 
-      // OTP verified successfully; redirect to SEC landing page.
-      router.push('/SEC/home');
+      // Store SEC auth info in localStorage, same as role login does.
+      if (typeof window !== 'undefined' && data?.user) {
+        window.localStorage.setItem('authUser', JSON.stringify(data.user));
+      }
+
+      // OTP verified successfully; redirect to SEC landing page (via shared helper).
+      const target = getHomePathForRole(data.user.role || 'SEC');
+      router.push(target);
     } catch (err) {
       console.error('Error verifying OTP', err);
       setError('Failed to verify OTP. Please try again.');

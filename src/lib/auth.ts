@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 import { Role, Validation } from '@prisma/client';
+import { cookies as nextCookies } from 'next/headers';
 
 const ACCESS_TOKEN_COOKIE = 'access_token';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
@@ -19,7 +20,8 @@ const ACCESS_SECRET = process.env.ACCESS_TOKEN_SECRET || 'dev-access-secret';
 const REFRESH_SECRET = process.env.REFRESH_TOKEN_SECRET || 'dev-refresh-secret';
 
 export interface AuthTokenPayload {
-  userId: string;
+  userId?: string;
+  secId?: string;
   role: Role;
 }
 
@@ -56,16 +58,46 @@ export function verifyRefreshToken(token: string): AuthTokenPayload | null {
   }
 }
 
-// Utility used inside API routes to resolve the logged-in user
-// It checks access token first; if not valid it falls back to refresh token.
-// It does NOT rotate tokens; it only validates them.
-export async function getAuthenticatedUserFromCookies(cookies: {
+type CookieReader = {
   get(name: string): { value: string } | undefined;
-}): Promise<AuthenticatedUser | null> {
-  const accessToken = cookies.get(ACCESS_TOKEN_COOKIE)?.value;
-  const refreshToken = cookies.get(REFRESH_TOKEN_COOKIE)?.value;
+};
+
+// Utility used inside API routes to resolve the logged-in user.
+// Flow:
+// 1) Try access token.
+// 2) If missing/invalid, try refresh token.
+// 3) If refresh is valid, re-issue fresh access & refresh tokens and set cookies.
+// 4) Load the user from DB and ensure validation=APPROVED.
+// 5) If anything fails, clear auth cookies and return null.
+export async function getAuthenticatedUserFromCookies(
+  cookiesParam?: CookieReader,
+): Promise<AuthenticatedUser | null> {
+  // Prefer the explicit reader passed from route handlers; otherwise fall back to next/headers.
+  // In Next.js 16, `cookies()` is async and returns a Promise, so we must await it
+  // before accessing `.get`, `.set`, `.delete`, etc.
+  const cookieStore =
+    !cookiesParam && typeof nextCookies === 'function'
+      ? await nextCookies()
+      : undefined;
+
+  const reader: CookieReader = cookiesParam
+    ? cookiesParam
+    : cookieStore
+    ? {
+        get: (name: string) => {
+          const c = cookieStore.get(name);
+          return c ? { value: c.value } : undefined;
+        },
+      }
+    : {
+        get: () => undefined,
+      };
+
+  const accessToken = reader.get(ACCESS_TOKEN_COOKIE)?.value;
+  const refreshToken = reader.get(REFRESH_TOKEN_COOKIE)?.value;
 
   let payload: AuthTokenPayload | null = null;
+  let authenticatedViaRefresh = false;
 
   if (accessToken) {
     payload = verifyAccessToken(accessToken);
@@ -73,9 +105,68 @@ export async function getAuthenticatedUserFromCookies(cookies: {
 
   if (!payload && refreshToken) {
     payload = verifyRefreshToken(refreshToken);
+    authenticatedViaRefresh = !!payload;
   }
 
-  if (!payload) return null;
+  // No valid tokens at all – clear cookies if we can and bail out
+  if (!payload) {
+    if (cookieStore) {
+      if (accessToken) cookieStore.delete(ACCESS_TOKEN_COOKIE);
+      if (refreshToken) cookieStore.delete(REFRESH_TOKEN_COOKIE);
+    }
+    return null;
+  }
+
+  // Special handling for SEC users.
+  // For simple OTP-based SEC login we treat the SEC identity as the phone number
+  // carried in `secId` inside the JWT payload, and we do not depend on a
+  // dedicated SEC collection record.
+  if (payload.role === 'SEC') {
+    const secId = payload.secId;
+    if (!secId) {
+      if (cookieStore) {
+        cookieStore.delete(ACCESS_TOKEN_COOKIE);
+        cookieStore.delete(REFRESH_TOKEN_COOKIE);
+      }
+      return null;
+    }
+
+    // If we authenticated using the refresh token, rotate SEC tokens as well so
+    // a missing/expired access token gets recreated from a valid refresh token.
+    if (authenticatedViaRefresh && cookieStore) {
+      const newPayload: AuthTokenPayload = {
+        secId,
+        role: 'SEC' as Role,
+      };
+
+      // Rotate ONLY the access token. Refresh token keeps its original
+      // lifetime from login (fixed maximum session window).
+      const newAccessToken = signAccessToken(newPayload);
+      const isSecure = process.env.NODE_ENV === 'production';
+
+      cookieStore.set(ACCESS_TOKEN_COOKIE, newAccessToken, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: isSecure,
+        path: '/',
+        maxAge: ACCESS_TOKEN_TTL_SECONDS,
+      });
+    }
+
+    const authUser: AuthenticatedUser = {
+      id: secId,
+      username: secId,
+      role: 'SEC' as Role,
+      validation: 'APPROVED',
+      metadata: {},
+      profile: {
+        id: secId,
+        phone: secId,
+      },
+    } as any;
+
+    return authUser;
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: payload.userId },
@@ -84,13 +175,40 @@ export async function getAuthenticatedUserFromCookies(cookies: {
       aseProfile: true,
       zbmProfile: true,
       zseProfile: true,
-      secProfile: true,
       samsungAdminProfile: true,
       zopperAdminProfile: true,
     },
   } as any);
 
-  if (!user || user.validation !== 'APPROVED') return null;
+  if (!user || user.validation !== 'APPROVED') {
+    if (cookieStore) {
+      cookieStore.delete(ACCESS_TOKEN_COOKIE);
+      cookieStore.delete(REFRESH_TOKEN_COOKIE);
+    }
+    return null;
+  }
+
+  // If we authenticated using the refresh token, rotate tokens so the client
+  // gets a fresh access token (and optionally a new refresh token).
+  if (authenticatedViaRefresh && cookieStore) {
+    const newPayload: AuthTokenPayload = {
+      userId: user.id,
+      role: user.role,
+    };
+
+    // Rotate ONLY the access token. Refresh token keeps its original
+    // lifetime from login (fixed maximum session window).
+    const newAccessToken = signAccessToken(newPayload);
+    const isSecure = process.env.NODE_ENV === 'production';
+
+    cookieStore.set(ACCESS_TOKEN_COOKIE, newAccessToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: isSecure,
+      path: '/',
+      maxAge: ACCESS_TOKEN_TTL_SECONDS,
+    });
+  }
 
   const anyUser = user as any;
   const { password: _pw, ...rest } = anyUser;
@@ -100,7 +218,6 @@ export async function getAuthenticatedUserFromCookies(cookies: {
     anyUser.aseProfile ||
     anyUser.zbmProfile ||
     anyUser.zseProfile ||
-    anyUser.secProfile ||
     anyUser.samsungAdminProfile ||
     anyUser.zopperAdminProfile ||
     null;
