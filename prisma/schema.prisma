@@ -119,14 +119,15 @@ model ZSE {
 }
 
 model SEC {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
 
-  fullName String?
+  fullName    String?
+  phone       String   @unique
+  storeId     String?
+  lastLoginAt DateTime?
 
-  phone    String @unique
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Otp {
@@ -164,4 +165,20 @@ model ZopperAdmin {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ClaimProcedurePDF {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  fileName    String
+  fileSize    Int
+  fileData    String   // Base64 encoded PDF data
+  category    String   @default("GENERAL")
+  isActive    Boolean  @default(true)
+  uploadedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
 }

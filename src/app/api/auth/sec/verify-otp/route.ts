@@ -41,11 +41,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid or expired OTP' }, { status: 401 });
     }
 
-    // Mark as verified and/or delete so it cannot be reused.
-    await prisma.otp.delete({ where: { id: record.id } });
+    // Mark OTP as verified so we keep a history, but do not delete it here.
+    // Existing logic in send-otp will delete old OTPs for this phone
+    // when generating a new one.
+    await prisma.otp.update({
+      where: { id: record.id },
+      data: { verified: true },
+    });
 
-    // For simple SEC OTP login we do not require a pre-existing SEC profile.
-    // The SEC identity is the phone number itself.
+    // Log this SEC login in the SEC collection (no relation to User).
+    // Either create a document for this phone or update its last login timestamp.
+    await prisma.sEC.upsert({
+      where: { phone: normalized },
+      update: {
+        lastLoginAt: new Date(),
+      },
+      create: {
+        phone: normalized,
+        lastLoginAt: new Date(),
+      },
+    });
+
+    // For simple SEC OTP login the runtime identity is still just the phone number.
+    // We keep it in the JWT payload without linking to the main User table.
     const payload: AuthTokenPayload = {
       secId: normalized,
       role: 'SEC' as any,
