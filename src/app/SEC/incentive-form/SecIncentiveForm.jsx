@@ -8,7 +8,11 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const [secId, setSecId] = useState(initialSecId);
   const [dateOfSale, setDateOfSale] = useState('');
   const [storeName, setStoreName] = useState('');
+  const [storeSearch, setStoreSearch] = useState('');
+  const [showStoreDropdown, setShowStoreDropdown] = useState(false);
   const [deviceName, setDeviceName] = useState('');
+  const [deviceSearch, setDeviceSearch] = useState('');
+  const [showDeviceDropdown, setShowDeviceDropdown] = useState(false);
   const [planType, setPlanType] = useState('');
   const [imeiNumber, setImeiNumber] = useState('');
   const [imeiError, setImeiError] = useState('');
@@ -19,6 +23,39 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const [showSecModal, setShowSecModal] = useState(false);
   const [secInput, setSecInput] = useState('');
   const [secError, setSecError] = useState('');
+
+  // Store list - replace with your actual stores
+  const stores = [
+    'Croma - ABS - Noida-Gaur Mall',
+    'Croma - ARS - Noida - Mall of India',
+    'Croma - ARS - Noida-Logix Mall',
+    'VS- Up (Noida Sec.18) Br',
+    'Reliance Digital - Delhi',
+    'Vijay Sales - Mumbai',
+    'Samsung Store - Bangalore',
+  ];
+
+  // Device list - replace with your actual devices
+  const devices = [
+    'Super Premium - S25',
+    'Luxury Flip - Z Flip FE',
+    'Luxury Flip - Z Flip 6',
+    'Mid - F17',
+    'Samsung Galaxy S24',
+    'Samsung Galaxy S23',
+    'iPhone 15 Pro',
+    'iPhone 15',
+    'OnePlus 12',
+    'Xiaomi 14',
+  ];
+
+  const filteredStores = stores.filter((store) =>
+    store.toLowerCase().includes(storeSearch.toLowerCase())
+  );
+
+  const filteredDevices = devices.filter((device) =>
+    device.toLowerCase().includes(deviceSearch.toLowerCase())
+  );
 
   // Load SEC ID from localStorage on mount
   useEffect(() => {
@@ -299,23 +336,61 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               <label htmlFor="storeName" className="block text-sm font-medium text-gray-700 mb-2">
                 Store Name
               </label>
-              <select
-                id="storeName"
-                value={storeName}
-                onChange={(e) => setStoreName(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 1rem center',
-                  backgroundSize: '1.25rem',
-                }}
-              >
-                <option value="">Select Store</option>
-                <option value="store1">Store 1</option>
-                <option value="store2">Store 2</option>
-                <option value="store3">Store 3</option>
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="storeName"
+                  value={storeSearch || storeName}
+                  onChange={(e) => {
+                    setStoreSearch(e.target.value);
+                    setStoreName('');
+                    setShowStoreDropdown(true);
+                  }}
+                  onFocus={() => setShowStoreDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowStoreDropdown(false), 200)}
+                  placeholder="Search or select store"
+                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <svg
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+
+                {/* Dropdown */}
+                {showStoreDropdown && filteredStores.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto">
+                    {filteredStores.map((store) => (
+                      <div
+                        key={store}
+                        onClick={() => {
+                          setStoreName(store);
+                          setStoreSearch(store);
+                          setShowStoreDropdown(false);
+                        }}
+                        className="px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      >
+                        {store}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* No results */}
+                {showStoreDropdown && storeSearch && filteredStores.length === 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg p-4 text-center">
+                    <p className="text-sm text-gray-500">No stores found</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Device Name */}
@@ -323,23 +398,61 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               <label htmlFor="deviceName" className="block text-sm font-medium text-gray-700 mb-2">
                 Device Name
               </label>
-              <select
-                id="deviceName"
-                value={deviceName}
-                onChange={(e) => setDeviceName(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 1rem center',
-                  backgroundSize: '1.25rem',
-                }}
-              >
-                <option value="">Select Device</option>
-                <option value="iphone">iPhone</option>
-                <option value="samsung">Samsung</option>
-                <option value="oneplus">OnePlus</option>
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="deviceName"
+                  value={deviceSearch || deviceName}
+                  onChange={(e) => {
+                    setDeviceSearch(e.target.value);
+                    setDeviceName('');
+                    setShowDeviceDropdown(true);
+                  }}
+                  onFocus={() => setShowDeviceDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowDeviceDropdown(false), 200)}
+                  placeholder="Search or select device"
+                  className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <svg
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+
+                {/* Dropdown */}
+                {showDeviceDropdown && filteredDevices.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto">
+                    {filteredDevices.map((device) => (
+                      <div
+                        key={device}
+                        onClick={() => {
+                          setDeviceName(device);
+                          setDeviceSearch(device);
+                          setShowDeviceDropdown(false);
+                        }}
+                        className="px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      >
+                        {device}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* No results */}
+                {showDeviceDropdown && deviceSearch && filteredDevices.length === 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg p-4 text-center">
+                    <p className="text-sm text-gray-500">No devices found</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Plan Type */}
