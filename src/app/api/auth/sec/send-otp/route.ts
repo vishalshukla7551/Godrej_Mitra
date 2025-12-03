@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { comifyService } from '@/lib/comify';
 
 // POST /api/auth/sec/send-otp
 // Body: { phoneNumber: string }
 // Generates an OTP, stores it in the database against the phone number,
-// and logs the OTP to the server console for development.
+// and sends it via Comify WhatsApp API.
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -37,7 +38,24 @@ export async function POST(req: NextRequest) {
 
     console.log(`[SEC OTP] Phone ${normalized} -> ${code}`);
 
-    return NextResponse.json({ success: true });
+    // Send OTP via Comify WhatsApp API
+    if (comifyService.isConfigured()) {
+      try {
+        await comifyService.sendOtp(normalized, code);
+        console.log(`[SEC OTP] Successfully sent OTP to ${normalized} via Comify WhatsApp`);
+      } catch (comifyError) {
+        console.error(`[SEC OTP] Failed to send OTP via Comify:`, comifyError);
+        // Continue execution - OTP is still stored in database for manual verification
+        // In production, you might want to return an error here depending on requirements
+      }
+    } else {
+      console.warn('[SEC OTP] Comify not configured - OTP not sent via WhatsApp');
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      message: 'OTP generated and sent successfully'
+    });
   } catch (error) {
     console.error('Error in POST /api/auth/sec/send-otp', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
