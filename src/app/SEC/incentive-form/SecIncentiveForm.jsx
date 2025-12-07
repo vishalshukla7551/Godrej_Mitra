@@ -9,6 +9,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const [secPhone, setSecPhone] = useState('');
   const [dateOfSale, setDateOfSale] = useState('');
   const [storeId, setStoreId] = useState('');
+  const [storeFixedFromProfile, setStoreFixedFromProfile] = useState(false);
   const [deviceId, setDeviceId] = useState('');
   const [planId, setPlanId] = useState('');
   const [imeiNumber, setImeiNumber] = useState('');
@@ -32,23 +33,35 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const [loadingDevices, setLoadingDevices] = useState(true);
   const [loadingPlans, setLoadingPlans] = useState(false);
 
-  // Load SEC phone from authUser in localStorage on mount
+  // Load SEC phone and fixed store (if any) from authUser in localStorage on mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const raw = window.localStorage.getItem('authUser');
-      if (raw) {
-        const auth = JSON.parse(raw);
-        if (auth?.phone) {
-          setSecPhone(auth.phone);
-          setShowSecAlert(false);
-          return;
-        }
+      if (!raw) {
+        setShowSecAlert(true);
+        return;
+      }
+
+      const auth = JSON.parse(raw);
+      const phoneFromAuth = auth?.phone;
+      const storeFromAuth = auth?.selectedStoreId;
+
+      if (phoneFromAuth) {
+        setSecPhone(phoneFromAuth);
+        setShowSecAlert(false);
+      } else {
+        setShowSecAlert(true);
+      }
+
+      if (storeFromAuth) {
+        setStoreId(storeFromAuth);
+        setStoreFixedFromProfile(true);
       }
     } catch {
-      // ignore parse errors
+      // ignore parse errors but show alert so SEC can re-login
+      setShowSecAlert(true);
     }
-    setShowSecAlert(true);
   }, []);
 
   // Fetch stores on mount
@@ -442,11 +455,24 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               </div>
             </div>
 
-            {/* Store Name */}
-            <div>
-              <label htmlFor="storeId" className="block text-sm font-medium text-gray-700 mb-2">
-                Store Name
-              </label>
+          {/* Store Name */}
+          <div>
+            <label htmlFor="storeId" className="block text-sm font-medium text-gray-700 mb-2">
+              Store Name
+            </label>
+            {storeFixedFromProfile ? (
+              <input
+                type="text"
+                id="storeId"
+                value={(() => {
+                  const store = stores.find((s) => s.id === storeId);
+                  if (!store) return 'Store not set';
+                  return `${store.name}${store.city ? ` - ${store.city}` : ''}`;
+                })()}
+                disabled
+                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm"
+              />
+            ) : (
               <select
                 id="storeId"
                 value={storeId}
@@ -467,7 +493,8 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                   </option>
                 ))}
               </select>
-            </div>
+            )}
+          </div>
 
             {/* Device Name */}
             <div>

@@ -14,6 +14,11 @@ export default function RoleLogin() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  // Reuse SEC login phone field typography & input styles
+  const inputBaseClasses =
+    'w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500';
+  const labelBaseClasses = 'block text-sm font-medium text-gray-900 mb-2';
+
   // If already logged in (authUser in localStorage), redirect to role home.
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -91,7 +96,7 @@ export default function RoleLogin() {
           <div>
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-gray-900 mb-2"
+              className={labelBaseClasses}
             >
               Username
             </label>
@@ -101,14 +106,14 @@ export default function RoleLogin() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter username"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+              className={inputBaseClasses}
             />
           </div>
 
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-900 mb-2"
+              className={labelBaseClasses}
             >
               Password
             </label>
@@ -119,7 +124,7 @@ export default function RoleLogin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12 placeholder:text-gray-400"
+                className={`${inputBaseClasses} pr-12`}
               />
               <button
                 type="button"

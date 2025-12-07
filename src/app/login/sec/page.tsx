@@ -18,6 +18,11 @@ export default function SECLogin() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Shared input styles – keep consistent with Phone Number field
+  const inputBaseClasses =
+    'w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500';
+  const labelBaseClasses = 'block text-sm font-medium text-gray-900 mb-2';
+
   // If already logged in, redirect away from SEC login.
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -172,7 +177,7 @@ export default function SECLogin() {
           <div>
             <label
               htmlFor="phone"
-              className="block text-sm font-medium text-gray-900 mb-2"
+              className={labelBaseClasses}
             >
               Phone Number
             </label>
@@ -201,7 +206,7 @@ export default function SECLogin() {
                 value={phoneNumber}
                 onChange={handlePhoneChange}
                 placeholder="Enter your phone number"
-                className="w-full pl-14 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500"
+                className={`pl-14 pr-4 ${inputBaseClasses.replace('px-4 ', '')}`}
               />
             </div>
             {validationMessage && (
@@ -247,7 +252,7 @@ export default function SECLogin() {
             <div>
               <label
                 htmlFor="otp"
-                className="block text-sm font-medium text-gray-900 mb-2"
+                className={labelBaseClasses}
               >
                 OTP
               </label>
@@ -260,7 +265,7 @@ export default function SECLogin() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
                 placeholder="Enter your OTP"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
+                className={inputBaseClasses}
               />
             </div>
           )}
