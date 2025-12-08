@@ -79,13 +79,11 @@ model SalesReport {
   planId                  String                 @db.ObjectId
   plan                    Plan                   @relation(fields: [planId], references: [id])
   imei                    String
-  salesSummaryId          String?                @db.ObjectId
-  SalesSummary            SalesSummary?          @relation("SalesSummaryReports", fields: [salesSummaryId], references: [id])
-  spotIncentiveCampaignId String?                @db.ObjectId
-  spotIncentiveCampaign   SpotIncentiveCampaign? @relation(fields: [spotIncentiveCampaignId], references: [id])
+  isCompaignActive        Boolean                @default(false)
   spotincentiveEarned     Int // Calculated incentive amount
   voucherCode             String? // Optional voucher code for incentive redemption
   spotincentivepaidAt     DateTime? //paid for each sale
+  samsungincentivepaidAt  DateTime? //paid for each sale
   metadata                Json? // Additional data related to the sales report
   submittedAt             DateTime               @default(now())
   createdAt               DateTime               @default(now())
@@ -95,25 +93,6 @@ model SalesReport {
   @@index([secId])
   @@index([storeId])
   @@index([submittedAt])
-  @@index([spotIncentiveCampaignId])
-}
-
-model SalesSummary {
-  id                          String        @id @default(auto()) @map("_id") @db.ObjectId
-  secId                       String        @db.ObjectId
-  secUser                     SEC           @relation(fields: [secId], references: [id])
-  totalSpotIncentiveEarned    Int
-  totalSamsungIncentiveEarned Int? // Optional - decided at payment date
-  samsungincentivepaidAt      DateTime? //paid for  monthly sale
-  metadata                    Json? // Additional data related to the sales summary
-  salesReport                 SalesReport[] @relation("SalesSummaryReports")
-  month                       Int
-  year                        Int
-  createdAt                   DateTime      @default(now())
-  updatedAt                   DateTime      @updatedAt
-
-  @@index([secId])
-  @@index([month, year])
 }
 
 enum IncentiveType {
@@ -123,7 +102,7 @@ enum IncentiveType {
 
 model SpotIncentiveCampaign {
   id           String     @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
+  name         String?
   description  String?
   // targeting (nullable -> if null that axis is "all")
   store        Store      @relation(fields: [storeId], references: [id])
@@ -141,9 +120,6 @@ model SpotIncentiveCampaign {
   startDate DateTime
   endDate   DateTime
   active    Boolean  @default(true)
-
-  // relationships
-  salesReports SalesReport[] @relation
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

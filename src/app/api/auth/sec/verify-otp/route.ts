@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     // Log this SEC login in the SEC collection (no relation to User).
     // Either create a document for this phone or update its last login timestamp.
-    const secRecord = await prisma.sEC.upsert({
+    const secRecord: any = await prisma.sEC.upsert({
       where: { phone: normalized },
       update: {
         lastLoginAt: new Date(),
@@ -62,7 +62,22 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Fetch store details if storeId exists
+    let storeDetails = null;
+    if (secRecord.storeId) {
+      storeDetails = await prisma.store.findUnique({
+        where: { id: secRecord.storeId },
+        select: {
+          id: true,
+          name: true,
+          city: true,
+          state: true,
+        },
+      });
+    }
+
     const needsName = !secRecord.fullName || secRecord.fullName.trim().length === 0;
+    const needsStore = !secRecord.storeId;
 
     // For simple SEC OTP login the runtime identity is still just the phone number.
     // We keep it in the JWT payload without linking to the main User table.
@@ -76,12 +91,16 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       success: true,
-      needsName,
+      needsName: needsName || needsStore,
       user: {
         role: 'SEC',
         id: secRecord.id,
         phone: normalized,
         fullName: secRecord.fullName ?? null,
+        storeId: secRecord.storeId ?? null,
+        store: storeDetails,
+        AgencyName: secRecord.AgencyName ?? null,
+        AgentCode: secRecord.AgentCode ?? null,
       },
     });
 
