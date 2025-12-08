@@ -11,7 +11,7 @@ export default function IncentiveCalculatorPage() {
   const [calculatedIncentive, setCalculatedIncentive] = useState(0);
 
   // Incentive rates (you can modify these based on your actual rates)
-  const incentiveRates = {
+  const incentiveRates: Record<string, Record<string, number>> = {
     "Super Premium - S25": {
       ADLD: 2500,
       COMBO: 1800,
