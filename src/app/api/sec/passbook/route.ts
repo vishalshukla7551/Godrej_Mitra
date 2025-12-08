@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
         combo,
         units: 1,
       };
-    }).sort((a, b) => {
+    }).sort((a: { date: string; adld: string; combo: string; units: number }, b: { date: string; adld: string; combo: string; units: number }) => {
       const dateA = a.date.split('-').reverse().join('-');
       const dateB = b.date.split('-').reverse().join('-');
       return dateB.localeCompare(dateA);
