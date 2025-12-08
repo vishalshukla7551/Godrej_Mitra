@@ -29,12 +29,12 @@ export async function GET(req: NextRequest) {
 
     // Date range filter
     if (startDate || endDate) {
-      where.submittedAt = {};
+      where.Date_of_sale = {};
       if (startDate) {
-        where.submittedAt.gte = new Date(startDate);
+        where.Date_of_sale.gte = new Date(startDate);
       }
       if (endDate) {
-        where.submittedAt.lte = new Date(endDate);
+        where.Date_of_sale.lte = new Date(endDate);
       }
     }
 
@@ -145,18 +145,10 @@ export async function GET(req: NextRequest) {
             planType: true,
             price: true
           }
-        },
-        spotIncentiveCampaign: {
-          select: {
-            id: true,
-            name: true,
-            incentiveType: true,
-            incentiveValue: true
-          }
         }
       },
       orderBy: {
-        submittedAt: 'desc'
+        Date_of_sale: 'desc'
       },
       skip: (page - 1) * pageSize,
       take: pageSize
@@ -208,7 +200,8 @@ export async function GET(req: NextRequest) {
         salesReports: salesReports.map((report: any) => ({
           id: report.id,
           createdAt: report.createdAt,
-          submittedAt: report.submittedAt,
+          submittedAt: report.Date_of_sale || report.createdAt,
+          dateOfSale: report.Date_of_sale,
           imei: report.imei,
           spotincentiveEarned: report.spotincentiveEarned,
           voucherCode: report.voucherCode,
@@ -237,7 +230,7 @@ export async function GET(req: NextRequest) {
             planType: report.plan.planType,
             price: report.plan.price
           },
-          spotIncentiveCampaign: report.spotIncentiveCampaign
+          isCampaignActive: report.isCompaignActive || false
         })),
         pagination: {
           page,

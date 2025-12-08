@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { secPhone, storeId, deviceId, planId, imei } = body;
+    const { secPhone, storeId, deviceId, planId, imei, dateOfSale } = body;
 
     // Validate required fields
     if (!secPhone || !storeId || !deviceId || !planId || !imei) {
@@ -147,9 +147,12 @@ export async function POST(req: NextRequest) {
     }
     // If no campaign, spotincentiveEarned remains 0 and isCampaignActive is false
 
-    // Get current month and year for SalesSummary
-    const month = now.getMonth() + 1; // 1-12
-    const year = now.getFullYear();
+    // Use provided dateOfSale or default to now
+    const saleDate = dateOfSale ? new Date(dateOfSale) : now;
+
+    // Get month and year from sale date for SalesSummary
+    const month = saleDate.getMonth() + 1; // 1-12
+    const year = saleDate.getFullYear();
 
     // Find or create SalesSummary for this month/year
     let salesSummary = await prisma.salesSummary.findFirst({
@@ -182,7 +185,7 @@ export async function POST(req: NextRequest) {
         imei,
         spotincentiveEarned,
         isCompaignActive: isCampaignActive,
-        Date_of_sale: now,
+        Date_of_sale: saleDate,
         salesSummaryid: salesSummary.id,
       },
       include: {

@@ -181,6 +181,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
           deviceId,
           planId,
           imei: imeiNumber,
+          dateOfSale: dateOfSale || undefined,
         }),
       });
 
