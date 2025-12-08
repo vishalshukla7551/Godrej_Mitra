@@ -7,7 +7,6 @@ import SECFooter from '../SECFooter.jsx';
 export default function ProfilePage() {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
   const [storeName, setStoreName] = useState('');
   const [agencyName, setAgencyName] = useState('');
   const [agentCode, setAgentCode] = useState('');
@@ -15,8 +14,11 @@ export default function ProfilePage() {
   const [personalInfoError, setPersonalInfoError] = useState<string | null>(null);
   
   const [panNumber, setPanNumber] = useState('');
-  const [panImage, setPanImage] = useState<File | null>(null);
   const [kycStatus, setKycStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [verifyingPan, setVerifyingPan] = useState(false);
+  const [panVerified, setPanVerified] = useState(false);
+  const [panError, setPanError] = useState<string | null>(null);
+  const [kycData, setKycData] = useState<any>(null);
   
   const [bankName, setBankName] = useState('');
   const [accountHolderName, setAccountHolderName] = useState('');
@@ -35,21 +37,47 @@ export default function ProfilePage() {
       const auth = JSON.parse(raw) as any;
       const fullNameFromAuth = (auth?.fullName || '').trim();
       const phoneFromAuth = (auth?.username || auth?.phone || '').trim();
-      const emailFromAuth = (auth?.email || '').trim();
       const storeNameFromAuth = auth?.store?.name || '';
       const agencyNameFromAuth = (auth?.AgencyName || '').trim();
       const agentCodeFromAuth = (auth?.AgentCode || '').trim();
 
       if (fullNameFromAuth) setFullName(fullNameFromAuth);
       if (phoneFromAuth) setPhoneNumber(phoneFromAuth);
-      if (emailFromAuth) setEmail(emailFromAuth);
       if (storeNameFromAuth) setStoreName(storeNameFromAuth);
       if (agencyNameFromAuth) setAgencyName(agencyNameFromAuth);
       if (agentCodeFromAuth) setAgentCode(agentCodeFromAuth);
+
+      // Load existing KYC info if available
+      if (auth?.kycInfo) {
+        setKycData(auth.kycInfo);
+        setPanVerified(true);
+        setPanNumber(auth.kycInfo.pan || '');
+        setKycStatus('approved');
+      }
     } catch {
       // ignore parse/storage errors
     }
+
+    // Also fetch KYC info from server
+    fetchKycInfo();
   }, []);
+
+  const fetchKycInfo = async () => {
+    try {
+      const response = await fetch('/api/sec/kyc/info');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.hasKycInfo) {
+          setKycData(data.kycInfo);
+          setPanVerified(true);
+          setPanNumber(data.kycInfo.pan || '');
+          setKycStatus('approved');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching KYC info:', error);
+    }
+  };
 
   const handlePersonalInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,10 +130,65 @@ export default function ProfilePage() {
     }
   };
 
-  const handleKYCSubmit = (e: React.FormEvent) => {
+  const handleKYCSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('KYC Info submitted:', { panNumber, panImage });
-    alert('KYC info saved successfully!');
+    setPanError(null);
+
+    if (!panNumber.trim()) {
+      setPanError('Please enter PAN number');
+      return;
+    }
+
+    try {
+      setVerifyingPan(true);
+
+      const response = await fetch('/api/sec/kyc/verify-pan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pan: panNumber.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setPanVerified(true);
+        setKycStatus('approved');
+        setKycData(data.kycInfo);
+        
+        // Update the full name in the UI
+        setFullName(data.fullName);
+        
+        // Update localStorage with new data
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = window.localStorage.getItem('authUser');
+            if (raw) {
+              const parsed = JSON.parse(raw) as any;
+              const updated = {
+                ...parsed,
+                fullName: data.fullName,
+                secId: data.secUser.id,
+                kycInfo: data.kycInfo,
+              };
+              window.localStorage.setItem('authUser', JSON.stringify(updated));
+            }
+          } catch {
+            // ignore parse/storage errors
+          }
+        }
+
+        alert('PAN verified successfully! Your KYC information has been saved.');
+      } else {
+        setPanError(data.error || 'PAN verification failed');
+      }
+    } catch (error) {
+      setPanError('Failed to verify PAN. Please try again.');
+      console.error('PAN verification error:', error);
+    } finally {
+      setVerifyingPan(false);
+    }
   };
 
   const handleBankingSubmit = (e: React.FormEvent) => {
@@ -169,12 +252,6 @@ export default function ProfilePage() {
               <div className="mb-3">
                 <label className="block text-xs text-gray-600 mb-1">Phone Number</label>
                 <div className="text-sm font-medium text-gray-900">{phoneNumber}</div>
-              </div>
-
-              {/* Email */}
-              <div className="mb-4">
-                <label className="block text-xs text-gray-600 mb-1">Email</label>
-                <div className="text-sm font-medium text-gray-900">{email}</div>
               </div>
 
               {/* Store Details */}
@@ -264,44 +341,98 @@ export default function ProfilePage() {
               {/* PAN Number */}
               <div className="mb-4">
                 <label htmlFor="panNumber" className="block text-xs text-gray-600 mb-1">PAN Number</label>
-                <input
-                  type="text"
-                  id="panNumber"
-                  value={panNumber}
-                  onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
-                  placeholder="Enter PAN Number"
-                  maxLength={10}
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    id="panNumber"
+                    value={panNumber}
+                    onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
+                    placeholder="Enter PAN Number"
+                    maxLength={10}
+                    disabled={panVerified}
+                    className={`flex-1 px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      panVerified ? 'bg-gray-50 text-gray-500' : ''
+                    }`}
+                  />
+                  {panVerified && (
+                    <div className="flex items-center px-3 py-3 bg-green-50 border border-green-300 rounded-xl">
+                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Upload PAN Image */}
-              <div className="mb-4">
-                <label className="block text-xs text-gray-600 mb-1">Upload PAN Image</label>
-                <label
-                  htmlFor="panImageUpload"
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                  {panImage ? panImage.name : 'Choose File'}
-                </label>
-                <input
-                  type="file"
-                  id="panImageUpload"
-                  accept="image/*"
-                  onChange={(e) => setPanImage(e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-              </div>
+              {/* Error Message */}
+              {panError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-xs text-red-700">{panError}</p>
+                </div>
+              )}
+
+              {/* Success Message */}
+              {panVerified && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl">
+                  <p className="text-xs text-green-700">
+                    ✓ PAN verified successfully! Your KYC information has been saved.
+                  </p>
+                </div>
+              )}
+
+              {/* KYC Information Display */}
+              {panVerified && kycData && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-3">Verified KYC Information</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Name:</span>
+                      <span className="font-medium text-blue-900">{kycData.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">PAN:</span>
+                      <span className="font-medium text-blue-900">{kycData.pan}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Gender:</span>
+                      <span className="font-medium text-blue-900 capitalize">{kycData.gender}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Date of Birth:</span>
+                      <span className="font-medium text-blue-900">{kycData.dob}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Aadhaar Linked:</span>
+                      <span className={`font-medium ${kycData.aadhaarLinked ? 'text-green-700' : 'text-red-700'}`}>
+                        {kycData.aadhaarLinked ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
 
               {/* KYC Status Badge */}
               <div className="mb-4">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-100 border border-yellow-300">
-                  <span className="text-xs font-medium text-yellow-800">Pending</span>
-                  <svg className="w-3 h-3 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
+                  panVerified 
+                    ? 'bg-green-100 border border-green-300' 
+                    : 'bg-yellow-100 border border-yellow-300'
+                }`}>
+                  <span className={`text-xs font-medium ${
+                    panVerified ? 'text-green-800' : 'text-yellow-800'
+                  }`}>
+                    {panVerified ? 'Verified' : 'Pending'}
+                  </span>
+                  <svg className={`w-3 h-3 ${
+                    panVerified ? 'text-green-600' : 'text-yellow-600'
+                  }`} fill="currentColor" viewBox="0 0 20 20">
+                    {panVerified ? (
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    ) : (
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    )}
                   </svg>
                 </div>
               </div>
@@ -309,12 +440,32 @@ export default function ProfilePage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full bg-black text-white font-semibold py-3.5 rounded-xl hover:bg-gray-900 transition-colors flex items-center justify-center gap-2"
+                disabled={verifyingPan || panVerified}
+                className="w-full bg-black text-white font-semibold py-3.5 rounded-xl hover:bg-gray-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                Submit
+                {verifyingPan ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Verifying PAN...
+                  </>
+                ) : panVerified ? (
+                  <>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Verified
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Verify PAN
+                  </>
+                )}
               </button>
             </form>
           </section>

@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx/xlsx.mjs';
+import * as XLSX from 'xlsx';
 import { PrismaClient } from '@prisma/client';
 import * as path from 'path';
 import * as fs from 'fs';

@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Confetti from 'react-confetti';
 import SECHeader from '../SECHeader.jsx';
 import SECFooter from '../SECFooter.jsx';
 
 export default function SecIncentiveForm({ initialSecId = '' }) {
+  const router = useRouter();
   const [secPhone, setSecPhone] = useState('');
   const [dateOfSale, setDateOfSale] = useState('');
   const [storeId, setStoreId] = useState('');
@@ -219,6 +221,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const handleCloseSuccess = () => {
     setShowSuccessModal(false);
     setShowConfetti(false);
+    router.push('/SEC/passbook');
   };
 
   const handleCancelConfirm = () => {

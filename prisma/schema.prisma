@@ -239,7 +239,8 @@ model SEC {
 
   fullName    String?
   phone       String    @unique
-  email       String?   @unique
+  email       String?
+  kycInfo     Json?
   lastLoginAt DateTime?
   storeId   String?
   store     Store?    @relation(fields: [storeId], references: [id])
