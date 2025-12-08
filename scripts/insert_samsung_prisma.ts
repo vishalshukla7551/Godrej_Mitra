@@ -10,9 +10,9 @@
  */
 
 import { PrismaClient } from "@prisma/client";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx/xlsx.mjs";
+import * as fs from "fs";
 import path from "path";
-import fs from "fs";
 
 const prisma = new PrismaClient();
 
@@ -60,7 +60,10 @@ async function main() {
   }
 
   console.log('✅ Excel file found');
-  console.log('📖 Reading Excel file...\n');
+  console.log('📖 Reading Excel file...\\n');
+
+  // Configure XLSX to use Node fs implementation
+  XLSX.set_fs(fs);
 
   const workbook = XLSX.readFile(EXCEL_PATH);
   const sheetName = workbook.SheetNames[0];

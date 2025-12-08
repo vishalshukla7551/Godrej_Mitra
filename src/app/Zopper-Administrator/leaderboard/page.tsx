@@ -1,125 +1,75 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import { clientLogout } from '@/lib/clientLogout';
 
+type StoreLeaderboardItem = {
+  rank: number;
+  store: string;
+  city: string;
+  totalIncentive: string;
+  totalSales: number;
+};
+
 export default function LeaderboardPage() {
-  const leaderboardData = [
-    {
-      rank: 1,
-      rankChange: 1,
-      store: 'Croma- A189 -Noida-Gaur Mall',
-      city: 'Noida',
-      adld: 800,
-      combo: 5700,
-      total: 8500,
-      sales: 27,
-    },
-    {
-      rank: 2,
-      rankChange: 1,
-      store: 'Croma- A151 -Noida-Mall of India',
-      city: 'Noida',
-      adld: 800,
-      combo: 5700,
-      total: 6500,
-      sales: 27,
-    },
-    {
-      rank: 3,
-      rankChange: 1,
-      store: 'Croma- A092 -Chhehrauli Sambhaji Nagar-Prozone Mall',
-      city: 'Chhehrauli Sambhaji Nagar',
-      adld: 2100,
-      combo: 4200,
-      total: 6300,
-      sales: 33,
-    },
-    {
-      rank: 4,
-      rankChange: -1,
-      store: 'Croma- A041 -Mumbai-Oberoi Mall',
-      city: 'Mumbai',
-      adld: 1800,
-      combo: 4500,
-      total: 6300,
-      sales: 33,
-    },
-    {
-      rank: 5,
-      rankChange: 1,
-      store: 'VS- Pune(Chinchwad) Br',
-      city: 'Pune',
-      adld: 5500,
-      combo: 600,
-      total: 6200,
-      sales: 58,
-    },
-    {
-      rank: 6,
-      rankChange: -1,
-      store: 'Croma- A316 -Gurugram-Mall Fifty One',
-      city: 'Gurugram',
-      adld: 800,
-      combo: 5400,
-      total: 6200,
-      sales: 26,
-    },
-    {
-      rank: 7,
-      rankChange: 0,
-      store: 'VS- Panvel Br',
-      city: 'Thane',
-      adld: 4200,
-      combo: 1200,
-      total: 5400,
-      sales: 48,
-    },
-    {
-      rank: 8,
-      rankChange: 0,
-      store: 'Croma- A058 -Bangalore-Koramangala',
-      city: 'Bangalore',
-      adld: 3200,
-      combo: 2100,
-      total: 5300,
-      sales: 39,
-    },
-    {
-      rank: 9,
-      rankChange: 0,
-      store: 'Croma- A270 -Kolkata-Green Chinar',
-      city: 'Kolkata',
-      adld: 100,
-      combo: 4200,
-      total: 4300,
-      sales: 12,
-    },
-    {
-      rank: 10,
-      rankChange: 0,
-      store: 'Croma- A039 -Mumbai-Sion',
-      city: 'Mumbai',
-      adld: 3300,
-      combo: 900,
-      total: 4200,
-      sales: 36,
-    },
-  ];
+  const [leaderboardData, setLeaderboardData] = useState<StoreLeaderboardItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const getRankChangeIcon = (change: number) => {
-    if (change > 0) return '↑';
-    if (change < 0) return '↓';
-    return '—';
-  };
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      setLoading(true);
+      setError(null);
 
-  const getRankChangeColor = (change: number) => {
-    if (change > 0) return 'text-green-500';
-    if (change < 0) return 'text-red-500';
-    return 'text-gray-400';
+      try {
+        const res = await fetch('/api/zopper-administrator/leaderboard?period=month&limit=10');
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          throw new Error(data?.error || 'Failed to load leaderboard');
+        }
+
+        const json = await res.json();
+        const stores = (json?.data?.stores || []) as any[];
+
+        const mapped = stores.map((store: any) => ({
+          rank: store.rank ?? 0,
+          store: store.storeName ?? '—',
+          city: store.city || store.state || '—',
+          totalIncentive:
+            typeof store.totalIncentive === 'string'
+              ? store.totalIncentive
+              : `₹${(store.totalIncentive || 0).toLocaleString('en-IN')}`,
+          totalSales: store.totalSales ?? 0,
+        }));
+
+        setLeaderboardData(mapped);
+      } catch (err: any) {
+        setError(err?.message || 'Failed to load leaderboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+  }, []);
+
+  const topOne = leaderboardData[0];
+  const topTwo = leaderboardData[1];
+  const topThree = leaderboardData[2];
+  const podiumFallback = {
+    store: loading ? 'Loading...' : '—',
+    city: '',
+    totalIncentive: '—',
+    totalSales: 0,
   };
+  const first = topOne ?? podiumFallback;
+  const second = topTwo ?? podiumFallback;
+  const third = topThree ?? podiumFallback;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 px-6 py-6">
+    <div className="min-h-screen bg-linear-to-b from-gray-900 to-gray-800 px-6 py-6">
       {/* Header with buttons */}
       <div className="flex justify-between items-center mb-8">
         <a
@@ -248,10 +198,16 @@ export default function LeaderboardPage() {
         </p>
       </div>
 
+      {error && (
+        <div className="max-w-5xl mx-auto mb-6 rounded-xl border border-red-500/30 bg-red-500/10 text-red-100 px-4 py-3 text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Podium */}
       <div className="flex justify-center items-end gap-4 mb-8 max-w-5xl mx-auto">
         {/* Second Place */}
-        <div className="relative w-64 h-44 rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500 shadow-xl p-5 flex flex-col justify-between">
+        <div className="relative w-64 h-44 rounded-2xl bg-linear-to-br from-gray-400 to-gray-500 shadow-xl p-5 flex flex-col justify-between">
           <div className="flex justify-between items-start">
             <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
               <svg
@@ -273,10 +229,10 @@ export default function LeaderboardPage() {
           </div>
           <div>
             <p className="text-white text-xs font-semibold mb-0.5">
-              {leaderboardData[1].store}
+              {second.store}
             </p>
-            <p className="text-white/80 text-xs mb-2">{leaderboardData[1].city}</p>
-            <div className="text-white text-xl font-bold">₹{leaderboardData[1].total}</div>
+            <p className="text-white/80 text-xs mb-2">{second.city}</p>
+            <div className="text-white text-xl font-bold">{second.totalIncentive}</div>
           </div>
           <div className="absolute bottom-3 right-3 bg-white/20 rounded-lg px-2.5 py-0.5">
             <span className="text-white text-xs font-bold">#2</span>
@@ -284,7 +240,7 @@ export default function LeaderboardPage() {
         </div>
 
         {/* First Place - Champion */}
-        <div className="relative w-64 h-52 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-2xl p-5 flex flex-col justify-between">
+        <div className="relative w-64 h-52 rounded-2xl bg-linear-to-br from-yellow-400 to-yellow-600 shadow-2xl p-5 flex flex-col justify-between">
           {/* Crown icon */}
           <div className="absolute -top-8 left-1/2 -translate-x-1/2">
             <svg
@@ -323,10 +279,10 @@ export default function LeaderboardPage() {
           </div>
           <div>
             <p className="text-white text-xs font-semibold mb-0.5">
-              {leaderboardData[0].store}
+              {first.store}
             </p>
-            <p className="text-white/90 text-xs mb-2">{leaderboardData[0].city}</p>
-            <div className="text-white text-2xl font-bold">₹{leaderboardData[0].total}</div>
+            <p className="text-white/90 text-xs mb-2">{first.city}</p>
+            <div className="text-white text-2xl font-bold">{first.totalIncentive}</div>
           </div>
           <div className="absolute bottom-3 right-3 bg-white/30 rounded-lg px-3 py-1">
             <span className="text-white text-xs font-bold">CHAMPION</span>
@@ -334,7 +290,7 @@ export default function LeaderboardPage() {
         </div>
 
         {/* Third Place */}
-        <div className="relative w-64 h-40 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-xl p-5 flex flex-col justify-between">
+        <div className="relative w-64 h-40 rounded-2xl bg-linear-to-br from-orange-400 to-orange-600 shadow-xl p-5 flex flex-col justify-between">
           <div className="flex justify-between items-start">
             <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
               <svg
@@ -356,10 +312,10 @@ export default function LeaderboardPage() {
           </div>
           <div>
             <p className="text-white text-xs font-semibold mb-0.5">
-              {leaderboardData[2].store}
+              {third.store}
             </p>
-            <p className="text-white/80 text-xs mb-2">{leaderboardData[2].city}</p>
-            <div className="text-white text-xl font-bold">₹{leaderboardData[2].total}</div>
+            <p className="text-white/80 text-xs mb-2">{third.city}</p>
+            <div className="text-white text-xl font-bold">{third.totalIncentive}</div>
           </div>
           <div className="absolute bottom-3 right-3 bg-white/20 rounded-lg px-2.5 py-0.5">
             <span className="text-white text-xs font-bold">#3</span>
@@ -368,7 +324,7 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Start Your Journey Section */}
-      <div className="max-w-5xl mx-auto mb-6 rounded-2xl bg-gradient-to-r from-gray-800 to-gray-700 border border-gray-600 p-6">
+      <div className="max-w-5xl mx-auto mb-6 rounded-2xl bg-linear-to-r from-gray-800 to-gray-700 border border-gray-600 p-6">
         <div className="flex flex-col items-center gap-3">
           <div className="text-4xl">📊</div>
           <h2 className="text-white text-xl font-bold">Start Your Journey!</h2>
@@ -421,58 +377,60 @@ export default function LeaderboardPage() {
                     Store
                   </th>
                   <th className="text-right px-4 py-3 text-neutral-400 text-xs font-medium">
-                    ADLD
+                    Total Incentive
                   </th>
                   <th className="text-right px-4 py-3 text-neutral-400 text-xs font-medium">
-                    Combo
-                  </th>
-                  <th className="text-right px-4 py-3 text-neutral-400 text-xs font-medium">
-                    Total
+                    Total Sales
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {leaderboardData.map((item, index) => (
-                  <tr
-                    key={item.rank}
-                    className={`border-b border-gray-800 ${
-                      index < 3 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent' : ''
-                    }`}
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {item.rank <= 3 && (
-                          <span className="text-xl">
-                            {item.rank === 1 ? '👑' : item.rank === 2 ? '🥈' : '🥉'}
-                          </span>
-                        )}
-                        {item.rank > 3 && (
-                          <span className="text-white font-semibold text-sm">#{item.rank}</span>
-                        )}
-                        <span className={`text-xs ${getRankChangeColor(item.rankChange)}`}>
-                          {getRankChangeIcon(item.rankChange)}
-                          {item.rankChange !== 0 && Math.abs(item.rankChange)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <div className="text-white text-sm font-medium">{item.store}</div>
-                        <div className="text-neutral-400 text-xs">{item.city}</div>
-                      </div>
-                    </td>
-                    <td className="text-right px-4 py-3 text-white text-sm">₹{item.adld}</td>
-                    <td className="text-right px-4 py-3 text-white text-sm">₹{item.combo}</td>
-                    <td className="text-right px-4 py-3">
-                      <div>
-                        <div className="text-green-500 font-bold text-base">
-                          ₹{item.total}
-                        </div>
-                        <div className="text-neutral-400 text-xs">{item.sales} sales</div>
-                      </div>
+                {loading && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-4 text-center text-neutral-300 text-sm">
+                      Loading leaderboard...
                     </td>
                   </tr>
-                ))}
+                )}
+                {!loading && leaderboardData.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-4 text-center text-neutral-300 text-sm">
+                      {error ? 'Unable to load leaderboard.' : 'No sales reported yet.'}
+                    </td>
+                  </tr>
+                )}
+                {!loading &&
+                  leaderboardData.map((item, index) => (
+                    <tr
+                      key={item.rank}
+                      className={`border-b border-gray-800 ${
+                        index < 3 ? 'bg-linear-to-r from-yellow-500/10 to-transparent' : ''
+                      }`}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {item.rank <= 3 && (
+                            <span className="text-xl">
+                              {item.rank === 1 ? '👑' : item.rank === 2 ? '🥈' : '🥉'}
+                            </span>
+                          )}
+                          {item.rank > 3 && (
+                            <span className="text-white font-semibold text-sm">#{item.rank}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div>
+                          <div className="text-white text-sm font-medium">{item.store}</div>
+                          <div className="text-neutral-400 text-xs">{item.city}</div>
+                        </div>
+                      </td>
+                      <td className="text-right px-4 py-3 text-white text-sm">{item.totalIncentive}</td>
+                      <td className="text-right px-4 py-3 text-white text-sm">
+                        {item.totalSales} sale{item.totalSales === 1 ? '' : 's'}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
