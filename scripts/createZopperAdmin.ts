@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  const plainPassword = 'Give Your Data';
+  const plainPassword = 'Zopperad@7408';
   
   // Hash the password before storing
   const hashedPassword = await bcrypt.hash(plainPassword, 10);
@@ -12,7 +12,7 @@ async function main() {
   // 1) Create the User
   const user = await prisma.user.create({
     data: {
-      username: 'Give Your Password',
+      username: 'ZopperAdmin',
       password: hashedPassword,
       role: 'ZOPPER_ADMINISTRATOR',
       validation: 'APPROVED',

@@ -122,33 +122,21 @@ export async function POST(req: NextRequest) {
 
     // Check for active spot incentive campaign
     // Only give spot incentive if an active campaign exists
-    let activeCampaign = null;
-    try {
-      const now = new Date();
-      // Check for active campaign matching store, device, and plan
-      // Note: If no campaigns exist, this will return null (which is fine)
-      // Using optional chaining to handle cases where Prisma client hasn't been regenerated
-      activeCampaign = await (prisma as any).spotIncentiveCampaign?.findFirst({
-        where: {
-          storeId: store.id,
-          samsungSKUId: device.id,
-          planId: plan.id,
-          active: true,
-          startDate: { lte: now },
-          endDate: { gte: now },
-        },
-      }) || null;
-    } catch (error: any) {
-      // If campaign model doesn't exist or query fails, continue without spot incentive
-      // This handles cases where campaigns haven't been set up yet or there's a schema mismatch
-      // Also handles cases where Prisma client needs regeneration/restart
-      console.warn('Error checking for campaign (campaigns may not be set up yet):', error?.message || error);
-      activeCampaign = null;
-    }
+    const now = new Date();
+    const activeCampaign = await prisma.spotIncentiveCampaign.findFirst({
+      where: {
+        storeId: store.id,
+        samsungSKUId: device.id,
+        planId: plan.id,
+        active: true,
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+    });
 
     // Calculate spot incentive only if campaign exists
     let spotincentiveEarned = 0;
-    let campaignId: string | undefined = undefined;
+    const isCampaignActive = !!activeCampaign;
 
     if (activeCampaign) {
       if (activeCampaign.incentiveType === 'FIXED') {
@@ -156,17 +144,14 @@ export async function POST(req: NextRequest) {
       } else if (activeCampaign.incentiveType === 'PERCENTAGE') {
         spotincentiveEarned = Math.round(plan.price * (activeCampaign.incentiveValue / 100));
       }
-      campaignId = activeCampaign.id;
     }
-    // If no campaign, spotincentiveEarned remains 0
+    // If no campaign, spotincentiveEarned remains 0 and isCampaignActive is false
 
     // Get current month and year for SalesSummary
-    const currentDate = new Date();
-    const month = currentDate.getMonth() + 1; // 1-12
-    const year = currentDate.getFullYear();
+    const month = now.getMonth() + 1; // 1-12
+    const year = now.getFullYear();
 
-    // Create or update SalesSummary for this month/year
-    // First, find or create SalesSummary
+    // Find or create SalesSummary for this month/year
     let salesSummary = await prisma.salesSummary.findFirst({
       where: {
         secId: secUser.id,
@@ -177,19 +162,17 @@ export async function POST(req: NextRequest) {
 
     if (!salesSummary) {
       // Create new SalesSummary
-      // totalSamsungIncentiveEarned is optional - will be set at payment date
       salesSummary = await prisma.salesSummary.create({
         data: {
           secId: secUser.id,
           month,
           year,
           totalSpotIncentiveEarned: 0,
-          // totalSamsungIncentiveEarned will be set later at payment date
         },
       });
     }
 
-    // Create the sales report
+    // Create the sales report with isCampaignActive field
     const salesReport = await prisma.salesReport.create({
       data: {
         secId: secUser.id,
@@ -198,8 +181,9 @@ export async function POST(req: NextRequest) {
         planId: plan.id,
         imei,
         spotincentiveEarned,
-        salesSummaryId: salesSummary.id,
-        spotIncentiveCampaignId: campaignId || null,
+        isCompaignActive: isCampaignActive,
+        Date_of_sale: now,
+        salesSummaryid: salesSummary.id,
       },
       include: {
         secUser: {
@@ -238,23 +222,21 @@ export async function POST(req: NextRequest) {
     // Get all sales reports for this month/year to recalculate totals
     const monthReports = await prisma.salesReport.findMany({
       where: {
-        salesSummaryId: salesSummary.id,
+        salesSummaryid: salesSummary.id,
       },
     });
 
-    // Calculate total spot incentive (only from reports with campaigns)
+    // Calculate total spot incentive (from all reports in this month)
     const totalSpotIncentive = monthReports.reduce(
-      (sum, report) => sum + report.spotincentiveEarned,
+      (sum, report: any) => sum + (report.spotincentiveEarned || 0),
       0
     );
 
-    // Update SalesSummary with spot incentive total
-    // Note: totalSamsungIncentiveEarned is not set here - it will be decided at payment date
+    // Update SalesSummary with new totals
     await prisma.salesSummary.update({
       where: { id: salesSummary.id },
       data: {
         totalSpotIncentiveEarned: totalSpotIncentive,
-        // totalSamsungIncentiveEarned will be set later when payment is processed
       },
     });
 
@@ -265,11 +247,11 @@ export async function POST(req: NextRequest) {
           id: salesReport.id,
           imei: salesReport.imei,
           incentiveEarned: salesReport.spotincentiveEarned,
-          submittedAt: salesReport.submittedAt,
+          dateOfSale: salesReport.Date_of_sale,
+          isCampaignActive: salesReport.isCompaignActive,
           store: salesReport.store,
           device: salesReport.samsungSKU,
           plan: salesReport.plan,
-          hasCampaign: !!activeCampaign,
         },
       },
       { status: 201 }

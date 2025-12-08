@@ -67,10 +67,11 @@ export async function GET(req: NextRequest) {
     const campaignIds = activeCampaigns.map((c) => c.id);
 
     // Get sales reports for active campaigns within the period
-    const salesReports = await prisma.salesReport.findMany({
+    // Filter by isCompaignActive = true
+    const salesReports: any = await (prisma.salesReport as any).findMany({
       where: {
-        spotIncentiveCampaignId: { in: campaignIds },
-        submittedAt: { gte: startDate },
+        isCompaignActive: true,
+        Date_of_sale: { gte: startDate },
       },
       include: {
         store: {
@@ -126,7 +127,7 @@ export async function GET(req: NextRequest) {
       totalIncentive: number;
     }>();
 
-    salesReports.forEach((report) => {
+    salesReports.forEach((report: any) => {
       // Store aggregation
       const storeKey = report.storeId;
       if (storeMap.has(storeKey)) {

@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 
     // Get all sales reports for this SEC user
     // Note: Using SalesReport model from schema (spotIncentiveSalesReport in old code)
-    const salesReports = await prisma.salesReport.findMany({
+    const salesReports: any = await (prisma.salesReport as any).findMany({
       where: {
         secId: secUser.id,
       },
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
         },
       },
       orderBy: {
-        submittedAt: 'desc',
+        Date_of_sale: 'desc',
       },
     });
 
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
         salesReport: {
           select: {
             id: true,
-            submittedAt: true,
+            Date_of_sale: true,
           },
         },
       },
@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
     }>();
 
     salesReports.forEach((report: any) => {
-      const date = formatDate(report.submittedAt);
+      const date = formatDate(report.Date_of_sale);
       const planType = report.plan.planType;
       
       // Determine ADLD and Combo from planType
@@ -187,9 +187,9 @@ export async function GET(req: NextRequest) {
     });
 
     // Spot Incentive Transactions (from SalesReport)
-    // Only show reports that have spot incentive (i.e., had an active campaign)
+    // Only show reports that have active campaigns (isCompaignActive = true)
     const spotTransactions = salesReports
-      .filter((report: any) => report.spotincentiveEarned > 0)
+      .filter((report: any) => report.isCompaignActive === true && report.spotincentiveEarned > 0)
       .map((report: any) => {
         const planType = report.plan.planType;
         // Extract plan name from planType
@@ -199,7 +199,7 @@ export async function GET(req: NextRequest) {
         }
 
         return {
-          date: formatDate(report.submittedAt),
+          date: formatDate(report.Date_of_sale || report.submittedAt),
           deviceName: report.samsungSKU.ModelName || report.samsungSKU.Category,
           planName: planName,
           incentive: `₹${report.spotincentiveEarned.toLocaleString('en-IN')}`,
@@ -256,7 +256,7 @@ export async function GET(req: NextRequest) {
 
       fySummaries.forEach((summary: any) => {
         totalUnits += summary.salesReport.length;
-        // Only add to totalEarned if totalSamsungIncentiveEarned is set (not null/undefined)
+        // Add totalSamsungIncentiveEarned if set
         if (summary.totalSamsungIncentiveEarned != null) {
           totalEarned += summary.totalSamsungIncentiveEarned;
           if (summary.samsungincentivepaidAt) {
@@ -271,7 +271,7 @@ export async function GET(req: NextRequest) {
       const fyEnd = new Date(year + 1, 2, 31); // March 31
       
       const fySpotReports = salesReports.filter((report: any) => {
-        const reportDate = new Date(report.submittedAt);
+        const reportDate = new Date(report.Date_of_sale || report.createdAt);
         return reportDate >= fyStart && reportDate <= fyEnd && report.spotincentiveEarned > 0;
       });
 
