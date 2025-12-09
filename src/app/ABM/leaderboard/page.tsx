@@ -1,121 +1,45 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { clientLogout } from '@/lib/clientLogout';
 
-export default function LeaderboardPage() {
-  const leaderboardData = [
-    {
-      rank: 1,
-      rankChange: 1,
-      store: 'Croma- A189 -Noida-Gaur Mall',
-      city: 'Noida',
-      adld: 800,
-      combo: 5700,
-      total: 8500,
-      sales: 27,
-    },
-    {
-      rank: 2,
-      rankChange: 1,
-      store: 'Croma- A151 -Noida-Mall of India',
-      city: 'Noida',
-      adld: 800,
-      combo: 5700,
-      total: 6500,
-      sales: 27,
-    },
-    {
-      rank: 3,
-      rankChange: 1,
-      store: 'Croma- A092 -Chhehrauli Sambhaji Nagar-Prozone Mall',
-      city: 'Chhehrauli Sambhaji Nagar',
-      adld: 2100,
-      combo: 4200,
-      total: 6300,
-      sales: 33,
-    },
-    {
-      rank: 4,
-      rankChange: -1,
-      store: 'Croma- A041 -Mumbai-Oberoi Mall',
-      city: 'Mumbai',
-      adld: 1800,
-      combo: 4500,
-      total: 6300,
-      sales: 33,
-    },
-    {
-      rank: 5,
-      rankChange: 1,
-      store: 'VS- Pune(Chinchwad) Br',
-      city: 'Pune',
-      adld: 5500,
-      combo: 600,
-      total: 6200,
-      sales: 58,
-    },
-    {
-      rank: 6,
-      rankChange: -1,
-      store: 'Croma- A316 -Gurugram-Mall Fifty One',
-      city: 'Gurugram',
-      adld: 800,
-      combo: 5400,
-      total: 6200,
-      sales: 26,
-    },
-    {
-      rank: 7,
-      rankChange: 0,
-      store: 'VS- Panvel Br',
-      city: 'Thane',
-      adld: 4200,
-      combo: 1200,
-      total: 5400,
-      sales: 48,
-    },
-    {
-      rank: 8,
-      rankChange: 0,
-      store: 'Croma- A058 -Bangalore-Koramangala',
-      city: 'Bangalore',
-      adld: 3200,
-      combo: 2100,
-      total: 5300,
-      sales: 39,
-    },
-    {
-      rank: 9,
-      rankChange: 0,
-      store: 'Croma- A270 -Kolkata-Green Chinar',
-      city: 'Kolkata',
-      adld: 100,
-      combo: 4200,
-      total: 4300,
-      sales: 12,
-    },
-    {
-      rank: 10,
-      rankChange: 0,
-      store: 'Croma- A039 -Mumbai-Sion',
-      city: 'Mumbai',
-      adld: 3300,
-      combo: 900,
-      total: 4200,
-      sales: 36,
-    },
-  ];
+interface LeaderboardItem {
+  rank: number;
+  storeId: string;
+  storeName: string;
+  city: string | null;
+  state: string | null;
+  totalSales: number;
+  totalIncentive: string;
+}
 
-  const getRankChangeIcon = (change: number) => {
-    if (change > 0) return '↑';
-    if (change < 0) return '↓';
-    return '↓';
+export default function LeaderboardPage() {
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState('month');
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [period]);
+
+  const fetchLeaderboard = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/abm/leaderboard?period=${period}&limit=10`);
+      const result = await response.json();
+
+      if (result.success) {
+        setLeaderboardData(result.data.stores);
+      }
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getRankChangeColor = (change: number) => {
-    if (change > 0) return 'text-green-500';
-    if (change < 0) return 'text-red-500';
-    return 'text-red-500';
+  const parseIncentive = (incentiveStr: string): number => {
+    return parseInt(incentiveStr.replace(/[₹,]/g, '')) || 0;
   };
 
   return (
@@ -250,121 +174,133 @@ export default function LeaderboardPage() {
 
       {/* Podium */}
       <div className="flex justify-center items-end gap-4 mb-8 max-w-5xl mx-auto">
-        {/* Second Place */}
-        <div className="relative w-64 h-44 rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500 shadow-xl p-5 flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M8 6H5C4.46957 6 3.96086 6.21071 3.58579 6.58579C3.21071 6.96086 3 7.46957 3 8C3 8.53043 3.21071 9.03914 3.58579 9.41421C3.96086 9.78929 4.46957 10 5 10H8M16 6H19C19.5304 6 20.0391 6.21071 20.4142 6.58579C20.7893 6.96086 21 7.46957 21 8C21 8.53043 20.7893 9.03914 20.4142 9.41421C20.0391 9.78929 19.5304 10 19 10H16M5 21H19M9.5 13V15C9.5 15.2652 9.39464 15.5196 9.20711 15.7071C9.01957 15.8946 8.76522 16 8.5 16C7.7 16 6.5 16.6667 6 17.5C5.625 18.125 5.5 18.9167 5.5 20M14.5 13V15C14.5 15.2652 14.6054 15.5196 14.7929 15.7071C14.9804 15.8946 15.2348 16 15.5 16C16.3 16 17.5 16.6667 18 17.5C18.375 18.125 18.5 18.9167 18.5 20M16 3H8V10C8 11.0609 8.42143 12.0783 9.17157 12.8284C9.92172 13.5786 10.9391 14 12 14C13.0609 14 14.0783 13.5786 14.8284 12.8284C15.5786 12.0783 16 11.0609 16 10V3Z"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+        {loading ? (
+          <div className="text-center text-white py-12 w-full">Loading leaderboard...</div>
+        ) : leaderboardData.length >= 3 ? (
+          <>
+          {/* Second Place */}
+          <div className="relative w-64 h-44 rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500 shadow-xl p-5 flex flex-col justify-between">
+            <div className="flex justify-between items-start">
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 6H5C4.46957 6 3.96086 6.21071 3.58579 6.58579C3.21071 6.96086 3 7.46957 3 8C3 8.53043 3.21071 9.03914 3.58579 9.41421C3.96086 9.78929 4.46957 10 5 10H8M16 6H19C19.5304 6 20.0391 6.21071 20.4142 6.58579C20.7893 6.96086 21 7.46957 21 8C21 8.53043 20.7893 9.03914 20.4142 9.41421C20.0391 9.78929 19.5304 10 19 10H16M5 21H19M9.5 13V15C9.5 15.2652 9.39464 15.5196 9.20711 15.7071C9.01957 15.8946 8.76522 16 8.5 16C7.7 16 6.5 16.6667 6 17.5C5.625 18.125 5.5 18.9167 5.5 20M14.5 13V15C14.5 15.2652 14.6054 15.5196 14.7929 15.7071C14.9804 15.8946 15.2348 16 15.5 16C16.3 16 17.5 16.6667 18 17.5C18.375 18.125 18.5 18.9167 18.5 20M16 3H8V10C8 11.0609 8.42143 12.0783 9.17157 12.8284C9.92172 13.5786 10.9391 14 12 14C13.0609 14 14.0783 13.5786 14.8284 12.8284C15.5786 12.0783 16 11.0609 16 10V3Z"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <p className="text-white text-xs font-semibold mb-0.5">
+                {leaderboardData[1].storeName}
+              </p>
+              <p className="text-white/80 text-xs mb-2">{leaderboardData[1].city || 'N/A'}</p>
+              <div className="text-white text-xl font-bold">{leaderboardData[1].totalIncentive}</div>
+            </div>
+            <div className="absolute bottom-3 right-3 bg-white/20 rounded-lg px-2.5 py-0.5">
+              <span className="text-white text-xs font-bold">#2</span>
             </div>
           </div>
-          <div>
-            <p className="text-white text-xs font-semibold mb-0.5">
-              {leaderboardData[1].store}
-            </p>
-            <p className="text-white/80 text-xs mb-2">{leaderboardData[1].city}</p>
-            <div className="text-white text-xl font-bold">₹{leaderboardData[1].total}</div>
-          </div>
-          <div className="absolute bottom-3 right-3 bg-white/20 rounded-lg px-2.5 py-0.5">
-            <span className="text-white text-xs font-bold">#2</span>
-          </div>
-        </div>
 
-        {/* First Place - Champion */}
-        <div className="relative w-64 h-52 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-2xl p-5 flex flex-col justify-between">
-          {/* Crown icon */}
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2">
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 48 48"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M24 8L28 18L38 20L31 27L33 38L24 33L15 38L17 27L10 20L20 18L24 8Z"
-                fill="#FFD700"
-                stroke="#FFA500"
-                strokeWidth="2"
-              />
-            </svg>
-          </div>
-          <div className="flex justify-between items-start">
-            <div className="w-12 h-12 rounded-xl bg-white/30 flex items-center justify-center">
+          {/* First Place - Champion */}
+          <div className="relative w-64 h-52 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-2xl p-5 flex flex-col justify-between">
+            {/* Crown icon */}
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2">
               <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
+                width="48"
+                height="48"
+                viewBox="0 0 48 48"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  d="M8 6H5C4.46957 6 3.96086 6.21071 3.58579 6.58579C3.21071 6.96086 3 7.46957 3 8C3 8.53043 3.21071 9.03914 3.58579 9.41421C3.96086 9.78929 4.46957 10 5 10H8M16 6H19C19.5304 6 20.0391 6.21071 20.4142 6.58579C20.7893 6.96086 21 7.46957 21 8C21 8.53043 20.7893 9.03914 20.4142 9.41421C20.0391 9.78929 19.5304 10 19 10H16M5 21H19M9.5 13V15C9.5 15.2652 9.39464 15.5196 9.20711 15.7071C9.01957 15.8946 8.76522 16 8.5 16C7.7 16 6.5 16.6667 6 17.5C5.625 18.125 5.5 18.9167 5.5 20M14.5 13V15C14.5 15.2652 14.6054 15.5196 14.7929 15.7071C14.9804 15.8946 15.2348 16 15.5 16C16.3 16 17.5 16.6667 18 17.5C18.375 18.125 18.5 18.9167 18.5 20M16 3H8V10C8 11.0609 8.42143 12.0783 9.17157 12.8284C9.92172 13.5786 10.9391 14 12 14C13.0609 14 14.0783 13.5786 14.8284 12.8284C15.5786 12.0783 16 11.0609 16 10V3Z"
-                  stroke="white"
+                  d="M24 8L28 18L38 20L31 27L33 38L24 33L15 38L17 27L10 20L20 18L24 8Z"
+                  fill="#FFD700"
+                  stroke="#FFA500"
                   strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
                 />
               </svg>
             </div>
+            <div className="flex justify-between items-start">
+              <div className="w-12 h-12 rounded-xl bg-white/30 flex items-center justify-center">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 6H5C4.46957 6 3.96086 6.21071 3.58579 6.58579C3.21071 6.96086 3 7.46957 3 8C3 8.53043 3.21071 9.03914 3.58579 9.41421C3.96086 9.78929 4.46957 10 5 10H8M16 6H19C19.5304 6 20.0391 6.21071 20.4142 6.58579C20.7893 6.96086 21 7.46957 21 8C21 8.53043 20.7893 9.03914 20.4142 9.41421C20.0391 9.78929 19.5304 10 19 10H16M5 21H19M9.5 13V15C9.5 15.2652 9.39464 15.5196 9.20711 15.7071C9.01957 15.8946 8.76522 16 8.5 16C7.7 16 6.5 16.6667 6 17.5C5.625 18.125 5.5 18.9167 5.5 20M14.5 13V15C14.5 15.2652 14.6054 15.5196 14.7929 15.7071C14.9804 15.8946 15.2348 16 15.5 16C16.3 16 17.5 16.6667 18 17.5C18.375 18.125 18.5 18.9167 18.5 20M16 3H8V10C8 11.0609 8.42143 12.0783 9.17157 12.8284C9.92172 13.5786 10.9391 14 12 14C13.0609 14 14.0783 13.5786 14.8284 12.8284C15.5786 12.0783 16 11.0609 16 10V3Z"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <p className="text-white text-xs font-semibold mb-0.5">
+                {leaderboardData[0].storeName}
+              </p>
+              <p className="text-white/90 text-xs mb-2">{leaderboardData[0].city || 'N/A'}</p>
+              <div className="text-white text-2xl font-bold">{leaderboardData[0].totalIncentive}</div>
+            </div>
+            <div className="absolute bottom-3 right-3 bg-white/30 rounded-lg px-3 py-1">
+              <span className="text-white text-xs font-bold">CHAMPION</span>
+            </div>
           </div>
-          <div>
-            <p className="text-white text-xs font-semibold mb-0.5">
-              {leaderboardData[0].store}
-            </p>
-            <p className="text-white/90 text-xs mb-2">{leaderboardData[0].city}</p>
-            <div className="text-white text-2xl font-bold">₹{leaderboardData[0].total}</div>
-          </div>
-          <div className="absolute bottom-3 right-3 bg-white/30 rounded-lg px-3 py-1">
-            <span className="text-white text-xs font-bold">CHAMPION</span>
-          </div>
-        </div>
 
-        {/* Third Place */}
-        <div className="relative w-64 h-40 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-xl p-5 flex flex-col justify-between">
-          <div className="flex justify-between items-start">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M8 6H5C4.46957 6 3.96086 6.21071 3.58579 6.58579C3.21071 6.96086 3 7.46957 3 8C3 8.53043 3.21071 9.03914 3.58579 9.41421C3.96086 9.78929 4.46957 10 5 10H8M16 6H19C19.5304 6 20.0391 6.21071 20.4142 6.58579C20.7893 6.96086 21 7.46957 21 8C21 8.53043 20.7893 9.03914 20.4142 9.41421C20.0391 9.78929 19.5304 10 19 10H16M5 21H19M9.5 13V15C9.5 15.2652 9.39464 15.5196 9.20711 15.7071C9.01957 15.8946 8.76522 16 8.5 16C7.7 16 6.5 16.6667 6 17.5C5.625 18.125 5.5 18.9167 5.5 20M14.5 13V15C14.5 15.2652 14.6054 15.5196 14.7929 15.7071C14.9804 15.8946 15.2348 16 15.5 16C16.3 16 17.5 16.6667 18 17.5C18.375 18.125 18.5 18.9167 18.5 20M16 3H8V10C8 11.0609 8.42143 12.0783 9.17157 12.8284C9.92172 13.5786 10.9391 14 12 14C13.0609 14 14.0783 13.5786 14.8284 12.8284C15.5786 12.0783 16 11.0609 16 10V3Z"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+          {/* Third Place */}
+          <div className="relative w-64 h-40 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-xl p-5 flex flex-col justify-between">
+            <div className="flex justify-between items-start">
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 6H5C4.46957 6 3.96086 6.21071 3.58579 6.58579C3.21071 6.96086 3 7.46957 3 8C3 8.53043 3.21071 9.03914 3.58579 9.41421C3.96086 9.78929 4.46957 10 5 10H8M16 6H19C19.5304 6 20.0391 6.21071 20.4142 6.58579C20.7893 6.96086 21 7.46957 21 8C21 8.53043 20.7893 9.03914 20.4142 9.41421C20.0391 9.78929 19.5304 10 19 10H16M5 21H19M9.5 13V15C9.5 15.2652 9.39464 15.5196 9.20711 15.7071C9.01957 15.8946 8.76522 16 8.5 16C7.7 16 6.5 16.6667 6 17.5C5.625 18.125 5.5 18.9167 5.5 20M14.5 13V15C14.5 15.2652 14.6054 15.5196 14.7929 15.7071C14.9804 15.8946 15.2348 16 15.5 16C16.3 16 17.5 16.6667 18 17.5C18.375 18.125 18.5 18.9167 18.5 20M16 3H8V10C8 11.0609 8.42143 12.0783 9.17157 12.8284C9.92172 13.5786 10.9391 14 12 14C13.0609 14 14.0783 13.5786 14.8284 12.8284C15.5786 12.0783 16 11.0609 16 10V3Z"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <p className="text-white text-xs font-semibold mb-0.5">
+                {leaderboardData[2].storeName}
+              </p>
+              <p className="text-white/80 text-xs mb-2">{leaderboardData[2].city || 'N/A'}</p>
+              <div className="text-white text-xl font-bold">{leaderboardData[2].totalIncentive}</div>
+            </div>
+            <div className="absolute bottom-3 right-3 bg-white/20 rounded-lg px-2.5 py-0.5">
+              <span className="text-white text-xs font-bold">#3</span>
             </div>
           </div>
-          <div>
-            <p className="text-white text-xs font-semibold mb-0.5">
-              {leaderboardData[2].store}
-            </p>
-            <p className="text-white/80 text-xs mb-2">{leaderboardData[2].city}</p>
-            <div className="text-white text-xl font-bold">₹{leaderboardData[2].total}</div>
+          </>
+        ) : (
+          <div className="text-center text-white py-12 w-full">
+            <div className="text-5xl mb-4">🏆</div>
+            <h3 className="text-xl font-bold mb-2">No Rankings Yet</h3>
+            <p className="text-neutral-400 text-sm">Start making sales to appear on the leaderboard!</p>
           </div>
-          <div className="absolute bottom-3 right-3 bg-white/20 rounded-lg px-2.5 py-0.5">
-            <span className="text-white text-xs font-bold">#3</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Start Your Journey Section */}
@@ -427,52 +363,62 @@ export default function LeaderboardPage() {
                     Combo
                   </th>
                   <th className="text-right px-4 py-3 text-neutral-400 text-xs font-medium">
-                    Total
+                    Total Incentive
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {leaderboardData.map((item, index) => (
-                  <tr
-                    key={item.rank}
-                    className={`border-b border-gray-800 ${
-                      index < 3 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent' : ''
-                    }`}
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {item.rank <= 3 && (
-                          <span className="text-xl">
-                            {item.rank === 1 ? '👑' : item.rank === 2 ? '🥈' : '🥉'}
-                          </span>
-                        )}
-                        {item.rank > 3 && (
-                          <span className="text-white font-semibold text-sm">#{item.rank}</span>
-                        )}
-                        <span className={`text-xs ${getRankChangeColor(item.rankChange)}`}>
-                          {getRankChangeIcon(item.rankChange)}
-                          {item.rankChange !== 0 && Math.abs(item.rankChange)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <div className="text-white text-sm font-medium">{item.store}</div>
-                        <div className="text-neutral-400 text-xs">{item.city}</div>
-                      </div>
-                    </td>
-                    <td className="text-right px-4 py-3 text-white text-sm">₹{item.adld}</td>
-                    <td className="text-right px-4 py-3 text-white text-sm">₹{item.combo}</td>
-                    <td className="text-right px-4 py-3">
-                      <div>
-                        <div className="text-green-500 font-bold text-base">
-                          ₹{item.total}
-                        </div>
-                        <div className="text-neutral-400 text-xs">{item.sales} sales</div>
-                      </div>
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="text-center text-white py-8">
+                      Loading...
                     </td>
                   </tr>
-                ))}
+                ) : leaderboardData.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center text-neutral-400 py-8">
+                      No data available
+                    </td>
+                  </tr>
+                ) : (
+                  leaderboardData.map((item, index) => (
+                    <tr
+                      key={item.storeId}
+                      className={`border-b border-gray-800 ${
+                        index < 3 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent' : ''
+                      }`}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {item.rank <= 3 && (
+                            <span className="text-xl">
+                              {item.rank === 1 ? '👑' : item.rank === 2 ? '🥈' : '🥉'}
+                            </span>
+                          )}
+                          {item.rank > 3 && (
+                            <span className="text-white font-semibold text-sm">#{item.rank}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div>
+                          <div className="text-white text-sm font-medium">{item.storeName}</div>
+                          <div className="text-neutral-400 text-xs">{item.city || 'N/A'}</div>
+                        </div>
+                      </td>
+                      <td className="text-right px-4 py-3 text-white text-sm">-</td>
+                      <td className="text-right px-4 py-3 text-white text-sm">-</td>
+                      <td className="text-right px-4 py-3">
+                        <div>
+                          <div className="text-green-500 font-bold text-base">
+                            {item.totalIncentive}
+                          </div>
+                          <div className="text-neutral-400 text-xs">{item.totalSales} sales</div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

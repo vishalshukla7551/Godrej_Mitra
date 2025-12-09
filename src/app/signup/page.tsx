@@ -95,11 +95,56 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Basic field validation
+    if (!formData.fullName.trim()) {
+      alert('Please enter your full name');
+      return;
+    }
+
+    if (!formData.phoneNumber.trim()) {
+      alert('Please enter your phone number');
+      return;
+    }
+
+    // Phone number validation (10 digits)
+    if (!/^\d{10}$/.test(formData.phoneNumber.trim())) {
+      alert('Please enter a valid 10-digit phone number');
+      return;
+    }
+
+    if (!formData.role) {
+      alert('Please select a role');
+      return;
+    }
+
+    // Role-specific validation for ABM and ASE
+    if (formData.role === 'ABM' || formData.role === 'ASE') {
+      if (formData.storeIds.length === 0) {
+        alert('Please select at least one store');
+        return;
+      }
+
+      if (!formData.managerId) {
+        alert(`Please select a ${formData.role === 'ABM' ? 'ZBM' : 'ZSM'}`);
+        return;
+      }
+    }
+
+    if (!formData.username.trim()) {
+      alert('Please enter a username');
+      return;
+    }
+
     // Username validation
     if (!isUsernameLongEnough || !hasUsernameLetter || !hasUsernameNumber) {
       alert(
         'Username must be at least 4 characters long, contain at least one letter, and contain at least one number.'
       );
+      return;
+    }
+
+    if (!formData.password) {
+      alert('Please enter a password');
       return;
     }
 
@@ -160,6 +205,28 @@ export default function SignUpPage() {
   const hasPasswordUppercase = /[A-Z]/.test(password);
   const hasPasswordLetter = /[A-Za-z]/.test(password);
   const hasPasswordSpecial = /[^A-Za-z0-9]/.test(password);
+
+  // Check if all required fields are filled
+  const isFormValid = () => {
+    const basicFieldsFilled = 
+      formData.fullName.trim() !== '' &&
+      formData.phoneNumber.trim() !== '' &&
+      /^\d{10}$/.test(formData.phoneNumber.trim()) &&
+      formData.role !== '' &&
+      formData.username.trim() !== '' &&
+      formData.password !== '';
+
+    const usernameValid = isUsernameLongEnough && hasUsernameLetter && hasUsernameNumber;
+    const passwordValid = isPasswordLongEnough && hasPasswordUppercase && hasPasswordLetter && hasPasswordSpecial;
+
+    // Role-specific validation
+    let roleSpecificValid = true;
+    if (formData.role === 'ABM' || formData.role === 'ASE') {
+      roleSpecificValid = formData.storeIds.length > 0 && formData.managerId !== '';
+    }
+
+    return basicFieldsFilled && usernameValid && passwordValid && roleSpecificValid;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -584,10 +651,20 @@ export default function SignUpPage() {
           {/* Create Account Button */}
           <button
             type="submit"
-            className="w-full bg-gray-900 text-white font-semibold py-4 rounded-lg hover:bg-gray-800 transition-colors text-lg"
+            disabled={!isFormValid()}
+            className={`w-full font-semibold py-4 rounded-lg transition-colors text-lg ${
+              isFormValid()
+                ? 'bg-gray-900 text-white hover:bg-gray-800 cursor-pointer'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
             Create Account
           </button>
+          {!isFormValid() && (
+            <p className="text-xs text-red-600 text-center -mt-4">
+              Please fill all required fields correctly to continue
+            </p>
+          )}
         </form>
 
         {/* Already have an account */}

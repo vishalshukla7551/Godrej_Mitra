@@ -105,7 +105,6 @@ export default function MonthlyIncentiveReport() {
 
   const [validationFilter, setValidationFilter] = useState<'all' | 'not_validated' | 'validated' | 'discarded'>('all');
   const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
   const pageSize = 50;
   
@@ -145,14 +144,14 @@ export default function MonthlyIncentiveReport() {
         ...(planFilter && { planFilter }),
 
         ...(validationFilter !== 'all' && { validationFilter }),
-        ...(startDate && { startDate }),
-        ...(endDate && { endDate })
+        ...(startDate && { startDate })
       });
 
       const response = await fetch(`/api/zopper-admin/monthly-incentive-report?${params}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch data');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.details || errorData.error || `Failed to fetch data (${response.status})`);
       }
 
       const result: ApiResponse = await response.json();
@@ -176,14 +175,14 @@ export default function MonthlyIncentiveReport() {
   // Fetch data on component mount and when filters change
   useEffect(() => {
     fetchData();
-  }, [page, query, storeFilter, planFilter, validationFilter, startDate, endDate]);
+  }, [page, query, storeFilter, planFilter, validationFilter, startDate]);
 
   // Reset page when filters change
   useEffect(() => {
     if (page !== 1) {
       setPage(1);
     }
-  }, [query, storeFilter, planFilter, validationFilter, startDate, endDate]);
+  }, [query, storeFilter, planFilter, validationFilter, startDate]);
 
   // Handle validation actions
   const handleValidationAction = async (reportId: string, action: 'validate' | 'discard') => {
@@ -289,15 +288,7 @@ export default function MonthlyIncentiveReport() {
             className="px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            placeholder="Start Date"
-          />
-
-          <input
-            type="date"
-            className="px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            placeholder="End Date"
+            placeholder="Filter by Date"
           />
 
           <select

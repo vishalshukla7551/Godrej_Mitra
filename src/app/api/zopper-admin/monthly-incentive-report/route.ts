@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
       where.store = {
         name: {
           contains: storeFilter,
-          mode: 'insensitive'
+          mode: 'insensitive' as any
         }
       };
     }
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
           store: {
             name: {
               contains: query,
-              mode: 'insensitive'
+              mode: 'insensitive' as any
             }
           }
         },
@@ -257,8 +257,15 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error in GET /api/zopper-admin/monthly-incentive-report', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

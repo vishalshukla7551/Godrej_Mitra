@@ -6,9 +6,10 @@
     "dev": "next dev",
     "dev:clean": "pkill -9 -f 'next dev' || true && rm -rf .next/dev/lock && next dev",
     "clean": "pkill -9 -f 'next dev' || true && rm -rf .next/dev/lock",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

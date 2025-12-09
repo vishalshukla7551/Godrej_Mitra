@@ -273,7 +273,7 @@ export default function ZopperUserValidationPage() {
           const res = await fetch(`/api/zopper-administrator/user-validate/ase/${editingUser.roleProfileId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ storeIds: editStoreIds, zseId: editManagerId || undefined }),
+            body: JSON.stringify({ storeIds: editStoreIds, zsmId: editManagerId || undefined }),
           });
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
@@ -305,10 +305,6 @@ export default function ZopperUserValidationPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">User Validation</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage SalesDost ABM / ASE / ZBM / ZSM users. Pending and approved users are
-            separated into tabs. Blocking a user will delete them using the delete API.
-          </p>
         </div>
         <div className="flex gap-2">
           <button

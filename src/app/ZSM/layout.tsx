@@ -99,6 +99,42 @@ export default function ZSMLayout({
               </span>
             </Link>
 
+            {/* Report */}
+            <Link
+              href="/ZSM/report"
+              className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
+                isActive('/ZSM/report')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
+              }`}
+            >
+              <svg
+                width="21"
+                height="19"
+                viewBox="0 0 21 19"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="shrink-0"
+              >
+                <path
+                  d="M13.125 1.58325H7.875C7.39175 1.58325 7 1.93769 7 2.37492V3.95825C7 4.39548 7.39175 4.74992 7.875 4.74992H13.125C13.6082 4.74992 14 4.39548 14 3.95825V2.37492C14 1.93769 13.6082 1.58325 13.125 1.58325Z"
+                  stroke="white"
+                  strokeWidth="1.875"
+                />
+                <path
+                  d="M14 3.16675H15.75C16.2141 3.16675 16.6592 3.33356 16.9874 3.6305C17.3156 3.92743 17.5 4.33016 17.5 4.75008V15.8334C17.5 16.2533 17.3156 16.6561 16.9874 16.953C16.6592 17.2499 16.2141 17.4167 15.75 17.4167H5.25C4.78587 17.4167 4.34075 17.2499 4.01256 16.953C3.68437 16.6561 3.5 16.2533 3.5 15.8334V4.75008C3.5 4.33016 3.68437 3.92743 4.01256 3.6305C4.34075 3.33356 4.78587 3.16675 5.25 3.16675H7"
+                  stroke="white"
+                  strokeWidth="1.875"
+                />
+                <path d="M10.5 8.70825H14" stroke="white" strokeWidth="1.875" />
+                <path d="M10.5 12.6667H14" stroke="white" strokeWidth="1.875" />
+                <path d="M7 8.70825H7.00875" stroke="white" strokeWidth="1.875" />
+                <path d="M7 12.6667H7.00875" stroke="white" strokeWidth="1.875" />
+              </svg>
+
+              <span className="text-sm leading-normal">Report</span>
+            </Link>
+
             {/* View Leaderboard */}
             <Link
               href="/ZSM/leaderboard"
@@ -193,42 +229,6 @@ export default function ZSMLayout({
               </svg>
 
               <span className="text-sm leading-normal">Profile</span>
-            </Link>
-
-            {/* Report */}
-            <Link
-              href="/ZSM/report"
-              className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
-                isActive('/ZSM/report')
-                  ? 'bg-blue-600 text-white font-semibold'
-                  : 'text-white hover:bg-white/5'
-              }`}
-            >
-              <svg
-                width="21"
-                height="19"
-                viewBox="0 0 21 19"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="shrink-0"
-              >
-                <path
-                  d="M13.125 1.58325H7.875C7.39175 1.58325 7 1.93769 7 2.37492V3.95825C7 4.39548 7.39175 4.74992 7.875 4.74992H13.125C13.6082 4.74992 14 4.39548 14 3.95825V2.37492C14 1.93769 13.6082 1.58325 13.125 1.58325Z"
-                  stroke="white"
-                  strokeWidth="1.875"
-                />
-                <path
-                  d="M14 3.16675H15.75C16.2141 3.16675 16.6592 3.33356 16.9874 3.6305C17.3156 3.92743 17.5 4.33016 17.5 4.75008V15.8334C17.5 16.2533 17.3156 16.6561 16.9874 16.953C16.6592 17.2499 16.2141 17.4167 15.75 17.4167H5.25C4.78587 17.4167 4.34075 17.2499 4.01256 16.953C3.68437 16.6561 3.5 16.2533 3.5 15.8334V4.75008C3.5 4.33016 3.68437 3.92743 4.01256 3.6305C4.34075 3.33356 4.78587 3.16675 5.25 3.16675H7"
-                  stroke="white"
-                  strokeWidth="1.875"
-                />
-                <path d="M10.5 8.70825H14" stroke="white" strokeWidth="1.875" />
-                <path d="M10.5 12.6667H14" stroke="white" strokeWidth="1.875" />
-                <path d="M7 8.70825H7.00875" stroke="white" strokeWidth="1.875" />
-                <path d="M7 12.6667H7.00875" stroke="white" strokeWidth="1.875" />
-              </svg>
-
-              <span className="text-sm leading-normal">Report</span>
             </Link>
           </div>
         </nav>
