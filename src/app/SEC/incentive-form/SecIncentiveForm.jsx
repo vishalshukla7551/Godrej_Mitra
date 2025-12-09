@@ -11,7 +11,6 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const [secPhone, setSecPhone] = useState('');
   const [dateOfSale, setDateOfSale] = useState('');
   const [storeId, setStoreId] = useState('');
-  const [storeFixedFromProfile, setStoreFixedFromProfile] = useState(false);
   const [deviceId, setDeviceId] = useState('');
   const [planId, setPlanId] = useState('');
   const [imeiNumber, setImeiNumber] = useState('');
@@ -35,7 +34,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const [loadingDevices, setLoadingDevices] = useState(true);
   const [loadingPlans, setLoadingPlans] = useState(false);
 
-  // Load SEC phone and fixed store (if any) from authUser in localStorage on mount
+  // Load SEC phone and store from authUser in localStorage on mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -47,7 +46,8 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
       const auth = JSON.parse(raw);
       const phoneFromAuth = auth?.phone;
-      const storeFromAuth = auth?.selectedStoreId;
+      const storeFromAuth = auth?.storeId || auth?.selectedStoreId;
+      const storeDetails = auth?.store;
 
       if (phoneFromAuth) {
         setSecPhone(phoneFromAuth);
@@ -58,30 +58,16 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
       if (storeFromAuth) {
         setStoreId(storeFromAuth);
-        setStoreFixedFromProfile(true);
+        // Store the store details for display
+        if (storeDetails) {
+          setStores([storeDetails]);
+        }
       }
     } catch {
       // ignore parse errors but show alert so SEC can re-login
       setShowSecAlert(true);
     }
-  }, []);
-
-  // Fetch stores on mount
-  useEffect(() => {
-    async function fetchStores() {
-      try {
-        const res = await fetch('/api/sec/incentive-form/stores');
-        if (res.ok) {
-          const data = await res.json();
-          setStores(data.stores || []);
-        }
-      } catch (error) {
-        console.error('Error fetching stores:', error);
-      } finally {
-        setLoadingStores(false);
-      }
-    }
-    fetchStores();
+    setLoadingStores(false);
   }, []);
 
   // Fetch devices on mount
@@ -463,45 +449,22 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               </div>
             </div>
 
-          {/* Store Name */}
+          {/* Store Name - Always disabled, loaded from authUser */}
           <div>
             <label htmlFor="storeId" className="block text-sm font-medium text-gray-700 mb-2">
               Store Name
             </label>
-            {storeFixedFromProfile ? (
-              <input
-                type="text"
-                id="storeId"
-                value={(() => {
-                  const store = stores.find((s) => s.id === storeId);
-                  if (!store) return 'Store not set';
-                  return `${store.name}${store.city ? ` - ${store.city}` : ''}`;
-                })()}
-                disabled
-                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm"
-              />
-            ) : (
-              <select
-                id="storeId"
-                value={storeId}
-                onChange={(e) => setStoreId(e.target.value)}
-                disabled={loadingStores}
-                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none disabled:opacity-50"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 1rem center',
-                  backgroundSize: '1.25rem',
-                }}
-              >
-                <option value="">{loadingStores ? 'Loading stores...' : 'Select Store'}</option>
-                {stores.map((store) => (
-                  <option key={store.id} value={store.id}>
-                    {store.name} {store.city ? `- ${store.city}` : ''}
-                  </option>
-                ))}
-              </select>
-            )}
+            <input
+              type="text"
+              id="storeId"
+              value={(() => {
+                const store = stores.find((s) => s.id === storeId);
+                if (!store) return loadingStores ? 'Loading...' : 'Store not set';
+                return `${store.name}${store.city ? ` - ${store.city}` : ''}`;
+              })()}
+              disabled
+              className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm"
+            />
           </div>
 
             {/* Device Name */}
