@@ -1,9 +1,49 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { clientLogout } from '@/lib/clientLogout';
 
+interface ZSMProfileApiResponse {
+  success: boolean;
+  data?: {
+    zsm: {
+      id: string;
+      fullName: string;
+      phone: string;
+    };
+    stores: any[];
+  };
+  error?: string;
+}
+
 export default function ZSMPage() {
+  const [zsmName, setZsmName] = useState('User');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchZSMProfile = async () => {
+      try {
+        const res = await fetch('/api/zsm/profile');
+        if (res.ok) {
+          const json = (await res.json()) as ZSMProfileApiResponse;
+          if (json.success && json.data?.zsm?.fullName) {
+            // Extract only the first name from the full name and convert to proper case
+            const firstName = json.data.zsm.fullName.split(' ')[0];
+            const properCaseFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+            setZsmName(properCaseFirstName);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching ZSM profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchZSMProfile();
+  }, []);
+
   return (
     <div className="flex-1 relative overflow-hidden bg-gray-900">
       {/* background glow */}
@@ -13,7 +53,7 @@ export default function ZSMPage() {
       <div className="flex justify-between items-center px-10 pt-6">
         <div>
           <p className="text-neutral-50 text-3xl font-semibold leading-[48px]">
-            Hello ZSM,
+            {loading ? 'Hello User,' : `Hello ${zsmName},`}
           </p>
           <p className="text-white text-lg leading-7">
             Welcome! Choose your action below

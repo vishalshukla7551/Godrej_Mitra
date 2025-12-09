@@ -1,9 +1,49 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { clientLogout } from '@/lib/clientLogout';
 
+interface ZBMProfileApiResponse {
+  success: boolean;
+  data?: {
+    zbm: {
+      id: string;
+      fullName: string;
+      phone: string;
+      region?: string;
+    };
+  };
+  error?: string;
+}
+
 export default function ZBMPage() {
+  const [zbmName, setZbmName] = useState('User');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchZBMProfile = async () => {
+      try {
+        const res = await fetch('/api/zbm/profile');
+        if (res.ok) {
+          const json = (await res.json()) as ZBMProfileApiResponse;
+          if (json.success && json.data?.zbm?.fullName) {
+            // Extract only the first name from the full name and convert to proper case
+            const firstName = json.data.zbm.fullName.split(' ')[0];
+            const properCaseFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+            setZbmName(properCaseFirstName);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching ZBM profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchZBMProfile();
+  }, []);
+
   return (
     <div className="flex-1 relative overflow-hidden bg-gray-900">
       {/* background glow */}
@@ -13,7 +53,7 @@ export default function ZBMPage() {
       <div className="flex justify-between items-center px-10 pt-6">
         <div>
           <p className="text-neutral-50 text-3xl font-semibold leading-[48px]">
-            Hello ZBM,
+            {loading ? 'Hello User,' : `Hello ${zbmName},`}
           </p>
           <p className="text-white text-lg leading-7">
             Welcome! Choose your action below

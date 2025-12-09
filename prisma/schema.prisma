@@ -10,7 +10,6 @@ datasource db {
 enum Role {
   ABM
   ASE
-  SEC
   ZBM
   ZSM
   SEC
@@ -226,7 +225,9 @@ model ZSM {
   fullName String
   phone    String
 
-  region String?
+  storeIds String[]
+  region   String?
+  kycInfo  Json?
 
   user User @relation("UserZSM", fields: [userId], references: [id], onDelete: Cascade)
 

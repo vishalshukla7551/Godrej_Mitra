@@ -1,8 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { clientLogout } from '@/lib/clientLogout';
+
+interface ZBMProfileApiResponse {
+  success: boolean;
+  data?: {
+    zbm: {
+      id: string;
+      fullName: string;
+      phone: string;
+      region?: string;
+    };
+  };
+  error?: string;
+}
 
 export default function ZBMProfilePage() {
   const [formData, setFormData] = useState({
@@ -10,13 +23,46 @@ export default function ZBMProfilePage() {
     phoneNumber: '',
     email: '',
     dateOfBirth: '',
+    region: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('Profile updated successfully!');
-  };
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch('/api/zbm/profile');
+        if (!res.ok) {
+          throw new Error('Failed to load ZBM profile');
+        }
+
+        const json = (await res.json()) as ZBMProfileApiResponse;
+        if (!json.success || !json.data) {
+          throw new Error(json.error || 'Failed to load ZBM profile');
+        }
+
+        const { zbm } = json.data;
+
+        setFormData(prev => ({
+          ...prev,
+          fullName: zbm.fullName || '',
+          phoneNumber: zbm.phone || '',
+          region: zbm.region || '',
+        }));
+
+      } catch (err) {
+        console.error(err);
+        setError('Unable to load profile details.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+
 
   return (
     <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-700 to-slate-800 px-16 py-10">
@@ -62,8 +108,41 @@ export default function ZBMProfilePage() {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        {/* Personal Details Card - Centered */}
+      {loading ? (
+        <div className="max-w-2xl mx-auto">
+          <div className="rounded-2xl bg-white p-8 shadow-lg">
+            <div className="animate-pulse">
+              <div className="h-6 bg-gray-200 rounded mb-6"></div>
+              <div className="space-y-5">
+                <div className="h-12 bg-gray-200 rounded"></div>
+                <div className="h-12 bg-gray-200 rounded"></div>
+                <div className="h-12 bg-gray-200 rounded"></div>
+                <div className="h-12 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="max-w-2xl mx-auto">
+          <div className="rounded-2xl bg-white p-8 shadow-lg">
+            <div className="text-center">
+              <div className="text-red-600 mb-4">
+                <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Profile</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
         <div className="max-w-2xl mx-auto">
           <div className="rounded-2xl bg-white p-8 shadow-lg">
             <div className="flex items-center gap-2 mb-6">
@@ -92,67 +171,50 @@ export default function ZBMProfilePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Full Name
                 </label>
-                <input
-                  type="text"
-                  placeholder="Enter your complete name"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
-                />
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">
+                  {formData.fullName || 'Not provided'}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Phone Number
                 </label>
-                <input
-                  type="tel"
-                  placeholder="Enter your phone number"
-                  value={formData.phoneNumber}
-                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
-                />
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">
+                  {formData.phoneNumber || 'Not provided'}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email
                 </label>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
-                />
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">
+                  {formData.email || 'Not provided'}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Date of Birth
                 </label>
-                <input
-                  type="date"
-                  value={formData.dateOfBirth}
-                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                  placeholder="dd/mm/yyyy"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                />
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">
+                  {formData.dateOfBirth || 'Not provided'}
+                </div>
               </div>
-            </div>
 
-            {/* Submit Button */}
-            <div className="mt-8">
-              <button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors"
-              >
-                Save Changes
-              </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Region
+                </label>
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">
+                  {formData.region || 'Not provided'}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </form>
+      )}
     </div>
   );
 }
