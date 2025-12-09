@@ -17,7 +17,10 @@ export default function SECHomePage() {
       const fullName = (auth?.fullName || '').trim();
 
       if (fullName) {
-        setUserName(fullName);
+        // Extract only the first name and convert to proper case
+        const firstName = fullName.split(' ')[0];
+        const properCaseFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+        setUserName(properCaseFirstName);
       }
     } catch {
       // ignore JSON parse errors

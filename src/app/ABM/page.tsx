@@ -1,7 +1,48 @@
+'use client';
+
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { clientLogout } from '@/lib/clientLogout';
 
+interface ABMProfileApiResponse {
+  success: boolean;
+  data?: {
+    abm: {
+      id: string;
+      fullName: string;
+      phone: string;
+    };
+    stores: any[];
+  };
+  error?: string;
+}
+
 export default function ABMPage() {
+  const [abmName, setAbmName] = useState('User');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchABMProfile = async () => {
+      try {
+        const res = await fetch('/api/abm/profile');
+        if (res.ok) {
+          const json = (await res.json()) as ABMProfileApiResponse;
+          if (json.success && json.data?.abm?.fullName) {
+            // Extract only the first name from the full name and convert to proper case
+            const firstName = json.data.abm.fullName.split(' ')[0];
+            const properCaseFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+            setAbmName(properCaseFirstName);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching ABM profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchABMProfile();
+  }, []);
   return (
     <div className="flex-1 relative overflow-hidden bg-gray-900">
       {/* background glow */}
@@ -11,7 +52,7 @@ export default function ABMPage() {
       <div className="flex justify-between items-center px-10 pt-6">
         <div>
           <p className="text-neutral-50 text-3xl font-semibold leading-[48px]">
-            Hello ABM,
+            {loading ? 'Hello User,' : `Hello ${abmName},`}
           </p>
           <p className="text-white text-lg leading-7">
             Welcome! Choose your action below

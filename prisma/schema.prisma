@@ -10,6 +10,7 @@ datasource db {
 enum Role {
   ABM
   ASE
+  SEC
   ZBM
   ZSM
   SAMSUNG_ADMINISTRATOR

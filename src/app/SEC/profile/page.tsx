@@ -4,6 +4,30 @@ import { useState, useEffect } from 'react';
 import SECHeader from '../SECHeader.jsx';
 import SECFooter from '../SECFooter.jsx';
 
+interface StoreInfo {
+  id: string;
+  name: string;
+  city: string | null;
+  state: string | null;
+}
+
+interface StoreChangeRequest {
+  id: string;
+  requestedStoreIds: string[];
+  currentStoreIds: string[];
+  reason: string | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+  reviewNotes?: string;
+}
+
+interface AllStoresResponse {
+  success: boolean;
+  data: {
+    stores: StoreInfo[];
+  };
+}
+
 export default function ProfilePage() {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -12,6 +36,16 @@ export default function ProfilePage() {
   const [agentCode, setAgentCode] = useState('');
   const [submittingPersonalInfo, setSubmittingPersonalInfo] = useState(false);
   const [personalInfoError, setPersonalInfoError] = useState<string | null>(null);
+  
+  // Store change functionality
+  const [currentStore, setCurrentStore] = useState<StoreInfo | null>(null);
+  const [allStores, setAllStores] = useState<StoreInfo[]>([]);
+  const [pendingRequest, setPendingRequest] = useState<StoreChangeRequest | null>(null);
+  const [showStoreChangeModal, setShowStoreChangeModal] = useState(false);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>('');
+  const [changeReason, setChangeReason] = useState('');
+  const [storeSearch, setStoreSearch] = useState('');
+  const [submittingRequest, setSubmittingRequest] = useState(false);
   
   const [panNumber, setPanNumber] = useState('');
   const [kycStatus, setKycStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
@@ -58,8 +92,9 @@ export default function ProfilePage() {
       // ignore parse/storage errors
     }
 
-    // Also fetch KYC info from server
+    // Also fetch KYC info and store info from server
     fetchKycInfo();
+    fetchStoreInfo();
   }, []);
 
   const fetchKycInfo = async () => {
@@ -78,6 +113,125 @@ export default function ProfilePage() {
       console.error('Error fetching KYC info:', error);
     }
   };
+
+  const fetchStoreInfo = async () => {
+    try {
+      const response = await fetch('/api/sec/profile');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data.store) {
+          setCurrentStore(data.data.store);
+          setStoreName(data.data.store.name);
+        }
+      }
+
+      // Fetch pending store change request
+      const requestRes = await fetch('/api/sec/store-change-request');
+      if (requestRes.ok) {
+        const requestJson = await requestRes.json();
+        if (requestJson.success && requestJson.data.pendingRequest) {
+          setPendingRequest(requestJson.data.pendingRequest);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching store info:', error);
+    }
+  };
+
+  const fetchAllStores = async (search = '') => {
+    try {
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      
+      // Always include currently selected store ID to ensure it appears
+      if (selectedStoreId) {
+        params.append('includeIds', selectedStoreId);
+      } else if (currentStore) {
+        params.append('includeIds', currentStore.id);
+      }
+      
+      const res = await fetch(`/api/sec/stores?${params}`);
+      if (res.ok) {
+        const json: AllStoresResponse = await res.json();
+        if (json.success) {
+          setAllStores(json.data.stores);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch stores:', err);
+    }
+  };
+
+  const handleEditStore = async () => {
+    setSelectedStoreId(currentStore?.id || '');
+    setShowStoreChangeModal(true);
+    
+    // Fetch all stores, including the currently selected one
+    const params = new URLSearchParams();
+    if (currentStore) {
+      params.append('includeIds', currentStore.id);
+    }
+    
+    try {
+      const res = await fetch(`/api/sec/stores?${params}`);
+      if (res.ok) {
+        const json: AllStoresResponse = await res.json();
+        if (json.success) {
+          setAllStores(json.data.stores);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch stores:', err);
+    }
+  };
+
+  const handleSubmitStoreChangeRequest = async () => {
+    if (!selectedStoreId) {
+      alert('Please select a store');
+      return;
+    }
+
+    setSubmittingRequest(true);
+    try {
+      const res = await fetch('/api/sec/store-change-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          requestedStoreIds: [selectedStoreId], // SEC can only have one store
+          reason: changeReason
+        })
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        alert('Store change request submitted successfully! It will be reviewed by an administrator.');
+        setShowStoreChangeModal(false);
+        setChangeReason('');
+        setSelectedStoreId('');
+        // Refresh pending request
+        const requestRes = await fetch('/api/sec/store-change-request');
+        if (requestRes.ok) {
+          const requestJson = await requestRes.json();
+          if (requestJson.success && requestJson.data.pendingRequest) {
+            setPendingRequest(requestJson.data.pendingRequest);
+          } else {
+            setPendingRequest(null);
+          }
+        }
+      } else {
+        alert(json.error || 'Failed to submit store change request');
+      }
+    } catch (err) {
+      console.error('Error submitting request:', err);
+      alert('Failed to submit store change request');
+    } finally {
+      setSubmittingRequest(false);
+    }
+  };
+
+
 
   const handlePersonalInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,11 +389,6 @@ export default function ProfilePage() {
                   </svg>
                   <span className="text-sm font-medium text-gray-700">Personal Details</span>
                 </div>
-                <button type="button" className="text-gray-600 hover:text-gray-900">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                </button>
               </div>
 
               {/* Full Name */}
@@ -263,7 +412,14 @@ export default function ProfilePage() {
                     </svg>
                     <span className="text-sm font-semibold text-gray-900">Store Details</span>
                   </div>
-                  <button type="button" className="text-gray-600 hover:text-gray-900">
+                  <button 
+                    type="button" 
+                    onClick={handleEditStore}
+                    disabled={pendingRequest?.status === 'PENDING'}
+                    className={`text-gray-600 hover:text-gray-900 ${
+                      pendingRequest?.status === 'PENDING' ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                     </svg>
@@ -271,8 +427,85 @@ export default function ProfilePage() {
                 </div>
                 <div className="mb-3">
                   <label className="block text-xs text-gray-600 mb-1">Store Name</label>
-                  <div className="text-sm font-medium text-gray-900">{storeName}</div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {currentStore ? `${currentStore.name}${currentStore.city ? ` - ${currentStore.city}` : ''}` : storeName}
+                  </div>
                 </div>
+
+                {/* Store Change Request Status */}
+                {pendingRequest && (
+                  <div className={`mb-3 p-3 rounded-xl border ${
+                    pendingRequest.status === 'PENDING' ? 'bg-yellow-50 border-yellow-200' :
+                    pendingRequest.status === 'APPROVED' ? 'bg-green-50 border-green-200' :
+                    'bg-red-50 border-red-200'
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          pendingRequest.status === 'PENDING' ? 'bg-yellow-400' :
+                          pendingRequest.status === 'APPROVED' ? 'bg-green-400' :
+                          'bg-red-400'
+                        }`}></div>
+                        <span className={`text-xs font-medium ${
+                          pendingRequest.status === 'PENDING' ? 'text-yellow-800' :
+                          pendingRequest.status === 'APPROVED' ? 'text-green-800' :
+                          'text-red-800'
+                        }`}>
+                          Store Change Request {pendingRequest.status}
+                        </span>
+                      </div>
+                      {(pendingRequest.status === 'APPROVED' || pendingRequest.status === 'REJECTED') && (
+                        <button
+                          onClick={() => setPendingRequest(null)}
+                          className="text-gray-400 hover:text-gray-600 text-xs"
+                          title="Dismiss notification"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    {pendingRequest.status === 'PENDING' && (
+                      <p className="text-xs text-yellow-700 mb-1">
+                        Your request to change store mapping is under review.
+                      </p>
+                    )}
+                    {pendingRequest.status === 'APPROVED' && (
+                      <p className="text-xs text-green-700 mb-1">
+                        Your store change request has been approved! Your store mapping has been updated.
+                      </p>
+                    )}
+                    {pendingRequest.status === 'REJECTED' && (
+                      <p className="text-xs text-red-700 mb-1">
+                        Your store change request has been rejected. You can submit a new request.
+                      </p>
+                    )}
+                    <p className={`text-xs ${
+                      pendingRequest.status === 'PENDING' ? 'text-yellow-600' :
+                      pendingRequest.status === 'APPROVED' ? 'text-green-600' :
+                      'text-red-600'
+                    }`}>
+                      Submitted: {new Date(pendingRequest.createdAt).toLocaleDateString()}
+                    </p>
+                    {pendingRequest.reason && (
+                      <p className={`text-xs mt-1 ${
+                        pendingRequest.status === 'PENDING' ? 'text-yellow-600' :
+                        pendingRequest.status === 'APPROVED' ? 'text-green-600' :
+                        'text-red-600'
+                      }`}>
+                        Reason: {pendingRequest.reason}
+                      </p>
+                    )}
+                    {pendingRequest.reviewNotes && (
+                      <p className={`text-xs mt-1 ${
+                        pendingRequest.status === 'PENDING' ? 'text-yellow-600' :
+                        pendingRequest.status === 'APPROVED' ? 'text-green-600' :
+                        'text-red-600'
+                      }`}>
+                        Admin Notes: {pendingRequest.reviewNotes}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Agency */}
@@ -603,6 +836,160 @@ export default function ProfilePage() {
       </main>
 
       <SECFooter />
+
+      {/* Store Change Request Modal */}
+      {showStoreChangeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Change Store</h3>
+                <button
+                  onClick={() => setShowStoreChangeModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              {/* Current Store */}
+              {currentStore && (
+                <div className="mb-4">
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Current Store
+                  </label>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <div className="text-sm font-medium text-gray-900">{currentStore.name}</div>
+                    {currentStore.city && (
+                      <div className="text-xs text-gray-600">{currentStore.city}</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  Search Stores
+                </label>
+                <input
+                  type="text"
+                  placeholder="Search by store name, city, or state..."
+                  value={storeSearch}
+                  onChange={(e) => {
+                    setStoreSearch(e.target.value);
+                    fetchAllStores(e.target.value);
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  Select New Store
+                </label>
+                <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg">
+                  {allStores.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      {storeSearch ? 'No stores found matching your search' : 'Loading stores...'}
+                    </div>
+                  ) : (
+                    allStores.map((store) => {
+                      const isSelected = selectedStoreId === store.id;
+                      const isCurrent = currentStore?.id === store.id;
+                      return (
+                        <label
+                          key={store.id}
+                          className={`flex items-center p-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors ${
+                            isSelected 
+                              ? 'bg-blue-50 hover:bg-blue-100' 
+                              : isCurrent
+                              ? 'bg-gray-50'
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="storeSelection"
+                            checked={isSelected}
+                            onChange={() => setSelectedStoreId(store.id)}
+                            disabled={isCurrent}
+                            className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <div className="flex-1">
+                            <div className={`text-sm font-medium ${
+                              isSelected ? 'text-blue-900' : 
+                              isCurrent ? 'text-gray-500' : 'text-gray-900'
+                            }`}>
+                              {store.name}
+                              {isCurrent && (
+                                <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                                  Current
+                                </span>
+                              )}
+                              {isSelected && !isCurrent && (
+                                <span className="ml-2 text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">
+                                  Selected
+                                </span>
+                              )}
+                            </div>
+                            {(store.city || store.state) && (
+                              <div className={`text-xs ${
+                                isSelected ? 'text-blue-700' : 
+                                isCurrent ? 'text-gray-400' : 'text-gray-500'
+                              }`}>
+                                {[store.city, store.state].filter(Boolean).join(', ')}
+                              </div>
+                            )}
+                          </div>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  Reason for Change (Optional)
+                </label>
+                <textarea
+                  value={changeReason}
+                  onChange={(e) => setChangeReason(e.target.value)}
+                  placeholder="Please provide a reason for requesting this store change..."
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
+                />
+              </div>
+
+              <div className="text-xs text-gray-600 mb-4">
+                <p>• Your request will be sent to the administrator for approval</p>
+                <p>• You will be notified once the request is reviewed</p>
+                <p>• Current store mapping will remain until the request is approved</p>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-200 flex gap-3 justify-end">
+              <button
+                onClick={() => setShowStoreChangeModal(false)}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitStoreChangeRequest}
+                disabled={submittingRequest || !selectedStoreId || selectedStoreId === currentStore?.id}
+                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                {submittingRequest ? 'Submitting...' : 'Submit Request'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
