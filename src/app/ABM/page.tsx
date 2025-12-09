@@ -76,69 +76,7 @@ export default function ABMPage() {
 
       {/* Cards row */}
       <section className="mt-12 px-10 pb-10">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 max-w-4xl">
-          {/* Incentive Wallet card */}
-          <Link href="/ABM/wallet" className="relative h-60 rounded-2xl border border-zinc-100 bg-white shadow-[0_6px_24px_rgba(0,0,0,0.12)] p-6 block hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] transition-shadow cursor-pointer">
-            {/* Arrow button - top right */}
-            <div className="absolute top-6 right-6 h-10 w-10 rounded-full bg-emerald-600 shadow-[0_2px_8px_rgba(5,150,105,0.3)] flex items-center justify-center">
-              <span className="text-white text-lg font-semibold">{">"}</span>
-            </div>
-
-            <div className="relative mb-6">
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-[0_4px_12px_rgba(5,150,105,0.3)] flex items-center justify-center">
-                <svg
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="4"
-                    y="7"
-                    width="16"
-                    height="11"
-                    rx="2"
-                    fill="white"
-                  />
-                  <path
-                    d="M4 9C4 7.89543 4.89543 7 6 7H18C19.1046 7 20 7.89543 20 9V10H4V9Z"
-                    fill="white"
-                    fillOpacity="0.9"
-                  />
-                  <circle
-                    cx="15"
-                    cy="13.5"
-                    r="2"
-                    fill="rgba(16,185,129,0.3)"
-                  />
-                  <rect
-                    x="7"
-                    y="4"
-                    width="10"
-                    height="3"
-                    rx="1"
-                    fill="white"
-                    fillOpacity="0.6"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            <h3 className="text-zinc-900 text-xl font-bold leading-8">
-              Incentive Wallet
-            </h3>
-            <p className="text-stone-500 text-base leading-6">
-              Track your earnings
-            </p>
-
-            <div className="mt-4 inline-flex items-center rounded-md bg-emerald-600 px-3 py-1.5">
-              <span className="text-white text-xs font-semibold leading-4">
-                ₹12,450 Available
-              </span>
-            </div>
-          </Link>
-
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 max-w-3xl">
           {/* View Reports card */}
           <Link href="/ABM/report" className="relative h-60 rounded-2xl border border-zinc-100 bg-white shadow-[0_6px_24px_rgba(0,0,0,0.12)] p-6 block hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] transition-shadow cursor-pointer">
             {/* Arrow button - top right */}

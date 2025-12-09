@@ -1,7 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { clientLogout } from '@/lib/clientLogout';
+
+interface ReportData {
+  id: string;
+  dateOfSale: string;
+  secId: string;
+  secName: string;
+  secPhone: string;
+  storeName: string;
+  storeCity: string;
+  deviceName: string;
+  deviceCategory: string;
+  planType: string;
+  imei: string;
+  incentive: number;
+  isPaid: boolean;
+}
+
+interface Summary {
+  activeStores: number;
+  activeSECs: number;
+  totalReports: number;
+  paidCount: number;
+  unpaidCount: number;
+}
 
 export default function ReportPage() {
   const [planSearch, setPlanSearch] = useState("");
@@ -10,21 +34,57 @@ export default function ReportPage() {
   const [showPlanDropdown, setShowPlanDropdown] = useState(false);
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
   const [showDeviceDropdown, setShowDeviceDropdown] = useState(false);
+  const [reports, setReports] = useState<ReportData[]>([]);
+  const [summary, setSummary] = useState<Summary>({
+    activeStores: 0,
+    activeSECs: 0,
+    totalReports: 0,
+    paidCount: 0,
+    unpaidCount: 0
+  });
+  const [loading, setLoading] = useState(true);
 
   const planTypes = ["ADLD", "COMBO"];
-  const stores = [
-    "Croma - ABS - Noida-Gaur Mall",
-    "Croma - ARS - Noida - Mall of India",
-    "Croma - ARS - Noida-Logix Mall",
-    "VS- Up (Noida Sec.18) Br",
-  ];
-  const devices = [
-    "Super Premium - S25",
-    "Luxury Flip - Z Flip FE",
-    "Luxury Flip - Z Flip 6",
-    "Mid - F17",
-    "Samsung Galaxy S24",
-  ];
+  const [stores, setStores] = useState<string[]>([]);
+  const [devices, setDevices] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchReports();
+  }, [planSearch, storeSearch, deviceSearch]);
+
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (planSearch && planTypes.includes(planSearch)) {
+        params.append('planFilter', planSearch);
+      }
+      if (storeSearch) {
+        params.append('storeFilter', storeSearch);
+      }
+      if (deviceSearch) {
+        params.append('deviceFilter', deviceSearch);
+      }
+
+      const response = await fetch(`/api/zsm/report?${params.toString()}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setReports(result.data.reports);
+        setSummary(result.data.summary);
+
+        // Extract unique stores and devices for dropdowns
+        const uniqueStores = [...new Set(result.data.reports.map((r: ReportData) => r.storeName))] as string[];
+        const uniqueDevices = [...new Set(result.data.reports.map((r: ReportData) => r.deviceName))] as string[];
+        setStores(uniqueStores);
+        setDevices(uniqueDevices);
+      }
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredPlans = planTypes.filter((plan) =>
     plan.toLowerCase().includes(planSearch.toLowerCase())
@@ -42,7 +102,7 @@ export default function ReportPage() {
         <div className="flex items-start justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold text-white mb-1">Report Page</h1>
-            <p className="text-sm text-neutral-400">Incentives Summary — No of Incentive Paid: 2474 | Unpaid: 230</p>
+            <p className="text-sm text-neutral-400">Incentives Summary — No of Incentive Paid: {summary.paidCount} | Unpaid: {summary.unpaidCount}</p>
             <div className="flex items-center gap-2 mt-2">
               <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400">
                 <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
@@ -195,15 +255,15 @@ export default function ReportPage() {
       <div className="max-w-6xl mb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(99,102,241,0.3)]">
-            <h3 className="text-white text-4xl font-bold mb-2">465</h3>
+            <h3 className="text-white text-4xl font-bold mb-2">{summary.activeStores}</h3>
             <p className="text-indigo-100 text-sm font-medium">Active Stores</p>
           </div>
           <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(16,185,129,0.3)]">
-            <h3 className="text-white text-4xl font-bold mb-2">556</h3>
+            <h3 className="text-white text-4xl font-bold mb-2">{summary.activeSECs}</h3>
             <p className="text-emerald-100 text-sm font-medium">SECs Active</p>
           </div>
           <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(37,99,235,0.3)]">
-            <h3 className="text-white text-4xl font-bold mb-2">2704</h3>
+            <h3 className="text-white text-4xl font-bold mb-2">{summary.totalReports}</h3>
             <p className="text-blue-100 text-sm font-medium">Reports Submitted</p>
           </div>
         </div>
@@ -224,26 +284,32 @@ export default function ReportPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {[
-                { time: "2024-11-15 14:32:15", date: "2024-11-15", sec: "SEC001", store: "Croma- ABS - Noida-Gaur Mall", device: "Super Premium - S25", plan: "ADLD", imei: "358240051111110", amount: "₹2,500" },
-                { time: "2024-11-15 14:28:42", date: "2024-11-15", sec: "SEC002", store: "Croma- ARS-Noida- Mall of India", device: "Luxury Flip - Z Flip FE", plan: "COMBO", imei: "358240051111111", amount: "₹1,800" },
-                { time: "2024-11-15 14:25:18", date: "2024-11-15", sec: "SEC003", store: "Croma- ABS - Noida-Gaur Mall", device: "Mid - F17", plan: "ADLD", imei: "358240051111112", amount: "₹2,200" },
-                { time: "2024-11-15 14:22:05", date: "2024-11-15", sec: "SEC004", store: "Croma- ARS -Noida-Logix Mall", device: "Samsung Galaxy S24", plan: "COMBO", imei: "358240051111113", amount: "₹1,500" },
-                { time: "2024-11-15 14:18:33", date: "2024-11-15", sec: "SEC005", store: "Croma- ABS - Noida-Gaur Mall", device: "Luxury Flip - Z Flip 6", plan: "ADLD", imei: "358240051111114", amount: "₹1,900" },
-                { time: "2024-11-15 14:15:27", date: "2024-11-15", sec: "SEC006", store: "VS- Up (Noida Sec.18) Br", device: "Samsung Galaxy S24", plan: "COMBO", imei: "358240051111115", amount: "₹1,600" },
-                { time: "2024-11-15 14:12:14", date: "2024-11-15", sec: "SEC007", store: "Croma- ARS - Noida-Gaur Mall", device: "Mid - F17", plan: "ADLD", imei: "358240051111116", amount: "₹2,100" },
-                { time: "2024-11-15 14:08:51", date: "2024-11-15", sec: "SEC008", store: "VS- Up (Noida Sec.18) Br", device: "Super Premium - S25", plan: "COMBO", imei: "358240051111117", amount: "₹1,400" },
-                { time: "2024-11-15 14:05:38", date: "2024-11-15", sec: "SEC009", store: "Croma- ARS -Noida-Logix Mall", device: "Luxury Flip - Z Flip FE", plan: "ADLD", imei: "358240051111118", amount: "₹1,750" },
-              ].map((row, i) => (
-                <tr key={i} className="hover:bg-neutral-50 transition">
-                  <td className="text-neutral-600 text-sm p-4">{row.date}</td>
-                  <td className="text-neutral-900 text-sm font-medium p-4">{row.sec}</td>
-                  <td className="text-neutral-900 text-sm p-4">{row.store}</td>
-                  <td className="text-neutral-600 text-sm p-4">{row.device}</td>
-                  <td className="text-neutral-600 text-sm p-4">{row.plan}</td>
-                  <td className="text-neutral-500 text-xs font-mono p-4">{row.imei}</td>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center text-neutral-500 text-sm p-8">
+                    Loading reports...
+                  </td>
                 </tr>
-              ))}
+              ) : reports.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center text-neutral-500 text-sm p-8">
+                    No reports found
+                  </td>
+                </tr>
+              ) : (
+                reports.map((report) => (
+                  <tr key={report.id} className="hover:bg-neutral-50 transition">
+                    <td className="text-neutral-600 text-sm p-4">
+                      {new Date(report.dateOfSale).toLocaleDateString()}
+                    </td>
+                    <td className="text-neutral-900 text-sm font-medium p-4">{report.secId}</td>
+                    <td className="text-neutral-900 text-sm p-4">{report.storeName}</td>
+                    <td className="text-neutral-600 text-sm p-4">{report.deviceName}</td>
+                    <td className="text-neutral-600 text-sm p-4">{report.planType}</td>
+                    <td className="text-neutral-500 text-xs font-mono p-4">{report.imei}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
