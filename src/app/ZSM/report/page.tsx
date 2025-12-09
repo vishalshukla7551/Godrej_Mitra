@@ -276,7 +276,7 @@ export default function ReportPage() {
             <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
                 <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Date of Sale</th>
-                <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">SEC ID</th>
+                <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">SEC Name</th>
                 <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Store Name</th>
                 <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Device Name</th>
                 <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Plan Type</th>
@@ -302,7 +302,10 @@ export default function ReportPage() {
                     <td className="text-neutral-600 text-sm p-4">
                       {new Date(report.dateOfSale).toLocaleDateString()}
                     </td>
-                    <td className="text-neutral-900 text-sm font-medium p-4">{report.secId}</td>
+                    <td className="text-neutral-900 text-sm font-medium p-4">
+                      <div>{report.secName}</div>
+                      <div className="text-neutral-500 text-xs">{report.secPhone}</div>
+                    </td>
                     <td className="text-neutral-900 text-sm p-4">{report.storeName}</td>
                     <td className="text-neutral-600 text-sm p-4">{report.deviceName}</td>
                     <td className="text-neutral-600 text-sm p-4">{report.planType}</td>
