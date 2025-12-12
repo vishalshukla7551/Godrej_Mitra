@@ -16,8 +16,26 @@ export default function RoleLogin() {
 
   // Reuse SEC login phone field typography & input styles
   const inputBaseClasses =
-    'w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500';
-  const labelBaseClasses = 'block text-sm font-medium text-gray-900 mb-2';
+    'w-full px-3 py-2.5 rounded-lg text-base text-black placeholder:text-gray-500 transition-all duration-200 border-0 outline-none focus:outline-none';
+  const labelBaseClasses = 'block text-sm font-medium text-gray-900 mb-1.5';
+
+  // Apply important styles on mount
+  useEffect(() => {
+    const usernameInput = document.getElementById('username') as HTMLInputElement;
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    
+    if (usernameInput) {
+      usernameInput.style.setProperty('background-color', '#e8f0fe', 'important');
+      usernameInput.style.setProperty('border', '1px solid #d1d5db', 'important');
+      usernameInput.style.setProperty('outline', 'none', 'important');
+    }
+    
+    if (passwordInput) {
+      passwordInput.style.setProperty('background-color', '#e8f0fe', 'important');
+      passwordInput.style.setProperty('border', '1px solid #d1d5db', 'important');
+      passwordInput.style.setProperty('outline', 'none', 'important');
+    }
+  });
 
   // If already logged in (authUser in localStorage), redirect to role home.
   useEffect(() => {
@@ -82,8 +100,8 @@ export default function RoleLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#e5e7eb' }}>
+      <div className="w-full bg-white rounded-2xl shadow-lg p-10" style={{ maxWidth: '450px' }}>
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Login</h1>
           <p className="text-gray-500">Use your credentials</p>
@@ -109,6 +127,21 @@ export default function RoleLogin() {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter username"
               className={inputBaseClasses}
+              style={{
+                backgroundColor: '#e8f0fe',
+                border: '1px solid #d1d5db',
+                outline: 'none',
+                transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.setProperty('border-color', 'rgb(120, 164, 235)', 'important');
+                e.target.style.setProperty('box-shadow', 'rgba(59, 130, 246, 0.06) 0px 0px 0px 1.77453px', 'important');
+                e.target.style.setProperty('outline', 'none', 'important');
+              }}
+              onBlur={(e) => {
+                e.target.style.setProperty('border-color', '#d1d5db', 'important');
+                e.target.style.setProperty('box-shadow', 'none', 'important');
+              }}
             />
           </div>
 
@@ -127,6 +160,21 @@ export default function RoleLogin() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
                 className={`${inputBaseClasses} pr-12`}
+                style={{
+                  backgroundColor: '#e8f0fe',
+                  border: '1px solid #d1d5db',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.setProperty('border-color', 'rgb(120, 164, 235)', 'important');
+                  e.target.style.setProperty('box-shadow', 'rgba(59, 130, 246, 0.06) 0px 0px 0px 1.77453px', 'important');
+                  e.target.style.setProperty('outline', 'none', 'important');
+                }}
+                onBlur={(e) => {
+                  e.target.style.setProperty('border-color', '#d1d5db', 'important');
+                  e.target.style.setProperty('box-shadow', 'none', 'important');
+                }}
               />
               <button
                 type="button"
@@ -175,7 +223,10 @@ export default function RoleLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white font-semibold py-3 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full text-white font-semibold py-2.5 rounded-lg transition-colors text-base disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ backgroundColor: '#3b82f6' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>

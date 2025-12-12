@@ -34,6 +34,7 @@ export default function SignUpPage() {
 
   const [storeSearch, setStoreSearch] = useState('');
   const [managerSearch, setManagerSearch] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Load store + manager options from API
   useEffect(() => {
@@ -136,9 +137,9 @@ export default function SignUpPage() {
     }
 
     // Username validation
-    if (!isUsernameLongEnough || !hasUsernameLetter || !hasUsernameNumber) {
+    if (!isUsernameLongEnough || !hasUsernameLetter) {
       alert(
-        'Username must be at least 4 characters long, contain at least one letter, and contain at least one number.'
+        'Username must be at least 4 characters long and contain at least one letter.'
       );
       return;
     }
@@ -198,7 +199,6 @@ export default function SignUpPage() {
   const username = formData.username;
   const isUsernameLongEnough = username.length >= 4;
   const hasUsernameLetter = /[A-Za-z]/.test(username);
-  const hasUsernameNumber = /[0-9]/.test(username);
 
   const password = formData.password;
   const isPasswordLongEnough = password.length >= 6;
@@ -216,7 +216,7 @@ export default function SignUpPage() {
       formData.username.trim() !== '' &&
       formData.password !== '';
 
-    const usernameValid = isUsernameLongEnough && hasUsernameLetter && hasUsernameNumber;
+    const usernameValid = isUsernameLongEnough && hasUsernameLetter;
     const passwordValid = isPasswordLongEnough && hasPasswordUppercase && hasPasswordLetter && hasPasswordSpecial;
 
     // Role-specific validation
@@ -254,7 +254,7 @@ export default function SignUpPage() {
                 value={formData.fullName}
                 onChange={handleInputChange}
                 placeholder="Enter your full name"
-                className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base text-gray-900 placeholder:text-gray-500"
+                className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base text-gray-900 placeholder:text-gray-500"
                 required
               />
             </div>
@@ -278,7 +278,7 @@ export default function SignUpPage() {
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
                 placeholder="Enter 10-digit number"
-                className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base text-gray-900 placeholder:text-gray-500"
+                className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base text-gray-900 placeholder:text-gray-500"
                 required
               />
             </div>
@@ -300,7 +300,7 @@ export default function SignUpPage() {
                 name="role"
                 value={formData.role}
                 onChange={handleInputChange}
-                className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base text-gray-900 appearance-none"
+                className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base text-gray-900 appearance-none"
                 required
               >
                 <option value="">Select Role</option>
@@ -487,7 +487,7 @@ export default function SignUpPage() {
                 value={formData.username}
                 onChange={handleInputChange}
                 placeholder="Choose a username"
-                className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base text-gray-900 placeholder:text-gray-500"
+                className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base text-gray-900 placeholder:text-gray-500"
                 minLength={4}
                 required
               />
@@ -533,24 +533,7 @@ export default function SignUpPage() {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span
-                  className={`flex h-4 w-4 items-center justify-center rounded-full border text-[10px] ${
-                    hasUsernameNumber
-                      ? 'border-green-500 bg-green-500 text-white'
-                      : 'border-gray-300 text-gray-400'
-                  }`}
-                >
-                  ✓
-                </span>
-                <span
-                  className={
-                    hasUsernameNumber ? 'text-gray-700' : 'text-gray-400'
-                  }
-                >
-                  Contains at least one number
-                </span>
-              </div>
+
             </div>
           </div>
 
@@ -566,16 +549,57 @@ export default function SignUpPage() {
                 </svg>
               </div>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="Enter password (min 6 characters)"
-                className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base text-gray-900 placeholder:text-gray-500"
+                className="w-full pl-12 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base text-gray-900 placeholder:text-gray-500"
                 minLength={6}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                )}
+              </button>
             </div>
 
             {/* Password requirements checklist */}
@@ -662,7 +686,7 @@ export default function SignUpPage() {
           <button
             type="submit"
             disabled={!isFormValid()}
-            className={`w-full font-semibold py-4 rounded-lg transition-colors text-lg ${
+            className={`w-full font-semibold py-2.5 rounded-lg transition-colors text-base ${
               isFormValid()
                 ? 'bg-gray-900 text-white hover:bg-gray-800 cursor-pointer'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -670,11 +694,6 @@ export default function SignUpPage() {
           >
             Create Account
           </button>
-          {!isFormValid() && (
-            <p className="text-xs text-red-600 text-center -mt-4">
-              Please fill all required fields correctly to continue
-            </p>
-          )}
         </form>
 
         {/* Already have an account */}

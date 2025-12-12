@@ -94,20 +94,20 @@ export class IncentiveService {
     console.log(`  - Final Gate (threshold): ${finalGate} units`);
     console.log(`  - Final Volume Kicker: ${finalVolumeKicker} units`);
     
-    // Rule 1: Units <= finalGate → 0 incentive
-    if (units <= finalGate) {
-      console.log(`\n[calculateGroupIncentive] ✓ Rule 1 Applied: Units (${units}) ≤ Final Gate (${finalGate})`);
+    // Rule 1: Units < finalGate → 0 incentive
+    if (units < finalGate) {
+      console.log(`\n[calculateGroupIncentive] ✓ Rule 1 Applied: Units (${units}) < Final Gate (${finalGate})`);
       console.log(`[calculateGroupIncentive] Result: NO INCENTIVE (0% rate)`);
       console.log(`[calculateGroupIncentive] Calculation: ₹0`);
       console.log(`[calculateGroupIncentive] ========== CALCULATION END ==========\n`);
       return { totalIncentive: 0, appliedRate: 0 };
     }
 
-    // Rule 2: Units > finalGate and <= finalVolumeKicker → 100% incentive on ALL units
-    if (units <= finalVolumeKicker) {
+    // Rule 2: Units >= finalGate and < finalVolumeKicker → 100% incentive on ALL units
+    if (units < finalVolumeKicker) {
       const totalIncentive = units * incentiveAmount;
       
-      console.log(`\n[calculateGroupIncentive] ✓ Rule 2 Applied: Units (${units}) > Final Gate (${finalGate}) AND ≤ Volume Kicker (${finalVolumeKicker})`);
+      console.log(`\n[calculateGroupIncentive] ✓ Rule 2 Applied: Units (${units}) >= Final Gate (${finalGate}) AND < Volume Kicker (${finalVolumeKicker})`);
       console.log(`[calculateGroupIncentive] Result: 100% INCENTIVE ON ALL UNITS`);
       console.log(`[calculateGroupIncentive] Calculation: ${units} units × ₹${incentiveAmount} × 100% = ₹${totalIncentive}`);
       console.log(`[calculateGroupIncentive] ========== CALCULATION END ==========\n`);
@@ -118,10 +118,10 @@ export class IncentiveService {
       };
     }
 
-    // Rule 3: Units > finalVolumeKicker → 120% incentive on ALL units
+    // Rule 3: Units >= finalVolumeKicker → 120% incentive on ALL units
     const totalIncentive = units * incentiveAmount * 1.2;
     
-    console.log(`\n[calculateGroupIncentive] ✓ Rule 3 Applied: Units (${units}) > Volume Kicker (${finalVolumeKicker})`);
+    console.log(`\n[calculateGroupIncentive] ✓ Rule 3 Applied: Units (${units}) >= Volume Kicker (${finalVolumeKicker})`);
     console.log(`[calculateGroupIncentive] Result: 120% INCENTIVE ON ALL UNITS (BONUS!)`);
     console.log(`[calculateGroupIncentive] Calculation: ${units} units × ₹${incentiveAmount} × 120% = ₹${totalIncentive}`);
     console.log(`[calculateGroupIncentive] ========== CALCULATION END ==========\n`);
@@ -134,6 +134,7 @@ export class IncentiveService {
 
   /**
    * Calculate monthly incentive for a SEC user
+   * NEW LOGIC: Calculate at store level (all SECs combined), then divide by numberOfSec
    */
   static async calculateMonthlyIncentive(
     secId: string,
@@ -154,10 +155,41 @@ export class IncentiveService {
       endDate: endDate.toISOString()
     });
 
-    // Load all sales reports for this SEC in the specified month
+    // First, get the SEC user to find their store
+    const secUser = await (prisma as any).sEC.findUnique({
+      where: { id: secId },
+      include: { store: true }
+    });
+
+    if (!secUser || !secUser.storeId) {
+      console.warn(`SEC ${secId} not found or not assigned to a store`);
+      return {
+        totalIncentive: 0,
+        breakdownByStore: [],
+        unitsSummary: {
+          totalUnits: 0,
+          unitsAboveGate: 0,
+          unitsAboveVolumeKicker: 0
+        }
+      };
+    }
+
+    const storeId = secUser.storeId;
+    const numberOfSec = secUser.store?.numberOfSec || 1;
+
+    console.log(`\n========================================`);
+    console.log(`🏪 STORE-LEVEL CALCULATION`);
+    console.log(`   SEC ID: ${secId}`);
+    console.log(`   Store ID: ${storeId}`);
+    console.log(`   Store Name: ${secUser.store?.name || 'Unknown'}`);
+    console.log(`   Number of SECs: ${numberOfSec}`);
+    console.log(`   Period: ${month}/${year}`);
+    console.log(`========================================\n`);
+
+    // Load ALL sales reports for the ENTIRE STORE in the specified month (all SECs combined)
     const salesReports = await (prisma as any).salesReport.findMany({
       where: {
-        secId,
+        storeId: storeId,
         Date_of_sale: {
           gte: startDate,
           lte: endDate
@@ -165,7 +197,8 @@ export class IncentiveService {
       },
       include: {
         store: true,
-        samsungSKU: true
+        samsungSKU: true,
+        secUser: true
       }
     });
 
@@ -185,9 +218,8 @@ export class IncentiveService {
     const groupedSales = new Map<string, GroupedSales>();
 
     console.log(`\n========================================`);
-    console.log(`📊 PROCESSING ${salesReports.length} SALES REPORTS`);
-    console.log(`   SEC ID: ${secId}`);
-    console.log(`   Period: ${month}/${year}`);
+    console.log(`📊 PROCESSING ${salesReports.length} STORE-LEVEL SALES REPORTS`);
+    console.log(`   (All SECs at ${secUser.store?.name || storeId} combined)`);
     console.log(`========================================\n`);
 
     for (let i = 0; i < salesReports.length; i++) {
@@ -196,6 +228,7 @@ export class IncentiveService {
       
       console.log(`\n--- Report ${i + 1}/${salesReports.length} ---`);
       console.log(`  Report ID: ${report.id}`);
+      console.log(`  SEC: ${report.secUser?.phone || report.secId}`);
       console.log(`  Store: ${report.store.name} (${report.storeId})`);
       console.log(`  Store numberOfSec: ${report.store.numberOfSec || 1}`);
       console.log(`  SKU: ${report.samsungSKU.ModelName}`);
@@ -337,8 +370,13 @@ export class IncentiveService {
     console.log(`  � TOTAL UINCENTIVE: ₹${Math.round(totalIncentive).toLocaleString()}`);
     console.log(`════════════════════════════════════════════════════════════\n`);
 
+    // Calculate this SEC's share (total incentive divided by number of SECs)
+    const secShare = Math.round(totalIncentive / numberOfSec);
+
+    console.log(`\n  Number of SECs at store: ${numberOfSec}`);
+    console.log(`  INCENTIVE PER SEC: Rs.${secShare.toLocaleString()}\n`);
+
     // Upsert into SalesSummary
-    const savedIncentive = Math.round(totalIncentive);
     await (prisma as any).salesSummary.upsert({
       where: {
         secId_month_year: {
@@ -348,7 +386,7 @@ export class IncentiveService {
         }
       },
       update: {
-        estimatedIncenetiveEarned: savedIncentive,
+        estimatedIncenetiveEarned: secShare,
         updatedAt: new Date()
       },
       create: {
@@ -356,14 +394,14 @@ export class IncentiveService {
         month,
         year,
         totalSpotIncentiveEarned: 0,
-        estimatedIncenetiveEarned: savedIncentive
+        estimatedIncenetiveEarned: secShare
       }
     });
 
-    console.log(`✅ Saved to SalesSummary.estimatedIncenetiveEarned = ₹${savedIncentive.toLocaleString()}\n`);
+    console.log(`Saved to SalesSummary for SEC ${secId}: Rs.${secShare.toLocaleString()}\n`);
 
     return {
-      totalIncentive: Math.round(totalIncentive),
+      totalIncentive: secShare, // Return the SEC's share, not the total store incentive
       breakdownByStore,
       unitsSummary: {
         totalUnits,

@@ -329,10 +329,17 @@ model PriceIncentiveSlab {
   // finalGate = gate * store.numberOfSec
   // finalVolumeKicker = volumeKicker * store.numberOfSec
   //
-  // Incentive rules (applied to ALL units):
-  // 1. Units <= finalGate → No incentive (0%)
-  // 2. Units > finalGate and <= finalVolumeKicker → 100% incentive on ALL units
-  // 3. Units > finalVolumeKicker → 120% incentive on ALL units
+  // STORE-LEVEL CALCULATION:
+  // Incentives are calculated for the entire store (all SECs combined),
+  // then divided equally among all SECs at that store.
+  //
+  // Incentive rules (applied to ALL store units):
+  // 1. Units < finalGate → No incentive (0%)
+  // 2. Units >= finalGate and < finalVolumeKicker → 100% incentive on ALL units
+  // 3. Units >= finalVolumeKicker → 120% incentive on ALL units
+  // 4. Each SEC's share = Total Store Incentive ÷ numberOfSec
+  //
+  // Note: Gate and Volume Kicker thresholds are INCLUSIVE (>= comparison)
   gate            Int      // Threshold units per SEC before incentives apply
   volumeKicker    Int      // Units per SEC after which 120% incentive applies
 

@@ -25,18 +25,18 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Form fields: force neutral black borders and focus states across the app */
+/* Form fields: default neutral borders and focus states across the app */
 input,
 select,
 textarea {
-  border-color: #0f172a !important; /* blackish */
+  border-color: #d1d5db;
   box-shadow: none;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid #0f172a !important;
+  outline: 2px solid #0ea5e9;
   outline-offset: 0;
   box-shadow: none;
 }

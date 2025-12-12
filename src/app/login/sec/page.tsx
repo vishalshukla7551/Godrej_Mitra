@@ -20,8 +20,26 @@ export default function SECLogin() {
 
   // Shared input styles – keep consistent with Phone Number field
   const inputBaseClasses =
-    'w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500';
-  const labelBaseClasses = 'block text-sm font-medium text-gray-900 mb-2';
+    'w-full px-3 py-2.5 rounded-lg text-base text-black placeholder:text-gray-500 transition-all duration-200 border-0 outline-none focus:outline-none';
+  const labelBaseClasses = 'block text-sm font-medium text-gray-900 mb-1.5';
+
+  // Apply important styles on mount
+  useEffect(() => {
+    const phoneInput = document.getElementById('phone') as HTMLInputElement;
+    const otpInput = document.getElementById('otp') as HTMLInputElement;
+    
+    if (phoneInput) {
+      phoneInput.style.setProperty('background-color', '#e8f0fe', 'important');
+      phoneInput.style.setProperty('border', '1px solid #d1d5db', 'important');
+      phoneInput.style.setProperty('outline', 'none', 'important');
+    }
+    
+    if (otpInput) {
+      otpInput.style.setProperty('background-color', 'transparent', 'important');
+      otpInput.style.setProperty('border', '1px solid #d1d5db', 'important');
+      otpInput.style.setProperty('outline', 'none', 'important');
+    }
+  }, [otpSent]);
 
   // If already logged in, redirect away from SEC login.
   useEffect(() => {
@@ -162,13 +180,11 @@ export default function SECLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#e5e7eb' }}>
+      <div className="w-full bg-white rounded-2xl shadow-lg p-10" style={{ maxWidth: '450px' }}>
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            SC+ Engagement Portal
-          </h1>
-          <h2 className="text-gray-500">SEC Login</h2>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">SEC Login</h1>
+          <p className="text-gray-500">Login with your phone number</p>
         </div>
 
         <form
@@ -183,34 +199,32 @@ export default function SECLogin() {
             >
               Phone Number
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg
-                  className="w-6 h-6 text-black"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                  />
-                </svg>
-              </div>
-              <input
-                type="tel"
-                id="phone"
-                name="sec-phone"
-                autoComplete="off"
-                inputMode="tel"
-                value={phoneNumber}
-                onChange={handlePhoneChange}
-                placeholder="Enter your phone number"
-                className={`pl-14 pr-4 ${inputBaseClasses.replace('px-4 ', '')}`}
-              />
-            </div>
+            <input
+              type="tel"
+              id="phone"
+              name="sec-phone"
+              autoComplete="off"
+              inputMode="tel"
+              value={phoneNumber}
+              onChange={handlePhoneChange}
+              placeholder="Enter your phone number"
+              className={inputBaseClasses}
+              style={{
+                backgroundColor: '#e8f0fe',
+                border: '1px solid #d1d5db',
+                outline: 'none',
+                transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.setProperty('border-color', 'rgb(120, 164, 235)', 'important');
+                e.target.style.setProperty('box-shadow', 'rgba(59, 130, 246, 0.06) 0px 0px 0px 1.77453px', 'important');
+                e.target.style.setProperty('outline', 'none', 'important');
+              }}
+              onBlur={(e) => {
+                e.target.style.setProperty('border-color', '#d1d5db', 'important');
+                e.target.style.setProperty('box-shadow', 'none', 'important');
+              }}
+            />
             {validationMessage && (
               <p
                 className={`mt-2 text-sm ${
@@ -223,16 +237,16 @@ export default function SECLogin() {
           </div>
 
           <div className="flex items-start">
-            <div className="flex items-center h-6">
+            <div className="flex items-center h-5">
               <input
                 type="checkbox"
                 id="terms"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="w-5 h-5 border-2 border-gray-300 rounded cursor-pointer"
+                className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
               />
             </div>
-            <label htmlFor="terms" className="ml-3 text-sm text-gray-600">
+            <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
               I have read and agree to the{' '}
               <Link
                 href="/terms"
@@ -250,42 +264,123 @@ export default function SECLogin() {
             </label>
           </div>
 
-          {otpSent && (
-            <div>
-              <label
-                htmlFor="otp"
-                className={labelBaseClasses}
-              >
-                OTP
-              </label>
-              <input
-                type="text"
-                id="otp"
-                name="otp"
-                autoComplete="off"
-                inputMode="numeric"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                placeholder="Enter your OTP"
-                className={inputBaseClasses}
-              />
-            </div>
-          )}
+
 
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white font-semibold py-4 rounded-lg hover:bg-blue-700 transition-colors text-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            type="button"
+            onClick={handleSendOTP}
+            disabled={loading || otpSent}
+            className="w-full text-white font-semibold py-2.5 rounded-xl transition-colors text-base disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            style={{ 
+              backgroundColor: (loading || otpSent) ? '#d1d5db' : '#3b82f6'
+            }}
+            onMouseEnter={(e) => {
+              if (!loading && !otpSent) {
+                e.currentTarget.style.backgroundColor = '#2563eb';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading && !otpSent) {
+                e.currentTarget.style.backgroundColor = '#3b82f6';
+              }
+            }}
           >
-            {loading && <ButtonLoader variant="light" size="md" />}
-            {loading
-              ? otpSent
-                ? 'Verifying...'
-                : 'Sending...'
-              : otpSent
-                ? 'Verify & Continue'
-                : 'Send OTP'}
+            {loading && !otpSent && <ButtonLoader variant="light" size="md" />}
+            {loading && !otpSent ? 'Sending...' : 'Send OTP'}
           </button>
+
+          {otpSent && (
+            <>
+              {/* Divider */}
+              <div style={{
+                height: '1px',
+                background: 'linear-gradient(90deg, transparent, #e5e7eb, transparent)',
+                marginBottom: '24px'
+              }} />
+              
+              <div>
+                <p className="text-center mb-3" style={{ fontSize: '14px', color: '#374151', fontWeight: 500 }}>
+                  OTP sent to registered whatsapp number
+                </p>
+                <input
+                  type="text"
+                  id="otp"
+                  name="otp"
+                  autoComplete="off"
+                  inputMode="numeric"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="Enter OTP"
+                  className={inputBaseClasses}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: '1px solid #d1d5db',
+                    outline: 'none',
+                    textAlign: 'center',
+                    transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.setProperty('border-color', 'rgb(120, 164, 235)', 'important');
+                    e.target.style.setProperty('box-shadow', 'rgba(59, 130, 246, 0.06) 0px 0px 0px 1.77453px', 'important');
+                    e.target.style.setProperty('outline', 'none', 'important');
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.setProperty('border-color', '#d1d5db', 'important');
+                    e.target.style.setProperty('box-shadow', 'none', 'important');
+                  }}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleVerifyOTP}
+                  disabled={loading}
+                  className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-colors text-base disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{ 
+                    backgroundColor: loading ? '#d1d5db' : '#10b981'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.backgroundColor = '#059669';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.backgroundColor = '#10b981';
+                    }
+                  }}
+                >
+                  {loading && <ButtonLoader variant="light" size="md" />}
+                  {loading ? 'Verifying...' : 'Verify'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setOtp('');
+                    setError(null);
+                  }}
+                  disabled={loading}
+                  className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-colors text-base disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#6b7280' }}
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.backgroundColor = '#4b5563';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.backgroundColor = '#6b7280';
+                    }
+                  }}
+                >
+                Cancel
+              </button>
+              </div>
+            </>
+          )}
         </form>
 
         <div className="mt-6 text-center space-y-3">

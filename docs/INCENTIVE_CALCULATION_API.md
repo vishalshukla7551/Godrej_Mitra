@@ -20,6 +20,9 @@ GET /api/sec/incentive/calculate?secId=<secId>&month=<month>&year=<year>
 
 ## Incentive Calculation Rules
 
+### Store-Level Calculation
+**IMPORTANT**: Incentives ar`e calculated at the **store level** (all SECs combined), then divided equally among all SECs at that store.
+
 ### Price Incentive Slabs
 Each device sale is mapped to a price slab based on the `SamsungSKU.ModelPrice`:
 - `minPrice` to `maxPrice` range determines which slab applies
@@ -34,16 +37,23 @@ Thresholds are multiplied by the number of SECs at the store:
 - `finalVolumeKicker = volumeKicker * store.numberOfSec`
 
 ### Incentive Tiers
-For each group (store + price slab):
+For the entire store (all SECs' sales combined):
 
-1. **Units ≤ finalGate** → 0% incentive
+1. **Units < finalGate** → 0% incentive
    - No incentive earned
 
-2. **Units > finalGate AND ≤ finalVolumeKicker** → 100% incentive on ALL units
-   - Incentive = units × incentiveAmount × 100%
+2. **Units >= finalGate AND < finalVolumeKicker** → 100% incentive on ALL units
+   - Store Incentive = units × incentiveAmount × 100%
+   - Applies when units reach exactly the gate threshold
 
-3. **Units > finalVolumeKicker** → 120% incentive on ALL units
-   - Incentive = units × incentiveAmount × 120%
+3. **Units >= finalVolumeKicker** → 120% incentive on ALL units
+   - Store Incentive = units × incentiveAmount × 120%
+   - Applies when units reach exactly the volume kicker threshold
+
+### Equal Distribution
+After calculating the total store incentive:
+- **Each SEC's Share = Total Store Incentive ÷ numberOfSec**
+- All SECs at the same store receive equal shares regardless of individual performance
 
 ## Response Format
 
