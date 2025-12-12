@@ -144,6 +144,19 @@ export default function ZopperAdministratorLayout({
               <span className="text-sm leading-normal">User Validation</span>
             </Link>
 
+            {/* Store Change Requests */}
+            <Link
+              href="/Zopper-Administrator/store-change-requests"
+              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${
+                isActive('/Zopper-Administrator/store-change-requests')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
+              }`}
+            >
+              <span className="text-lg shrink-0">🏪</span>
+              <span className="text-sm leading-normal">Store Change Requests</span>
+            </Link>
+
             {/* View Referrals */}
             <Link
               href="/Zopper-Administrator/referrals"

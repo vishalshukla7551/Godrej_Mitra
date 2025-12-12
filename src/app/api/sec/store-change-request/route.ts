@@ -14,9 +14,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Find SEC by ID (for SEC users, authUser.id is the SEC ObjectId)
+    // Find SEC by phone (for SEC users, authUser.id is the phone number)
     const sec = await prisma.sEC.findUnique({
-      where: { id: authUser.id },
+      where: { phone: authUser.id },
       select: {
         id: true,
         fullName: true,
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     }
 
     const sec = await prisma.sEC.findUnique({
-      where: { id: authUser.id },
+      where: { phone: authUser.id },
       select: {
         id: true,
         storeId: true,
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
     };
 
     await prisma.sEC.update({
-      where: { id: authUser.id },
+      where: { phone: authUser.id },
       data: {
         kycInfo: updatedKycInfo
       }
