@@ -184,21 +184,7 @@ export default function SECLogin() {
       className="min-h-screen flex items-center justify-center p-4 relative"
       style={{ backgroundColor: '#F5F6F8' }}
     >
-      {/* Santa Hat - Top Left Corner */}
-      <Image
-        src="/images/santa-hat.png"
-        alt="Santa Hat"
-        width={150}
-        height={120}
-        className="absolute -top-12 -left-10 rotate-[-20deg] pointer-events-none z-10"
-        style={{
-          top: 'calc(50% - 300px)',
-          left: 'calc(50% - 280px)',
-        }}
-        priority
-      />
-
-      {/* Gift Box - Right Side of Card (with gap, not overlapping) */}
+      {/* Gift Box - Fixed to page (not card) */}
       <Image
         src="/images/gift-box.png"
         alt="Christmas Gift"
@@ -207,17 +193,36 @@ export default function SECLogin() {
         className="absolute pointer-events-none z-10"
         style={{
           top: '50%',
-          left: 'calc(50% + 260px)',
+          left: 'calc(50% + 160px)',
           transform: 'translateY(20%)',
           filter: 'drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12))',
         }}
         priority
       />
 
-      <div
-        className="w-full bg-white rounded-2xl p-10 relative"
-        style={{ maxWidth: '450px', boxShadow: 'rgba(0,0,0,0.08) 0px 4px 12px' }}
-      >
+      {/* Card Wrapper - Anchors Santa hat to the card */}
+      <div className="relative" style={{ maxWidth: '450px', width: '100%' }}>
+        {/* Santa Hat - Anchored to Card Top Left */}
+        <Image
+          src="/images/santa-hat.png"
+          alt="Santa Hat"
+          width={130}
+          height={130}
+          className="absolute pointer-events-none z-20"
+          style={{
+            top: '-50px',
+            left: '-45px',
+            transform: 'rotate(-18deg)',
+            filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.18))',
+          }}
+          priority
+        />
+
+        {/* Login Card */}
+        <div
+          className="w-full bg-white rounded-2xl p-10 relative"
+          style={{ boxShadow: 'rgba(0,0,0,0.08) 0px 4px 12px' }}
+        >
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">SEC Login</h1>
           <p className="text-gray-500">Login with your phone number</p>
@@ -465,6 +470,7 @@ export default function SECLogin() {
             />
             <span className="text-base font-semibold text-gray-900">Zopper</span>
           </div>
+        </div>
         </div>
       </div>
     </div>

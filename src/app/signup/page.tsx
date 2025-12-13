@@ -229,8 +229,49 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{ backgroundColor: '#F5F6F8' }}
+    >
+      {/* Gift Box - Fixed to page */}
+      <Image
+        src="/images/gift-box.png"
+        alt="Christmas Gift"
+        width={200}
+        height={200}
+        className="absolute pointer-events-none z-10"
+        style={{
+          top: '50%',
+          left: 'calc(50% + 220px)',
+          transform: 'translateY(20%)',
+          filter: 'drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12))',
+        }}
+        priority
+      />
+
+      {/* Card Wrapper - Anchors Santa hat to the card */}
+      <div className="relative" style={{ maxWidth: '512px', width: '100%' }}>
+        {/* Santa Hat - Anchored to Card Top Left */}
+        <Image
+          src="/images/santa-hat.png"
+          alt="Santa Hat"
+          width={130}
+          height={130}
+          className="absolute pointer-events-none z-20"
+          style={{
+            top: '-50px',
+            left: '-45px',
+            transform: 'rotate(-18deg)',
+            filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.18))',
+          }}
+          priority
+        />
+
+        {/* Signup Card */}
+        <div
+          className="w-full bg-white rounded-2xl p-6 sm:p-8 relative"
+          style={{ boxShadow: 'rgba(0,0,0,0.08) 0px 4px 12px' }}
+        >
         <div className="text-center mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create Account</h1>
         </div>
@@ -686,11 +727,30 @@ export default function SignUpPage() {
           <button
             type="submit"
             disabled={!isFormValid()}
-            className={`w-full font-semibold py-2.5 rounded-lg transition-colors text-base ${
-              isFormValid()
-                ? 'bg-gray-900 text-white hover:bg-gray-800 cursor-pointer'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+            className="w-full font-semibold py-2.5 transition-colors text-base text-white"
+            style={{
+              background: !isFormValid()
+                ? '#d1d5db'
+                : 'linear-gradient(135deg, #E53935 0%, #FF4D4D 100%)',
+              borderRadius: '12px',
+              boxShadow: !isFormValid()
+                ? 'none'
+                : 'rgba(229, 57, 53, 0.2) 0px 4px 12px',
+              cursor: !isFormValid() ? 'not-allowed' : 'pointer',
+              color: !isFormValid() ? '#6b7280' : '#ffffff',
+            }}
+            onMouseEnter={(e) => {
+              if (isFormValid()) {
+                e.currentTarget.style.background =
+                  'linear-gradient(135deg, #C62828 0%, #E53935 100%)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (isFormValid()) {
+                e.currentTarget.style.background =
+                  'linear-gradient(135deg, #E53935 0%, #FF4D4D 100%)';
+              }
+            }}
           >
             Create Account
           </button>
@@ -722,6 +782,7 @@ export default function SignUpPage() {
             />
             <span className="text-base font-semibold text-gray-900">Zopper</span>
           </div>
+        </div>
         </div>
       </div>
     </div>

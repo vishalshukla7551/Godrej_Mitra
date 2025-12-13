@@ -100,8 +100,49 @@ export default function RoleLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#e5e7eb' }}>
-      <div className="w-full bg-white rounded-2xl shadow-lg p-10" style={{ maxWidth: '450px' }}>
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{ backgroundColor: '#F5F6F8' }}
+    >
+      {/* Gift Box - Fixed to page */}
+      <Image
+        src="/images/gift-box.png"
+        alt="Christmas Gift"
+        width={200}
+        height={200}
+        className="absolute pointer-events-none z-10"
+        style={{
+          top: '50%',
+          left: 'calc(50% + 160px)',
+          transform: 'translateY(20%)',
+          filter: 'drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12))',
+        }}
+        priority
+      />
+
+      {/* Card Wrapper - Anchors Santa hat to the card */}
+      <div className="relative" style={{ maxWidth: '450px', width: '100%' }}>
+        {/* Santa Hat - Anchored to Card Top Left */}
+        <Image
+          src="/images/santa-hat.png"
+          alt="Santa Hat"
+          width={130}
+          height={130}
+          className="absolute pointer-events-none z-20"
+          style={{
+            top: '-50px',
+            left: '-45px',
+            transform: 'rotate(-18deg)',
+            filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.18))',
+          }}
+          priority
+        />
+
+        {/* Login Card */}
+        <div
+          className="w-full bg-white rounded-2xl p-10 relative"
+          style={{ boxShadow: 'rgba(0,0,0,0.08) 0px 4px 12px' }}
+        >
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Login</h1>
           <p className="text-gray-500">Use your credentials</p>
@@ -223,10 +264,22 @@ export default function RoleLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full text-white font-semibold py-2.5 rounded-lg transition-colors text-base disabled:opacity-60 disabled:cursor-not-allowed"
-            style={{ backgroundColor: '#3b82f6' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+            className="w-full text-white font-semibold py-2.5 transition-colors text-base disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              background: loading ? '#d1d5db' : 'linear-gradient(135deg, #E53935 0%, #FF4D4D 100%)',
+              borderRadius: '12px',
+              boxShadow: loading ? 'none' : 'rgba(229, 57, 53, 0.2) 0px 4px 12px',
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.background = 'linear-gradient(135deg, #C62828 0%, #E53935 100%)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.currentTarget.style.background = 'linear-gradient(135deg, #E53935 0%, #FF4D4D 100%)';
+              }
+            }}
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -265,6 +318,7 @@ export default function RoleLogin() {
             />
             <span className="text-base font-semibold text-gray-900">Zopper</span>
           </div>
+        </div>
         </div>
       </div>
     </div>
