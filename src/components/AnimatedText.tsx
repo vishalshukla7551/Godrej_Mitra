@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 export default function AnimatedText() {
   const text = 'SalesDost';
   const totalChars = text.length;
-  const moveDuration = 4; // Time for each character to move across screen (slower)
-  const triggerDuration = 0.1; // All chars trigger within 0.1 seconds (extremely fast)
+  const moveDuration = 3.5; // Time for each character to move across screen
+  const triggerDuration = 1.5; // Time spread for all characters to start moving
   const [screenWidth, setScreenWidth] = useState(0);
   const router = useRouter();
 
@@ -21,17 +21,22 @@ export default function AnimatedText() {
     
     window.addEventListener('resize', handleResize);
     
-    // Navigate after S character triggers with extra time (delay = 0.5 + 0.1 + 0.1 = 0.7s)
-    const sCharDelay = 0.5 + triggerDuration + 0.1; // Added 0.1s extra time
+    // Navigate as soon as S starts moving off screen (very early to avoid blank screen)
+    // S delay = 0.3s + 1.5s = 1.8s, then moves for 3.5s
+    // Navigate 2.5s before S fully disappears (right when it starts moving)
+    const initialDelay = 0.3;
+    const sCharDelay = initialDelay + triggerDuration; // S starts last
+    const sCharCompleteTime = sCharDelay + moveDuration - 2.5; // Navigate much earlier
+    
     const navigationTimer = setTimeout(() => {
       router.push('/login/sec');
-    }, sCharDelay * 1000);
+    }, sCharCompleteTime * 1000);
     
     return () => {
       window.removeEventListener('resize', handleResize);
       clearTimeout(navigationTimer);
     };
-  }, [router, triggerDuration]);
+  }, [router, moveDuration, triggerDuration]);
 
   return (
     <div className="flex items-center justify-center px-4 sm:px-6 md:px-8">
@@ -39,7 +44,7 @@ export default function AnimatedText() {
         {text.split('').map((char, index) => {
           // Last character starts first (index 8), first character starts last (index 0)
           const reverseIndex = totalChars - 1 - index;
-          const delay = 0.5 + (reverseIndex * triggerDuration / totalChars);
+          const delay = 0.3 + (reverseIndex * triggerDuration / totalChars);
           
           return (
             <motion.span

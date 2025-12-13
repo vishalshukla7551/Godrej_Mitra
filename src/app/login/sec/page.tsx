@@ -180,8 +180,43 @@ export default function SECLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#e5e7eb' }}>
-      <div className="w-full bg-white rounded-2xl shadow-lg p-10" style={{ maxWidth: '450px' }}>
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{ backgroundColor: '#F5F6F8' }}
+    >
+      {/* Santa Hat - Top Left Corner */}
+      <Image
+        src="/images/santa-hat.png"
+        alt="Santa Hat"
+        width={150}
+        height={120}
+        className="absolute -top-12 -left-10 rotate-[-20deg] pointer-events-none z-10"
+        style={{
+          top: 'calc(50% - 300px)',
+          left: 'calc(50% - 280px)',
+        }}
+        priority
+      />
+
+      {/* Gift Box - Right Side of Card */}
+      <Image
+        src="/images/gift-box.png"
+        alt="Christmas Gift"
+        width={180}
+        height={180}
+        className="absolute pointer-events-none z-10"
+        style={{
+          top: '50%',
+          right: 'calc(50% - 380px)',
+          transform: 'translateY(-30%)',
+        }}
+        priority
+      />
+
+      <div
+        className="w-full bg-white rounded-2xl p-10 relative"
+        style={{ maxWidth: '450px', boxShadow: 'rgba(0,0,0,0.08) 0px 4px 12px' }}
+      >
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">SEC Login</h1>
           <p className="text-gray-500">Login with your phone number</p>
@@ -275,18 +310,21 @@ export default function SECLogin() {
             type="button"
             onClick={handleSendOTP}
             disabled={loading || otpSent}
-            className="w-full text-white font-semibold py-2.5 rounded-xl transition-colors text-base disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            style={{ 
-              backgroundColor: (loading || otpSent) ? '#d1d5db' : '#3b82f6'
+            className="w-full text-white font-semibold py-2.5 transition-colors text-base disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            style={{
+              background:
+                loading || otpSent ? '#d1d5db' : 'linear-gradient(135deg, #E53935 0%, #FF4D4D 100%)',
+              borderRadius: '12px',
+              boxShadow: loading || otpSent ? 'none' : 'rgba(229, 57, 53, 0.2) 0px 4px 12px',
             }}
             onMouseEnter={(e) => {
               if (!loading && !otpSent) {
-                e.currentTarget.style.backgroundColor = '#2563eb';
+                e.currentTarget.style.background = 'linear-gradient(135deg, #C62828 0%, #E53935 100%)';
               }
             }}
             onMouseLeave={(e) => {
               if (!loading && !otpSent) {
-                e.currentTarget.style.backgroundColor = '#3b82f6';
+                e.currentTarget.style.background = 'linear-gradient(135deg, #E53935 0%, #FF4D4D 100%)';
               }
             }}
           >
