@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import SECHeader from '../../SECHeader.jsx';
-import SECFooter from '../../SECFooter.jsx';
+import FestiveHeader from '@/components/FestiveHeader';
+import FestiveFooter from '@/components/FestiveFooter';
 
 export default function LandingPage({ userName = '' }) {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -103,20 +103,10 @@ export default function LandingPage({ userName = '' }) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <SECHeader />
+      <FestiveHeader userName={userName || 'Guest'} />
 
       {/* Main Content */}
       <main className="flex-1 pb-[220px] md:pb-[200px] lg:pb-[180px] w-full">
-        {/* Inner constrained container for desktop */}
-        {/* Greeting Section */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pt-4 sm:pt-5 md:pt-6 pb-2 sm:pb-3">
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-1">
-            Hello {userName || 'Guest'},
-          </h1>
-          <p className="text-gray-500 text-xs sm:text-sm md:text-base">
-            Welcome! Choose your action below
-          </p>
-        </div>
 
         {/* Banner Carousel */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 mb-4 sm:mb-5 md:mb-6">
@@ -228,7 +218,7 @@ export default function LandingPage({ userName = '' }) {
         </div>
       </main>
 
-      <SECFooter />
+      <FestiveFooter />
     </div>
   );
 }

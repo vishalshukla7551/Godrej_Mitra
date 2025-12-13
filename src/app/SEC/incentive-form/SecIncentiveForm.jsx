@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Confetti from 'react-confetti';
-import SECHeader from '../SECHeader.jsx';
-import SECFooter from '../SECFooter.jsx';
+import FestiveHeader from '@/components/FestiveHeader';
+import FestiveFooter from '@/components/FestiveFooter';
 
 export default function SecIncentiveForm({ initialSecId = '' }) {
   const router = useRouter();
@@ -357,7 +357,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
-      <SECHeader />
+      <FestiveHeader hideGreeting />
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-32">
@@ -601,7 +601,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
 
 
-      <SECFooter />
+      <FestiveFooter />
 
       {/* Success Celebration Modal */}
       {showSuccessModal && (

@@ -1,0 +1,77 @@
+.pineWrapper {
+  position: absolute;
+  top: -10px;
+  z-index: 10;
+  pointer-events: none;
+  animation: pineWave 7s ease-in-out infinite;
+}
+
+.left {
+  left: -30px;
+  transform-origin: top left;
+}
+
+.right {
+  right: -30px;
+  transform-origin: top right;
+  animation: pineWaveRight 7s ease-in-out infinite;
+}
+
+.pineImage {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 360px;
+}
+
+/* Gentle waving animation - very subtle */
+@keyframes pineWave {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
+  }
+}
+
+@keyframes pineWaveRight {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-1.5deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .pineWrapper {
+    transform: scale(0.7);
+  }
+  
+  .left {
+    left: -50px;
+    top: -10px;
+  }
+  
+  .right {
+    right: -50px;
+    top: -10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pineWrapper {
+    transform: scale(0.5);
+  }
+  
+  .left {
+    left: -70px;
+    top: -20px;
+  }
+  
+  .right {
+    right: -70px;
+    top: -20px;
+  }
+}

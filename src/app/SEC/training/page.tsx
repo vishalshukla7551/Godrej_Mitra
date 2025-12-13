@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Play, FileText, Download, CheckCircle2, Clock } from 'lucide-react';
-import SECHeader from '../SECHeader.jsx';
-import SECFooter from '../SECFooter.jsx';
+import FestiveHeader from '@/components/FestiveHeader';
+import FestiveFooter from '@/components/FestiveFooter';
 
 const MONTHS = [
   'January',
@@ -144,7 +144,7 @@ export default function TrainingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
-      <SECHeader />
+      <FestiveHeader hideGreeting />
 
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
@@ -337,7 +337,7 @@ export default function TrainingPage() {
         </div>
       </main>
 
-      <SECFooter />
+      <FestiveFooter />
     </div>
   );
 }
