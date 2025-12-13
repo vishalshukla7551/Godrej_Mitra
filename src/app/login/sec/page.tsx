@@ -198,17 +198,18 @@ export default function SECLogin() {
         priority
       />
 
-      {/* Gift Box - Right Side of Card */}
+      {/* Gift Box - Right Side of Card (with gap, not overlapping) */}
       <Image
         src="/images/gift-box.png"
         alt="Christmas Gift"
-        width={180}
-        height={180}
+        width={200}
+        height={200}
         className="absolute pointer-events-none z-10"
         style={{
           top: '50%',
-          right: 'calc(50% - 380px)',
-          transform: 'translateY(-30%)',
+          left: 'calc(50% + 260px)',
+          transform: 'translateY(20%)',
+          filter: 'drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12))',
         }}
         priority
       />
