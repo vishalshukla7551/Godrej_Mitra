@@ -36,9 +36,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid or expired OTP' }, { status: 401 });
     }
 
+    // Check if OTP code matches FIRST
+    if (record.code !== otp) {
+      return NextResponse.json({ error: 'Invalid OTP. Please check and try again.' }, { status: 401 });
+    }
+
+    // Only check expiration if the OTP code is correct
     const now = new Date();
-    if (record.expiresAt < now || record.code !== otp) {
-      return NextResponse.json({ error: 'Invalid or expired OTP' }, { status: 401 });
+    const isExpired = record.expiresAt.getTime() < now.getTime();
+    
+    if (isExpired) {
+      return NextResponse.json({ error: 'OTP has expired. Please request a new OTP.' }, { status: 401 });
     }
 
     // Mark OTP as verified so we keep a history, but do not delete it here.

@@ -234,6 +234,11 @@ export default function SECLogin() {
                 {validationMessage}
               </p>
             )}
+            {error && !otpSent && (
+              <p className="mt-2 text-sm text-red-600">
+                {error}
+              </p>
+            )}
           </div>
 
           <div className="flex items-start">
@@ -329,6 +334,11 @@ export default function SECLogin() {
                     e.target.style.setProperty('box-shadow', 'none', 'important');
                   }}
                 />
+                {error && (
+                  <p className="mt-2 text-sm text-red-600 text-center">
+                    {error}
+                  </p>
+                )}
               </div>
 
               <div className="flex gap-3">

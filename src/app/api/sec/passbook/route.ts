@@ -176,33 +176,39 @@ export async function GET(req: NextRequest) {
     };
 
     // Sales Summary (common for both tabs)
-    // Show each sale as a separate row
-    // Include all sales reports (both with and without campaigns)
-    const salesSummary = salesReports.map((report: any) => {
+    // Group sales by date and count units by product type
+    const salesByDate: Record<string, { adld1Year: number; combo2Year: number }> = {};
+    
+    salesReports.forEach((report: any) => {
       const date = formatDate(report.Date_of_sale || report.createdAt);
       const planType = report.plan.planType;
       
-      // Determine ADLD and Combo from planType
-      let adld = '-';
-      let combo = '-';
-      
-      if (planType.includes('ADLD')) {
-        adld = planType;
-      } else if (planType.includes('COMBO')) {
-        combo = planType;
+      if (!salesByDate[date]) {
+        salesByDate[date] = { adld1Year: 0, combo2Year: 0 };
       }
-
-      return {
-        date,
-        adld,
-        combo,
-        units: 1,
-      };
-    }).sort((a: { date: string; adld: string; combo: string; units: number }, b: { date: string; adld: string; combo: string; units: number }) => {
-      const dateA = a.date.split('-').reverse().join('-');
-      const dateB = b.date.split('-').reverse().join('-');
-      return dateB.localeCompare(dateA);
+      
+      // Count units by plan type - check for ADLD or COMBO
+      // ADLD plans are typically 1 year, COMBO plans are typically 2 years
+      if (planType.includes('ADLD')) {
+        salesByDate[date].adld1Year += 1;
+      } else if (planType.includes('COMBO')) {
+        salesByDate[date].combo2Year += 1;
+      }
     });
+
+    // Convert to array and sort by date (newest first)
+    const salesSummary = Object.entries(salesByDate)
+      .map(([date, counts]) => ({
+        date,
+        adld1Year: counts.adld1Year,
+        combo2Year: counts.combo2Year,
+        units: counts.adld1Year + counts.combo2Year,
+      }))
+      .sort((a, b) => {
+        const dateA = a.date.split('-').reverse().join('-');
+        const dateB = b.date.split('-').reverse().join('-');
+        return dateB.localeCompare(dateA);
+      });
 
     // Monthly Incentive Transactions (from SalesSummary)
     // These show accumulated data for each month
@@ -283,7 +289,7 @@ export async function GET(req: NextRequest) {
         return dateB.localeCompare(dateA);
       });
 
-    // Calculate Financial Year Stats
+    // Calculate Financial Year Stats - Separate for Monthly and Spot
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
     
@@ -292,7 +298,14 @@ export async function GET(req: NextRequest) {
       ? `FY-${String(currentYear).slice(-2)}`
       : `FY-${String(currentYear - 1).slice(-2)}`;
 
-    const fyStats: Record<string, {
+    const monthlyFyStats: Record<string, {
+      units: string;
+      totalEarned: string;
+      paid: string;
+      net: string;
+    }> = {};
+
+    const spotFyStats: Record<string, {
       units: string;
       totalEarned: string;
       paid: string;
@@ -316,13 +329,13 @@ export async function GET(req: NextRequest) {
         }
       });
 
-      // Calculate monthly incentive stats
-      let totalUnits = 0;
-      let totalEarned = 0;
-      let totalPaid = 0;
+      // Calculate MONTHLY incentive stats
+      let monthlyUnits = 0;
+      let monthlyEarned = 0;
+      let monthlyPaid = 0;
 
       fySummaries.forEach((summary: any) => {
-        totalUnits += summary.salesReport.length;
+        monthlyUnits += summary.salesReport.length;
         
         // Use totalSamsungIncentiveEarned if set, otherwise use estimatedIncenetiveEarned
         const incentiveAmount = summary.totalSamsungIncentiveEarned != null
@@ -330,14 +343,23 @@ export async function GET(req: NextRequest) {
           : summary.estimatedIncenetiveEarned;
         
         if (incentiveAmount != null) {
-          totalEarned += incentiveAmount;
+          monthlyEarned += incentiveAmount;
           if (summary.samsungincentivepaidAt) {
-            totalPaid += incentiveAmount;
+            monthlyPaid += incentiveAmount;
           }
         }
       });
 
-      // Calculate spot incentive stats for this FY
+      const monthlyNet = monthlyEarned - monthlyPaid;
+
+      monthlyFyStats[fy] = {
+        units: monthlyUnits.toLocaleString('en-IN'),
+        totalEarned: `₹${monthlyEarned.toLocaleString('en-IN')}`,
+        paid: `₹${monthlyPaid.toLocaleString('en-IN')}`,
+        net: `₹${monthlyNet.toLocaleString('en-IN')}`,
+      };
+
+      // Calculate SPOT incentive stats for this FY
       // Only count reports that have spot incentive (i.e., had active campaigns)
       const fyStart = new Date(year, 3, 1); // April 1
       const fyEnd = new Date(year + 1, 2, 31); // March 31
@@ -347,28 +369,41 @@ export async function GET(req: NextRequest) {
         return reportDate >= fyStart && reportDate <= fyEnd && report.spotincentiveEarned > 0;
       });
 
+      let spotUnits = 0;
+      let spotEarned = 0;
+      let spotPaid = 0;
+
       fySpotReports.forEach((report: any) => {
-        totalEarned += report.spotincentiveEarned;
+        spotUnits += 1;
+        spotEarned += report.spotincentiveEarned;
         if (report.spotincentivepaidAt) {
-          totalPaid += report.spotincentiveEarned;
+          spotPaid += report.spotincentiveEarned;
         }
       });
 
-      const net = totalEarned - totalPaid;
+      const spotNet = spotEarned - spotPaid;
 
-      fyStats[fy] = {
-        units: totalUnits.toLocaleString('en-IN'),
-        totalEarned: `₹${totalEarned.toLocaleString('en-IN')}`,
-        paid: `₹${totalPaid.toLocaleString('en-IN')}`,
-        net: `₹${net.toLocaleString('en-IN')}`,
+      spotFyStats[fy] = {
+        units: spotUnits.toLocaleString('en-IN'),
+        totalEarned: `₹${spotEarned.toLocaleString('en-IN')}`,
+        paid: `₹${spotPaid.toLocaleString('en-IN')}`,
+        net: `₹${spotNet.toLocaleString('en-IN')}`,
       };
     }
 
     // Fill in missing FYs with zeros
     const allFYs = ['FY-25', 'FY-24', 'FY-23', 'FY-22', 'FY-21'];
     allFYs.forEach((fy) => {
-      if (!fyStats[fy]) {
-        fyStats[fy] = {
+      if (!monthlyFyStats[fy]) {
+        monthlyFyStats[fy] = {
+          units: '0',
+          totalEarned: '₹0',
+          paid: '₹0',
+          net: '₹0',
+        };
+      }
+      if (!spotFyStats[fy]) {
+        spotFyStats[fy] = {
           units: '0',
           totalEarned: '₹0',
           paid: '₹0',
@@ -386,15 +421,14 @@ export async function GET(req: NextRequest) {
         // Monthly incentive tab data
         monthlyIncentive: {
           transactions: monthlyTransactions,
+          fyStats: monthlyFyStats,
         },
         
         // Spot incentive tab data
         spotIncentive: {
           transactions: spotTransactions,
+          fyStats: spotFyStats,
         },
-        
-        // Financial year stats (common for both tabs)
-        fyStats,
       },
     });
   } catch (error) {

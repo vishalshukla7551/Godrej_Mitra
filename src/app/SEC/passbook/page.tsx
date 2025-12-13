@@ -12,8 +12,8 @@ type FilterType = (typeof monthlyFilters)[number];
 
 type MonthlySale = {
   date: string;
-  adld: string;
-  combo: string;
+  adld1Year: number;
+  combo2Year: number;
   units: number;
 };
 
@@ -33,20 +33,23 @@ type SpotVoucher = {
   voucherCode: string;
 };
 
+type FYStats = Record<string, {
+  units: string;
+  totalEarned: string;
+  paid: string;
+  net: string;
+}>;
+
 type PassbookData = {
   salesSummary: MonthlySale[];
   monthlyIncentive: {
     transactions: MonthlyTxn[];
+    fyStats: FYStats;
   };
   spotIncentive: {
     transactions: SpotVoucher[];
+    fyStats: FYStats;
   };
-  fyStats: Record<string, {
-    units: string;
-    totalEarned: string;
-    paid: string;
-    net: string;
-  }>;
 };
 
 const statsCardsConfig = [
@@ -129,7 +132,9 @@ export default function IncentivePassbookPage() {
   );
 
   // Get available FYs from API data or default
-  const allFYs = passbookData?.fyStats ? Object.keys(passbookData.fyStats) : ['FY-25', 'FY-24', 'FY-23', 'FY-22', 'FY-21'];
+  const allFYs = passbookData?.monthlyIncentive?.fyStats 
+    ? Object.keys(passbookData.monthlyIncentive.fyStats) 
+    : ['FY-25', 'FY-24', 'FY-23', 'FY-22', 'FY-21'];
 
   const filteredMonthlySales = salesSummaryData
     .filter((row) => {
@@ -156,11 +161,7 @@ export default function IncentivePassbookPage() {
     .filter((row) => {
       if (!search.trim()) return true;
       const term = search.toLowerCase();
-      return (
-        row.date.toLowerCase().includes(term) ||
-        row.adld.toLowerCase().includes(term) ||
-        row.combo.toLowerCase().includes(term)
-      );
+      return row.date.toLowerCase().includes(term);
     })
     .sort((a, b) => {
       const da = parseDate(a.date).getTime();
@@ -168,8 +169,15 @@ export default function IncentivePassbookPage() {
       return sortAsc ? da - db : db - da;
     });
 
-  // Get FY stats from API data
-  const fyStats = passbookData?.fyStats?.[selectedFY] || {
+  // Get FY stats from API data based on active tab
+  const monthlyFyStats = passbookData?.monthlyIncentive?.fyStats?.[selectedFY] || {
+    units: '0',
+    totalEarned: '₹0',
+    paid: '₹0',
+    net: '₹0',
+  };
+
+  const spotFyStats = passbookData?.spotIncentive?.fyStats?.[selectedFY] || {
     units: '0',
     totalEarned: '₹0',
     paid: '₹0',
@@ -313,42 +321,74 @@ export default function IncentivePassbookPage() {
             </button>
           </div>
 
+          {/* Sales Summary - Common for both tabs */}
+          <section className="mb-5">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h2 className="text-sm font-semibold text-gray-900 mb-0.5">Sales Summary</h2>
+                <p className="text-[11px] text-gray-500">Your recorded monthly sales</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-gray-600">Month</span>
+                <select
+                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                >
+                  <option value="All">All Months</option>
+                  {allMonths.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
+              <div className="grid grid-cols-4 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
+                <span>Date</span>
+                <span className="text-right">ADLD(1-Year)</span>
+                <span className="text-right">COMBO(2-Year)</span>
+                <span className="text-right">Total Units</span>
+              </div>
+              {filteredMonthlySales.length === 0 ? (
+                <div className="px-3 py-4 text-center text-gray-500 text-xs">
+                  No sales data found
+                </div>
+              ) : (
+                filteredMonthlySales.map((row, idx) => (
+                  <div
+                    key={row.date + idx}
+                    className="grid grid-cols-4 px-3 py-3 border-t border-gray-100 text-gray-800"
+                  >
+                    <span className="font-medium">{row.date}</span>
+                    <span className="text-right">{row.adld1Year}</span>
+                    <span className="text-right">{row.combo2Year}</span>
+                    <span className="text-right font-semibold text-black">{row.units}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
           {activeTab === 'monthly' ? (
             <MonthlyIncentiveSection
-              rows={filteredMonthlySales}
               transactions={monthlyTransactions}
-              allMonths={allMonths}
-              selectedMonth={selectedMonth}
-              setSelectedMonth={setSelectedMonth}
               selectedFY={selectedFY}
               setSelectedFY={setSelectedFY}
               allFYs={allFYs}
+              fyStats={monthlyFyStats}
             />
           ) : (
             <SpotIncentiveSection
-              rows={filteredMonthlySales}
               transactions={spotTransactions}
-              allMonths={allMonths}
-              selectedMonth={selectedMonth}
-              setSelectedMonth={setSelectedMonth}
               selectedFY={selectedFY}
               setSelectedFY={setSelectedFY}
               allFYs={allFYs}
+              fyStats={spotFyStats}
             />
           )}
-
-          {/* Stats cards (common) */}
-          <div className="mt-5 mb-4 space-y-3">
-            {statsCardsConfig.map((card) => (
-              <div
-                key={card.id}
-                className={`bg-gradient-to-r ${card.gradient} rounded-2xl px-4 py-4 text-white`}
-              >
-                <p className="text-xs mb-1">{card.label}</p>
-                <p className="text-xl font-semibold">{fyStats[card.key as keyof typeof fyStats]}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </main>
 
@@ -358,70 +398,31 @@ export default function IncentivePassbookPage() {
 }
 
 function MonthlyIncentiveSection({
-  rows,
   transactions,
-  allMonths,
-  selectedMonth,
-  setSelectedMonth,
   selectedFY,
   setSelectedFY,
   allFYs,
+  fyStats,
 }: {
-  rows: MonthlySale[];
   transactions: MonthlyTxn[];
-  allMonths: string[];
-  selectedMonth: string;
-  setSelectedMonth: (m: string) => void;
   selectedFY: string;
   setSelectedFY: (fy: string) => void;
   allFYs: string[];
+  fyStats: {
+    units: string;
+    totalEarned: string;
+    paid: string;
+    net: string;
+  };
 }) {
+  const statsCardsConfig = [
+    { id: 'units', label: 'Total Units Sold', key: 'units', gradient: 'from-[#176CF3] to-[#3056FF]' },
+    { id: 'total-earned', label: 'Total Earned Incentive', key: 'totalEarned', gradient: 'from-[#16A34A] to-[#22C55E]' },
+    { id: 'paid', label: 'Paid Incentive', key: 'paid', gradient: 'from-[#9333EA] to-[#EC4899]' },
+    { id: 'net', label: 'Net Balance', key: 'net', gradient: 'from-[#2563EB] to-[#4F46E5]' },
+  ] as const;
   return (
     <>
-      {/* Sales Summary */}
-      <section className="mb-5">
-        <h2 className="text-sm font-semibold text-gray-900 mb-1">Sales Summary</h2>
-        <p className="text-[11px] text-gray-500 mb-2">Your recorded monthly sales</p>
-
-        <div className="flex justify-end mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-gray-600">Month</span>
-            <select
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-            >
-              <option value="All">All Months</option>
-              {allMonths.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
-          <div className="grid grid-cols-4 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
-            <span>Date</span>
-            <span>ADLD</span>
-            <span>Combo</span>
-            <span className="text-right">Units</span>
-          </div>
-          {rows.map((row, idx) => (
-            <div
-              key={row.date + idx}
-              className="grid grid-cols-4 px-3 py-2 border-t border-gray-100 text-gray-800"
-            >
-              <span>{row.date}</span>
-              <span>{row.adld}</span>
-              <span>{row.combo}</span>
-              <span className="text-right">{row.units}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Previous Transactions */}
       <section className="mb-5">
         <h2 className="text-sm font-semibold text-gray-900 mb-1">Previous Transactions</h2>
@@ -488,75 +489,49 @@ function MonthlyIncentiveSection({
           </div>
         </div>
       </section>
+
+      {/* Stats cards for Monthly Incentive */}
+      <div className="mt-5 mb-4 space-y-3">
+        {statsCardsConfig.map((card) => (
+          <div
+            key={card.id}
+            className={`bg-gradient-to-r ${card.gradient} rounded-2xl px-4 py-4 text-white`}
+          >
+            <p className="text-xs mb-1">{card.label}</p>
+            <p className="text-xl font-semibold">{fyStats[card.key as keyof typeof fyStats]}</p>
+          </div>
+        ))}
+      </div>
     </>
   );
 }
 
 function SpotIncentiveSection({
-  rows,
   transactions,
-  allMonths,
-  selectedMonth,
-  setSelectedMonth,
   selectedFY,
   setSelectedFY,
   allFYs,
+  fyStats,
 }: {
-  rows: MonthlySale[];
   transactions: SpotVoucher[];
-  allMonths: string[];
-  selectedMonth: string;
-  setSelectedMonth: (m: string) => void;
   selectedFY: string;
   setSelectedFY: (fy: string) => void;
   allFYs: string[];
+  fyStats: {
+    units: string;
+    totalEarned: string;
+    paid: string;
+    net: string;
+  };
 }) {
+  const statsCardsConfig = [
+    { id: 'units', label: 'Total Units Sold', key: 'units', gradient: 'from-[#176CF3] to-[#3056FF]' },
+    { id: 'total-earned', label: 'Total Earned Incentive', key: 'totalEarned', gradient: 'from-[#16A34A] to-[#22C55E]' },
+    { id: 'paid', label: 'Paid Incentive', key: 'paid', gradient: 'from-[#9333EA] to-[#EC4899]' },
+    { id: 'net', label: 'Net Balance', key: 'net', gradient: 'from-[#2563EB] to-[#4F46E5]' },
+  ] as const;
   return (
     <>
-      {/* Sales Summary (same table as monthly top) */}
-      <section className="mb-5">
-        <h2 className="text-sm font-semibold text-gray-900 mb-1">Sales Summary</h2>
-        <p className="text-[11px] text-gray-500 mb-2">Your recorded monthly sales</p>
-
-        <div className="flex justify-end mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-gray-600">Month</span>
-            <select
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-            >
-              <option value="All">All Months</option>
-              {allMonths.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
-          <div className="grid grid-cols-4 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
-            <span>Date</span>
-            <span>ADLD</span>
-            <span>Combo</span>
-            <span className="text-right">Units</span>
-          </div>
-          {rows.map((row, idx) => (
-            <div
-              key={row.date + idx}
-              className="grid grid-cols-4 px-3 py-2 border-t border-gray-100 text-gray-800"
-            >
-              <span>{row.date}</span>
-              <span>{row.adld}</span>
-              <span>{row.combo}</span>
-              <span className="text-right">{row.units}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Spot Incentive Voucher Codes */}
       <section className="mb-5">
         <div className="flex items-center gap-2 mb-2">
@@ -624,6 +599,19 @@ function SpotIncentiveSection({
           </div>
         </div>
       </section>
+
+      {/* Stats cards for Spot Incentive */}
+      <div className="mt-5 mb-4 space-y-3">
+        {statsCardsConfig.map((card) => (
+          <div
+            key={card.id}
+            className={`bg-gradient-to-r ${card.gradient} rounded-2xl px-4 py-4 text-white`}
+          >
+            <p className="text-xs mb-1">{card.label}</p>
+            <p className="text-xl font-semibold">{fyStats[card.key as keyof typeof fyStats]}</p>
+          </div>
+        ))}
+      </div>
     </>
   );
 }
