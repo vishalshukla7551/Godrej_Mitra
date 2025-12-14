@@ -143,10 +143,10 @@ export default function TrainingPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
+    <div className="h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col overflow-hidden">
       <FestiveHeader hideGreeting />
 
-      <main className="flex-1 overflow-y-auto pb-32">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

@@ -238,31 +238,45 @@ export default function IncentivePassbookPage() {
 
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="px-4 pt-4">
-          {/* Top Tabs */}
-          <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
+          {/* Top Tabs - 3D Segmented Control */}
+          <div className="flex bg-gray-100 rounded-2xl p-1.5 mb-4 shadow-inner">
             <button
               type="button"
               onClick={() => setActiveTab('monthly')}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium border ${
+              className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
                 activeTab === 'monthly'
-                  ? 'bg-[#176CF3] text-white border-transparent shadow-sm'
-                  : 'bg-white text-gray-600 border-gray-200'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-xl scale-[1.02] transform'
+                  : 'bg-white text-gray-600 shadow-md hover:shadow-lg'
               }`}
+              style={activeTab !== 'monthly' ? {
+                animation: 'softPulse 2.5s ease-in-out infinite',
+              } : {}}
             >
-              Monthly Incentive
+              💰 Monthly Incentive
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('spot')}
-              className={`flex-1 ml-2 py-2 rounded-lg text-sm font-medium border ${
+              className={`flex-1 ml-2 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
                 activeTab === 'spot'
-                  ? 'bg-[#176CF3] text-white border-transparent shadow-sm'
-                  : 'bg-white text-gray-600 border-gray-200'
+                  ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl scale-[1.02] transform'
+                  : 'bg-white text-gray-600 shadow-md hover:shadow-lg'
               }`}
+              style={activeTab !== 'spot' ? {
+                animation: 'softPulse 2.5s ease-in-out infinite',
+              } : {}}
             >
-              Spot Incentive
+              ⚡ Spot Incentive
             </button>
           </div>
+
+          {/* Pulse Animation Styles */}
+          <style jsx global>{`
+            @keyframes softPulse {
+              0%, 100% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+              50% { box-shadow: 0 0 12px rgba(99, 102, 241, 0.4), 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+            }
+          `}</style>
 
           {/* Filter chips */}
           <div className="flex items-center gap-2 mb-4">
