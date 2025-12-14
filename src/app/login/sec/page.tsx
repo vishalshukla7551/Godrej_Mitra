@@ -181,16 +181,16 @@ export default function SECLogin() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 relative"
+      className="h-screen flex flex-col md:flex-row items-center justify-center p-4 relative overflow-x-hidden overflow-y-auto"
       style={{ backgroundColor: '#F5F6F8' }}
     >
-      {/* Gift Box - Fixed to page (not card) */}
+      {/* Gift Box - Desktop: absolute positioned on side */}
       <Image
         src="/images/gift-box.png"
         alt="Christmas Gift"
         width={200}
         height={200}
-        className="absolute pointer-events-none z-10"
+        className="absolute pointer-events-none z-10 hidden md:block"
         style={{
           top: '50%',
           left: 'calc(50% + 160px)',
@@ -201,17 +201,17 @@ export default function SECLogin() {
       />
 
       {/* Card Wrapper - Anchors Santa hat to the card */}
-      <div className="relative" style={{ maxWidth: '450px', width: '100%' }}>
-        {/* Santa Hat - Anchored to Card Top Left */}
+      <div className="relative w-full max-w-[450px] mx-auto overflow-visible">
+        {/* Santa Hat - Anchored to Card Top Left, smaller on mobile */}
         <Image
           src="/images/santa-hat.png"
           alt="Santa Hat"
           width={130}
           height={130}
-          className="absolute pointer-events-none z-20"
+          className="absolute pointer-events-none z-20 w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] md:w-[130px] md:h-[130px]"
           style={{
-            top: '-50px',
-            left: '-45px',
+            top: '-35px',
+            left: '-25px',
             transform: 'rotate(-18deg)',
             filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.18))',
           }}
@@ -220,7 +220,7 @@ export default function SECLogin() {
 
         {/* Login Card */}
         <div
-          className="w-full bg-white rounded-2xl p-10 relative"
+          className="w-full bg-white rounded-2xl p-6 sm:p-8 md:p-10 relative"
           style={{ boxShadow: 'rgba(0,0,0,0.08) 0px 4px 12px' }}
         >
         <div className="text-center mb-8">
@@ -471,6 +471,21 @@ export default function SECLogin() {
             <span className="text-base font-semibold text-gray-900">Zopper</span>
           </div>
         </div>
+        </div>
+
+        {/* Gift Box - Mobile: touching the bottom of the card */}
+        <div className="md:hidden flex justify-center -mt-6 relative z-10">
+          <Image
+            src="/images/gift-box.png"
+            alt="Christmas Gift"
+            width={100}
+            height={100}
+            className="pointer-events-none"
+            style={{
+              filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.12))',
+            }}
+            priority
+          />
         </div>
       </div>
     </div>
