@@ -27,7 +27,10 @@ interface Summary {
   unpaidCount: number;
 }
 
+type ReportTab = 'monthly' | 'spot';
+
 export default function ReportPage() {
+  const [activeTab, setActiveTab] = useState<ReportTab>('spot');
   const [planFilter, setPlanFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
   const [deviceFilter, setDeviceFilter] = useState("");
@@ -43,131 +46,51 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch data from API
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-
       const params = new URLSearchParams({
         ...(planFilter && { planFilter }),
         ...(storeFilter && { storeFilter }),
         ...(deviceFilter && { deviceFilter })
       });
-
       const response = await fetch(`/api/ase/report?${params}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch data');
-      }
-
+      if (!response.ok) throw new Error('Failed to fetch data');
       const result = await response.json();
-
       if (result.success) {
         setReports(result.data.reports);
         setSummary(result.data.summary);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-      console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [planFilter, storeFilter, deviceFilter]);
+  useEffect(() => { fetchData(); }, [planFilter, storeFilter, deviceFilter]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN');
+    return new Date(dateString).toLocaleDateString('en-IN');
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-10">
-      <header className="mb-6">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-1">Report Page</h1>
-            <p className="text-sm text-neutral-400">
-              Incentives Summary — Paid: {summary.paidCount} | Unpaid: {summary.unpaidCount}
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400">
-                <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-                Live
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => clientLogout('/login/role')}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-lg"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M16 17L21 12L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex items-center gap-4">
-          <input
-            type="text"
-            placeholder="Filter by Plan Type"
-            value={planFilter}
-            onChange={(e) => setPlanFilter(e.target.value)}
-            className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
-          />
-
-          <input
-            type="text"
-            placeholder="Filter by Store"
-            value={storeFilter}
-            onChange={(e) => setStoreFilter(e.target.value)}
-            className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64"
-          />
-
-          <input
-            type="text"
-            placeholder="Filter by Device"
-            value={deviceFilter}
-            onChange={(e) => setDeviceFilter(e.target.value)}
-            className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-56"
-          />
-        </div>
-      </header>
-
-      {/* Loading State */}
+  const renderContent = () => (
+    <>
       {loading && (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
           <span className="ml-3 text-white">Loading reports...</span>
         </div>
       )}
-
-      {/* Error State */}
       {error && (
         <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 text-red-200 mb-6">
           <p className="font-semibold">Error:</p>
           <p className="text-sm">{error}</p>
-          <button
-            onClick={fetchData}
-            className="mt-2 px-3 py-1 bg-red-700 hover:bg-red-600 rounded text-sm"
-          >
-            Retry
-          </button>
+          <button onClick={fetchData} className="mt-2 px-3 py-1 bg-red-700 hover:bg-red-600 rounded text-sm">Retry</button>
         </div>
       )}
-
-      {/* Key Metrics */}
       {!loading && !error && (
         <>
           <div className="max-w-6xl mb-8">
@@ -186,8 +109,6 @@ export default function ReportPage() {
               </div>
             </div>
           </div>
-
-          {/* Transactions Table */}
           <div className="max-w-7xl">
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               <table className="w-full">
@@ -204,11 +125,7 @@ export default function ReportPage() {
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
                   {reports.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="text-center py-8 text-neutral-500">
-                        No reports found for your assigned stores.
-                      </td>
-                    </tr>
+                    <tr><td colSpan={7} className="text-center py-8 text-neutral-500">No reports found.</td></tr>
                   ) : (
                     reports.map((row) => (
                       <tr key={row.id} className="hover:bg-neutral-50 transition">
@@ -229,13 +146,9 @@ export default function ReportPage() {
                         <td className="text-neutral-500 text-xs font-mono p-4">{row.imei}</td>
                         <td className="p-4">
                           {row.isPaid ? (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                              Paid
-                            </span>
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Paid</span>
                           ) : (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
-                              Pending
-                            </span>
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">Pending</span>
                           )}
                         </td>
                       </tr>
@@ -247,6 +160,39 @@ export default function ReportPage() {
           </div>
         </>
       )}
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-10">
+      <header className="mb-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-1">Report Page</h1>
+            <p className="text-sm text-neutral-400">Incentives Summary — Paid: {summary.paidCount} | Unpaid: {summary.unpaidCount}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400">
+                <span className="h-2 w-2 rounded-full bg-emerald-400"></span>Live
+              </span>
+            </div>
+          </div>
+          <button onClick={() => clientLogout('/login/role')} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-lg">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16 17L21 12L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <span>Logout</span>
+          </button>
+        </div>
+        <div className="flex gap-2 mb-6">
+          <button onClick={() => setActiveTab('monthly')} className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'monthly' ? 'bg-blue-600 text-white shadow-lg' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}>Monthly Report</button>
+          <button onClick={() => setActiveTab('spot')} className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'spot' ? 'bg-blue-600 text-white shadow-lg' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}>Spot Report</button>
+        </div>
+        <div className="flex items-center gap-4">
+          <input type="text" placeholder="Filter by Plan Type" value={planFilter} onChange={(e) => setPlanFilter(e.target.value)} className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48" />
+          <input type="text" placeholder="Filter by Store" value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)} className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64" />
+          <input type="text" placeholder="Filter by Device" value={deviceFilter} onChange={(e) => setDeviceFilter(e.target.value)} className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-56" />
+        </div>
+      </header>
+      {activeTab === 'monthly' && renderContent()}
+      {activeTab === 'spot' && renderContent()}
     </div>
   );
 }

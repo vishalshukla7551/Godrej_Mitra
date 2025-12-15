@@ -28,11 +28,14 @@ type MonthlyTxn = {
 };
 
 type SpotVoucher = {
+  id?: string;
   date: string;
   deviceName: string;
   planName: string;
   incentive: string;
   voucherCode: string;
+  isPaid?: boolean;
+  imei?: string;
 };
 
 type FYStats = Record<string, {
@@ -84,6 +87,7 @@ export default function IncentivePassbookPage() {
   
   // API data state
   const [passbookData, setPassbookData] = useState<PassbookData | null>(null);
+  const [spotIncentiveData, setSpotIncentiveData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -98,23 +102,37 @@ export default function IncentivePassbookPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch('/api/sec/passbook');
         
-        if (!res.ok) {
-          if (res.status === 401) {
+        // Fetch both passbook and spot incentive data
+        const [passbookRes, spotRes] = await Promise.all([
+          fetch('/api/sec/passbook'),
+          fetch('/api/sec/spot-incentive')
+        ]);
+        
+        if (!passbookRes.ok) {
+          if (passbookRes.status === 401) {
             setError('Unauthorized. Please login again.');
             return;
           }
-          const errorData = await res.json().catch(() => ({ error: 'Failed to fetch data' }));
+          const errorData = await passbookRes.json().catch(() => ({ error: 'Failed to fetch data' }));
           setError(errorData.error || 'Failed to fetch passbook data');
           return;
         }
 
-        const result = await res.json();
-        if (result.success && result.data) {
-          setPassbookData(result.data);
+        const passbookResult = await passbookRes.json();
+        if (passbookResult.success && passbookResult.data) {
+          setPassbookData(passbookResult.data);
         } else {
           setError('Invalid response from server');
+          return;
+        }
+
+        // Handle spot incentive data
+        if (spotRes.ok) {
+          const spotResult = await spotRes.json();
+          if (spotResult.success && spotResult.data) {
+            setSpotIncentiveData(spotResult.data);
+          }
         }
       } catch (err) {
         console.error('Error fetching passbook data:', err);
@@ -179,6 +197,10 @@ export default function IncentivePassbookPage() {
       return sortAsc ? da - db : db - da;
     });
 
+  // Get spot incentive data from new API
+  const spotTransactions = spotIncentiveData?.transactions || [];
+  const spotFyStatsFromAPI = spotIncentiveData?.fyStats || {};
+
   // Get FY stats from API data based on active tab
   const monthlyFyStats = passbookData?.monthlyIncentive?.fyStats?.[selectedFY] || {
     units: '0',
@@ -187,7 +209,7 @@ export default function IncentivePassbookPage() {
     net: '₹0',
   };
 
-  const spotFyStats = passbookData?.spotIncentive?.fyStats?.[selectedFY] || {
+  const spotFyStats = spotFyStatsFromAPI[selectedFY] || {
     units: '0',
     totalEarned: '₹0',
     paid: '₹0',
@@ -196,9 +218,6 @@ export default function IncentivePassbookPage() {
 
   // Get monthly transactions
   const monthlyTransactions = passbookData?.monthlyIncentive.transactions || [];
-
-  // Get spot incentive transactions
-  const spotTransactions = passbookData?.spotIncentive.transactions || [];
 
   if (loading) {
     return (
@@ -375,6 +394,7 @@ export default function IncentivePassbookPage() {
               selectedFY={selectedFY}
               setSelectedFY={setSelectedFY}
               allFYs={allFYs}
+              spotIncentiveData={spotIncentiveData}
             />
           )}
 
@@ -782,6 +802,7 @@ function SpotIncentiveSection({
   selectedFY,
   setSelectedFY,
   allFYs,
+  spotIncentiveData,
 }: {
   rows: MonthlySale[];
   transactions: SpotVoucher[];
@@ -791,6 +812,7 @@ function SpotIncentiveSection({
   selectedFY: string;
   setSelectedFY: (fy: string) => void;
   allFYs: string[];
+  spotIncentiveData: any;
 }) {
   return (
     <>
@@ -839,25 +861,51 @@ function SpotIncentiveSection({
         </div>
       </section>
 
-      {/* Spot Incentive Voucher Codes */}
+      {/* Spot Incentive Summary */}
+      <section className="mb-5">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-[9px] text-white">
+            ⚡
+          </span>
+          <h2 className="text-sm font-semibold text-gray-900">
+            Spot Incentive Summary
+          </h2>
+        </div>
+        <p className="text-[11px] text-gray-500 mb-3">Your spot incentive earnings overview</p>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 text-white">
+            <p className="text-[10px] opacity-90 mb-1">Total Earned</p>
+            <p className="text-lg font-bold">{spotIncentiveData?.summary?.totalEarned || '₹0'}</p>
+          </div>
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-3 text-white">
+            <p className="text-[10px] opacity-90 mb-1">Total Units</p>
+            <p className="text-lg font-bold">{spotIncentiveData?.summary?.totalUnits || '0'}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Spot Incentive Transactions */}
       <section className="mb-5">
         <div className="flex items-center gap-2 mb-0.5">
           <span className="w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center text-[9px]">
             ₹
           </span>
           <h2 className="text-sm font-semibold text-gray-900">
-            Spot Incentive Voucher Codes
+            Spot Incentive Transactions
           </h2>
         </div>
-        <p className="text-[11px] text-gray-500 mb-2">Your redeemed incentive vouchers</p>
+        <p className="text-[11px] text-gray-500 mb-2">Your spot incentive earnings from active campaigns</p>
 
         <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
-          <div className="grid grid-cols-5 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
+          <div className="grid grid-cols-6 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
             <span>Date</span>
-            <span className="text-center">Device Name</span>
-            <span className="text-center">Plan Name</span>
-            <span className="text-center">Incentive Earned</span>
-            <span className="text-center">Voucher Code</span>
+            <span className="text-center">Device</span>
+            <span className="text-center">Plan</span>
+            <span className="text-center">Incentive</span>
+            <span className="text-center">Status</span>
+            <span className="text-center">IMEI</span>
           </div>
           {transactions.length === 0 ? (
             <div className="px-3 py-4 text-center text-gray-500 text-xs">
@@ -866,20 +914,26 @@ function SpotIncentiveSection({
           ) : (
             transactions.map((row, idx) => (
               <div
-                key={row.date + idx}
-                className="grid grid-cols-5 px-3 py-2 border-t border-gray-100 text-gray-800 items-center"
+                key={row.id || row.date + idx}
+                className="grid grid-cols-6 px-3 py-2 border-t border-gray-100 text-gray-800 items-center"
               >
-                <span>{row.date}</span>
-                <span className="text-center">{row.deviceName}</span>
-                <span className="text-center">{row.planName}</span>
-                <span className="text-center text-green-600 font-semibold">{row.incentive}</span>
+                <span className="text-[10px]">{row.date}</span>
+                <span className="text-center text-[10px]">{row.deviceName}</span>
+                <span className="text-center text-[10px]">{row.planName}</span>
+                <span className="text-center text-green-600 font-semibold text-[10px]">{row.incentive}</span>
                 <span className="text-center">
-                  <button
-                    type="button"
-                    className="px-2 py-1 rounded-lg bg-blue-50 text-[11px] text-blue-700 border border-blue-200"
-                  >
-                    {row.voucherCode}
-                  </button>
+                  {row.isPaid ? (
+                    <span className="text-[9px] font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                      Paid
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
+                      Pending
+                    </span>
+                  )}
+                </span>
+                <span className="text-center text-[9px] font-mono text-gray-500">
+                  {row.imei ? `...${row.imei.slice(-4)}` : 'N/A'}
                 </span>
               </div>
             ))

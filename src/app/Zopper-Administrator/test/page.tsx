@@ -7,8 +7,8 @@ export default function TestPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to results by default
-    router.replace('/Zopper-Administrator/test/results');
+    // Redirect to manage tests by default
+    router.replace('/Zopper-Administrator/test/manage');
   }, [router]);
 
   return null;

@@ -239,28 +239,28 @@ export default function TestResultsPage() {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-2xl font-bold text-blue-600">{stats.totalSubmissions}</div>
-          <div className="text-sm text-gray-600">Total Submissions</div>
+          <div className="text-sm font-semibold text-gray-700">Total Submissions</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-2xl font-bold text-green-600">{stats.averageScore}%</div>
-          <div className="text-sm text-gray-600">Average Score</div>
+          <div className="text-sm font-semibold text-gray-700">Average Score</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-2xl font-bold text-yellow-600">{stats.passRate}%</div>
-          <div className="text-sm text-gray-600">Pass Rate (≥60%)</div>
+          <div className="text-sm font-semibold text-gray-700">Pass Rate (≥60%)</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-2xl font-bold text-purple-600">
             {formatTime(stats.averageTime)}
           </div>
-          <div className="text-sm text-gray-600">Avg. Time</div>
+          <div className="text-sm font-semibold text-gray-700">Avg. Time</div>
         </div>
         <div
           className="bg-white rounded-lg shadow p-6 cursor-pointer hover:bg-gray-50 transition-colors border-2 border-transparent hover:border-orange-400"
           onClick={() => router.push('/Zopper-Administrator/question-analysis')}
         >
           <div className="text-2xl font-bold text-orange-600">📊</div>
-          <div className="text-sm text-gray-600 font-medium">Question Analysis</div>
+          <div className="text-sm font-semibold text-gray-700">Question Analysis</div>
         </div>
       </div>
 
@@ -268,11 +268,11 @@ export default function TestResultsPage() {
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex flex-wrap gap-4 items-center">
           <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700">Filter:</label>
+            <label className="text-sm font-bold text-gray-900">Filter:</label>
             <select
               value={filterScore}
               onChange={(e) => setFilterScore(e.target.value as typeof filterScore)}
-              className="border border-gray-300 rounded-md px-3 py-1 text-sm"
+              className="border border-gray-300 rounded-md px-3 py-1.5 text-sm font-semibold text-gray-900 bg-white"
             >
               <option value="all">All Results</option>
               <option value="pass">Pass (≥60%)</option>
@@ -280,7 +280,7 @@ export default function TestResultsPage() {
             </select>
           </div>
 
-          <div className="text-sm text-gray-600">
+          <div className="text-sm font-bold text-gray-900">
             Showing {filteredSubmissions.length} of {submissions.length} results
           </div>
         </div>
@@ -300,40 +300,40 @@ export default function TestResultsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th
-                    className="w-[8%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="w-[8%] px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('secId')}
                   >
                     SEC ID {sortBy === 'secId' && (sortOrder === 'desc' ? '↓' : '↑')}
                   </th>
-                  <th className="w-[18%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="w-[18%] px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Store
                   </th>
                   <th
-                    className="w-[10%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="w-[10%] px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('score')}
                   >
                     Score {sortBy === 'score' && (sortOrder === 'desc' ? '↓' : '↑')}
                   </th>
-                  <th className="w-[10%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="w-[10%] px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Questions
                   </th>
-                  <th className="w-[9%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="w-[9%] px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Time
                   </th>
                   <th
-                    className="w-[18%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="w-[18%] px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('submittedAt')}
                   >
                     Submitted{' '}
                     {sortBy === 'submittedAt' && (sortOrder === 'desc' ? '↓' : '↑')}
                   </th>
-                  <th className="w-[18%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="w-[18%] px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="w-[9%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="w-[9%] px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     SS
                   </th>
-                  <th className="w-[12%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="w-[12%] px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Answers
                   </th>
                 </tr>
@@ -344,37 +344,37 @@ export default function TestResultsPage() {
                     key={submission.id || `${submission.secId}-${submission.submittedAt}-${i}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-3 py-3 text-sm font-medium text-gray-900 truncate">
+                    <td className="px-3 py-3 text-sm font-semibold text-gray-900 truncate">
                       {submission.secId}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-900">
+                    <td className="px-3 py-3 text-sm font-medium text-gray-900">
                       {submission.storeName ? (
                         <div className="truncate">
-                          <div className="font-medium truncate">{submission.storeName}</div>
-                          <div className="text-gray-500 text-xs truncate">
+                          <div className="font-semibold truncate">{submission.storeName}</div>
+                          <div className="text-gray-600 text-xs font-medium truncate">
                             {submission.storeCity}
                           </div>
                         </div>
                       ) : (
-                        <span className="text-gray-400">N/A</span>
+                        <span className="text-gray-400 font-medium">N/A</span>
                       )}
                     </td>
                     <td className="px-3 py-3">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium inline-block ${getScoreColor(
+                        className={`px-2 py-1 rounded-full text-xs font-bold inline-block ${getScoreColor(
                           submission.score,
                         )}`}
                       >
                         {submission.score}%
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-900">
+                    <td className="px-3 py-3 text-sm font-semibold text-gray-900">
                       {submission.responses.length}/{submission.totalQuestions}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-900">
+                    <td className="px-3 py-3 text-sm font-semibold text-gray-900">
                       {formatTime(submission.completionTime)}
                     </td>
-                    <td className="px-3 py-3 text-xs text-gray-900">
+                    <td className="px-3 py-3 text-xs font-medium text-gray-900">
                       {new Date(submission.submittedAt).toLocaleString('en-US', {
                         month: '2-digit',
                         day: '2-digit',
@@ -386,7 +386,7 @@ export default function TestResultsPage() {
                     <td className="px-3 py-3">
                       <div className="flex flex-col gap-1">
                         <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full inline-block text-center ${
+                          className={`px-2 py-1 text-xs font-bold rounded-full inline-block text-center ${
                             submission.score >= 60
                               ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
@@ -403,7 +403,7 @@ export default function TestResultsPage() {
                                 )}`,
                               )
                             }
-                            className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800 hover:bg-orange-200 cursor-pointer transition-colors"
+                            className="px-2 py-1 text-xs font-bold rounded-full bg-orange-100 text-orange-800 hover:bg-orange-200 cursor-pointer transition-colors"
                           >
                             ⚠️ FLAG
                           </button>

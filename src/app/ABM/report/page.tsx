@@ -27,7 +27,10 @@ interface Summary {
   unpaidCount: number;
 }
 
+type ReportTab = 'monthly' | 'spot';
+
 export default function ReportPage() {
+  const [activeTab, setActiveTab] = useState<ReportTab>('spot');
   const [planSearch, setPlanSearch] = useState("");
   const [storeSearch, setStoreSearch] = useState("");
   const [deviceSearch, setDeviceSearch] = useState("");
@@ -151,6 +154,30 @@ export default function ReportPage() {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setActiveTab('monthly')}
+            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === 'monthly'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+            }`}
+          >
+            Monthly Report
+          </button>
+          <button
+            onClick={() => setActiveTab('spot')}
+            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === 'spot'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+            }`}
+          >
+            Spot Report
+          </button>
+        </div>
+
         {/* Filters */}
         <div className="flex items-center gap-4">
           {/* Plan Type Filter */}
@@ -251,7 +278,82 @@ export default function ReportPage() {
         </div>
       </header>
 
-      {/* Key Metrics */}
+      {/* Monthly Report Tab Content */}
+      {activeTab === 'monthly' && (
+        <>
+          {/* Key Metrics */}
+          <div className="max-w-6xl mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(99,102,241,0.3)]">
+                <h3 className="text-white text-4xl font-bold mb-2">{summary.activeStores}</h3>
+                <p className="text-indigo-100 text-sm font-medium">Active Stores</p>
+              </div>
+              <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(16,185,129,0.3)]">
+                <h3 className="text-white text-4xl font-bold mb-2">{summary.activeSECs}</h3>
+                <p className="text-emerald-100 text-sm font-medium">SECs Active</p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(37,99,235,0.3)]">
+                <h3 className="text-white text-4xl font-bold mb-2">{summary.totalReports}</h3>
+                <p className="text-blue-100 text-sm font-medium">Reports Submitted</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Transactions Table */}
+          <div className="max-w-7xl">
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
+                  <tr>
+                    <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Date of Sale</th>
+                    <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">SEC Name</th>
+                    <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Store Name</th>
+                    <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Device Name</th>
+                    <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Plan Type</th>
+                    <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">IMEI</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="text-center text-neutral-500 text-sm p-8">
+                        Loading reports...
+                      </td>
+                    </tr>
+                  ) : reports.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center text-neutral-500 text-sm p-8">
+                        No reports found
+                      </td>
+                    </tr>
+                  ) : (
+                    reports.map((report) => (
+                      <tr key={report.id} className="hover:bg-neutral-50 transition">
+                        <td className="text-neutral-600 text-sm p-4">
+                          {new Date(report.dateOfSale).toLocaleDateString()}
+                        </td>
+                        <td className="text-neutral-900 text-sm font-medium p-4">
+                          <div>{report.secName}</div>
+                          <div className="text-neutral-500 text-xs">{report.secPhone}</div>
+                        </td>
+                        <td className="text-neutral-900 text-sm p-4">{report.storeName}</td>
+                        <td className="text-neutral-600 text-sm p-4">{report.deviceName}</td>
+                        <td className="text-neutral-600 text-sm p-4">{report.planType}</td>
+                        <td className="text-neutral-500 text-xs font-mono p-4">{report.imei}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Spot Report Tab Content */}
+      {activeTab === 'spot' && (
+        <>
+          {/* Key Metrics */}
       <div className="max-w-6xl mb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(99,102,241,0.3)]">
@@ -317,6 +419,8 @@ export default function ReportPage() {
           </table>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

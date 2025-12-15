@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
 
     // Get sales reports for active campaigns within the period
     // Filter by isCompaignActive = true
-    const salesReports: any = await (prisma.salesReport as any).findMany({
+    const salesReports: any = await (prisma.spotIncentiveReport as any).findMany({
       where: {
         isCompaignActive: true,
         Date_of_sale: { gte: startDate },
@@ -178,9 +178,9 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Convert to arrays and sort by total sales (descending)
+    // Convert to arrays and sort by total incentive earned (descending)
     const topStores = Array.from(storeMap.values())
-      .sort((a, b) => b.totalSales - a.totalSales)
+      .sort((a, b) => b.totalIncentive - a.totalIncentive)
       .slice(0, limit)
       .map((store, index) => ({
         rank: index + 1,
@@ -189,7 +189,7 @@ export async function GET(req: NextRequest) {
       }));
 
     const topDevices = Array.from(deviceMap.values())
-      .sort((a, b) => b.totalSales - a.totalSales)
+      .sort((a, b) => b.totalIncentive - a.totalIncentive)
       .slice(0, limit)
       .map((device, index) => ({
         rank: index + 1,
@@ -198,7 +198,7 @@ export async function GET(req: NextRequest) {
       }));
 
     const topPlans = Array.from(planMap.values())
-      .sort((a, b) => b.totalSales - a.totalSales)
+      .sort((a, b) => b.totalIncentive - a.totalIncentive)
       .slice(0, limit)
       .map((plan, index) => ({
         rank: index + 1,

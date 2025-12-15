@@ -1,6 +1,5 @@
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ??
-  (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3001/api');
+  process.env.NEXT_PUBLIC_API_URL ?? '/api';
 
 export const config = {
   apiUrl: API_BASE_URL,

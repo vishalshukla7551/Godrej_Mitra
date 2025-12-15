@@ -33,7 +33,11 @@ interface ApiResponse {
   };
 }
 
+type ReportTab = 'monthly' | 'spot';
+
 export default function ReportPage() {
+  const [activeTab, setActiveTab] = useState<ReportTab>('spot');
+  
   // Text values actually sent to the API as filters
   const [planFilter, setPlanFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
@@ -188,6 +192,30 @@ export default function ReportPage() {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setActiveTab('monthly')}
+            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === 'monthly'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+            }`}
+          >
+            Monthly Report
+          </button>
+          <button
+            onClick={() => setActiveTab('spot')}
+            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === 'spot'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+            }`}
+          >
+            Spot Report
+          </button>
+        </div>
+
         {/* Filters */}
         <div className="flex items-center gap-4">
           {/* Plan Type Filter - searchable dropdown */}
@@ -330,89 +358,184 @@ export default function ReportPage() {
         </div>
       </header>
 
-      {/* Key Metrics */}
-      <div className="max-w-6xl mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(99,102,241,0.3)]">
-            <h3 className="text-white text-4xl font-bold mb-2">{summary.activeStores}</h3>
-            <p className="text-indigo-100 text-sm font-medium">Active Stores</p>
+      {/* Monthly Report Tab Content */}
+      {activeTab === 'monthly' && (
+        <>
+          {/* Key Metrics */}
+          <div className="max-w-6xl mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(99,102,241,0.3)]">
+                <h3 className="text-white text-4xl font-bold mb-2">{summary.activeStores}</h3>
+                <p className="text-indigo-100 text-sm font-medium">Active Stores</p>
+              </div>
+              <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(16,185,129,0.3)]">
+                <h3 className="text-white text-4xl font-bold mb-2">{summary.activeSECs}</h3>
+                <p className="text-emerald-100 text-sm font-medium">SECs Active</p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(37,99,235,0.3)]">
+                <h3 className="text-white text-4xl font-bold mb-2">{summary.totalReports}</h3>
+                <p className="text-blue-100 text-sm font-medium">Reports Submitted</p>
+              </div>
+            </div>
           </div>
-          <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(16,185,129,0.3)]">
-            <h3 className="text-white text-4xl font-bold mb-2">{summary.activeSECs}</h3>
-            <p className="text-emerald-100 text-sm font-medium">SECs Active</p>
-          </div>
-          <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(37,99,235,0.3)]">
-            <h3 className="text-white text-4xl font-bold mb-2">{summary.totalReports}</h3>
-            <p className="text-blue-100 text-sm font-medium">Reports Submitted</p>
-          </div>
-        </div>
-      </div>
 
-      {/* Loading and Error States */}
-      {loading && (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-          <span className="ml-3 text-white">Loading reports...</span>
-        </div>
-      )}
+          {/* Loading and Error States */}
+          {loading && (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+              <span className="ml-3 text-white">Loading reports...</span>
+            </div>
+          )}
 
-      {error && (
-        <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 text-red-200 mb-6">
-          <p className="font-semibold">Error loading data:</p>
-          <p className="text-sm">{error}</p>
-          <button
-            onClick={fetchData}
-            className="mt-2 px-3 py-1 bg-red-700 hover:bg-red-600 rounded text-sm"
-          >
-            Retry
-          </button>
-        </div>
-      )}
+          {error && (
+            <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 text-red-200 mb-6">
+              <p className="font-semibold">Error loading data:</p>
+              <p className="text-sm">{error}</p>
+              <button
+                onClick={fetchData}
+                className="mt-2 px-3 py-1 bg-red-700 hover:bg-red-600 rounded text-sm"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
-      {/* Transactions Table */}
-      {!loading && !error && (
-        <div className="max-w-7xl">
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-neutral-50 border-b border-neutral-200">
-                <tr>
-                  <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Date of Sale</th>
-                  <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">SEC ID</th>
-                  <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Store Name</th>
-                  <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Device Name</th>
-                  <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Plan Type</th>
-                  <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">IMEI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {data.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="p-8 text-center text-neutral-500">
-                      No sales reports found matching your criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  data.map((row) => (
-                    <tr key={row.id} className="hover:bg-neutral-50 transition">
-                      <td className="text-neutral-600 text-sm p-4">{formatDate(row.dateOfSale)}</td>
-                      <td className="text-neutral-900 text-sm font-medium p-4">
-                        <div>{row.secName}</div>
-                        <div className="text-neutral-500 text-xs">{row.secPhone}</div>
-                      </td>
-                      <td className="text-neutral-900 text-sm p-4">
-                        <div>{row.storeName}</div>
-                        {row.storeCity && <div className="text-neutral-500 text-xs">{row.storeCity}</div>}
-                      </td>
-                      <td className="text-neutral-600 text-sm p-4">{row.deviceName}</td>
-                      <td className="text-neutral-600 text-sm p-4">{row.planType.replace(/_/g, ' ')}</td>
-                      <td className="text-neutral-500 text-xs font-mono p-4">{row.imei}</td>
+          {/* Transactions Table */}
+          {!loading && !error && (
+            <div className="max-w-7xl">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-neutral-50 border-b border-neutral-200">
+                    <tr>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Date of Sale</th>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">SEC ID</th>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Store Name</th>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Device Name</th>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Plan Type</th>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">IMEI</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100">
+                    {data.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-neutral-500">
+                          No sales reports found matching your criteria.
+                        </td>
+                      </tr>
+                    ) : (
+                      data.map((row) => (
+                        <tr key={row.id} className="hover:bg-neutral-50 transition">
+                          <td className="text-neutral-600 text-sm p-4">{formatDate(row.dateOfSale)}</td>
+                          <td className="text-neutral-900 text-sm font-medium p-4">
+                            <div>{row.secName}</div>
+                            <div className="text-neutral-500 text-xs">{row.secPhone}</div>
+                          </td>
+                          <td className="text-neutral-900 text-sm p-4">
+                            <div>{row.storeName}</div>
+                            {row.storeCity && <div className="text-neutral-500 text-xs">{row.storeCity}</div>}
+                          </td>
+                          <td className="text-neutral-600 text-sm p-4">{row.deviceName}</td>
+                          <td className="text-neutral-600 text-sm p-4">{row.planType.replace(/_/g, ' ')}</td>
+                          <td className="text-neutral-500 text-xs font-mono p-4">{row.imei}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Spot Report Tab Content */}
+      {activeTab === 'spot' && (
+        <>
+          {/* Key Metrics */}
+          <div className="max-w-6xl mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(99,102,241,0.3)]">
+                <h3 className="text-white text-4xl font-bold mb-2">{summary.activeStores}</h3>
+                <p className="text-indigo-100 text-sm font-medium">Active Stores</p>
+              </div>
+              <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(16,185,129,0.3)]">
+                <h3 className="text-white text-4xl font-bold mb-2">{summary.activeSECs}</h3>
+                <p className="text-emerald-100 text-sm font-medium">SECs Active</p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(37,99,235,0.3)]">
+                <h3 className="text-white text-4xl font-bold mb-2">{summary.totalReports}</h3>
+                <p className="text-blue-100 text-sm font-medium">Reports Submitted</p>
+              </div>
+            </div>
           </div>
-        </div>
+
+          {/* Loading and Error States */}
+          {loading && (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+              <span className="ml-3 text-white">Loading reports...</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 text-red-200 mb-6">
+              <p className="font-semibold">Error loading data:</p>
+              <p className="text-sm">{error}</p>
+              <button
+                onClick={fetchData}
+                className="mt-2 px-3 py-1 bg-red-700 hover:bg-red-600 rounded text-sm"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {/* Transactions Table */}
+          {!loading && !error && (
+            <div className="max-w-7xl">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-neutral-50 border-b border-neutral-200">
+                    <tr>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Date of Sale</th>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">SEC ID</th>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Store Name</th>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Device Name</th>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Plan Type</th>
+                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">IMEI</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100">
+                    {data.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-neutral-500">
+                          No sales reports found matching your criteria.
+                        </td>
+                      </tr>
+                    ) : (
+                      data.map((row) => (
+                        <tr key={row.id} className="hover:bg-neutral-50 transition">
+                          <td className="text-neutral-600 text-sm p-4">{formatDate(row.dateOfSale)}</td>
+                          <td className="text-neutral-900 text-sm font-medium p-4">
+                            <div>{row.secName}</div>
+                            <div className="text-neutral-500 text-xs">{row.secPhone}</div>
+                          </td>
+                          <td className="text-neutral-900 text-sm p-4">
+                            <div>{row.storeName}</div>
+                            {row.storeCity && <div className="text-neutral-500 text-xs">{row.storeCity}</div>}
+                          </td>
+                          <td className="text-neutral-600 text-sm p-4">{row.deviceName}</td>
+                          <td className="text-neutral-600 text-sm p-4">{row.planType.replace(/_/g, ' ')}</td>
+                          <td className="text-neutral-500 text-xs font-mono p-4">{row.imei}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

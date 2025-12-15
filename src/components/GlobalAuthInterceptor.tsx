@@ -15,7 +15,13 @@ export function GlobalAuthInterceptor() {
     const originalFetch = window.fetch.bind(window);
 
     window.fetch = async (...args) => {
-      const response = await originalFetch(...args);
+      let response: Response;
+      try {
+        response = await originalFetch(...args);
+      } catch (error) {
+        // Network error or fetch failed - rethrow to let caller handle it
+        throw error;
+      }
 
       if (response.status === 401) {
         // Get the request URL to check if it's a login endpoint

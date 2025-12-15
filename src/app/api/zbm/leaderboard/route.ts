@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get sales reports for ZBM's stores within the period
-    const salesReports = await prisma.salesReport.findMany({
+    const salesReports = await prisma.spotIncentiveReport.findMany({
       where: {
         isCompaignActive: true,
         Date_of_sale: { gte: startDate },

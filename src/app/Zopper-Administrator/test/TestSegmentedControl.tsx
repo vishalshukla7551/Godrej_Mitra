@@ -10,9 +10,11 @@ interface Segment {
 }
 
 const segments: Segment[] = [
+  { id: 'manage', label: 'Manage Tests', icon: '📋', path: '/Zopper-Administrator/test/manage' },
   { id: 'results', label: 'Test Results', icon: '📊', path: '/Zopper-Administrator/test/results' },
-  { id: 'invites', label: 'Send Test Invites', icon: '📧', path: '/Zopper-Administrator/test/invites' },
-  { id: 'questions', label: 'Insert Questions', icon: '📝', path: '/Zopper-Administrator/test/questions' },
+  { id: 'analysis', label: 'Analysis', icon: '📈', path: '/Zopper-Administrator/test/analysis' },
+  { id: 'invites', label: 'Send Invites', icon: '📨', path: '/Zopper-Administrator/test/invites' },
+  { id: 'questions', label: 'Question Bank', icon: '📝', path: '/Zopper-Administrator/test/questions' },
 ];
 
 export default function TestSegmentedControl() {
@@ -20,6 +22,8 @@ export default function TestSegmentedControl() {
   const router = useRouter();
 
   const getActiveSegment = () => {
+    if (pathname?.includes('/manage') || pathname?.includes('/create') || pathname?.includes('/edit')) return 'manage';
+    if (pathname?.includes('/analysis')) return 'analysis';
     if (pathname?.includes('/invites')) return 'invites';
     if (pathname?.includes('/questions')) return 'questions';
     return 'results';

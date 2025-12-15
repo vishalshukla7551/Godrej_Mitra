@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Play, FileText, Download, CheckCircle2, Clock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Play, FileText, Download, CheckCircle2, Clock, Award, History } from 'lucide-react';
 import FestiveHeader from '@/components/FestiveHeader';
 import FestiveFooter from '@/components/FestiveFooter';
 
@@ -138,9 +139,14 @@ const tests = [
 ];
 
 export default function TrainingPage() {
+  const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState<string>(
     MONTH_OPTIONS[new Date().getMonth()] ?? `November ${CURRENT_YEAR_SHORT}`,
   );
+
+  const handleStartTest = (testId: number) => {
+    router.push(`/SEC/training/test/${testId}`);
+  };
 
   return (
     <div className="h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col overflow-hidden">
@@ -251,6 +257,32 @@ export default function TrainingPage() {
             </div>
           </section>
 
+          {/* Quick Links - Certificates & History */}
+          <section className="mb-10">
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => router.push('/SEC/training/certificates')}
+                className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl p-4 flex items-center gap-3 shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <Award className="w-8 h-8 text-white" />
+                <div className="text-left">
+                  <div className="font-bold text-white">My Certificates</div>
+                  <div className="text-xs text-yellow-100">View earned certificates</div>
+                </div>
+              </button>
+              <button
+                onClick={() => router.push('/SEC/training/history')}
+                className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 flex items-center gap-3 shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <History className="w-8 h-8 text-white" />
+                <div className="text-left">
+                  <div className="font-bold text-white">Test History</div>
+                  <div className="text-xs text-purple-100">Review past answers</div>
+                </div>
+              </button>
+            </div>
+          </section>
+
           {/* Section 3 - Tests & Quiz Results */}
           <section className="mb-10">
             <div className="flex items-center gap-3 mb-5">
@@ -311,12 +343,18 @@ export default function TrainingPage() {
 
                     <div className="flex-shrink-0">
                       {test.status === 'completed' && (
-                        <button className="w-full sm:w-auto px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors text-sm">
+                        <button 
+                          onClick={() => handleStartTest(test.id)}
+                          className="w-full sm:w-auto px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors text-sm"
+                        >
                           Retake Test
                         </button>
                       )}
                       {test.status === 'pending' && (
-                        <button className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm">
+                        <button 
+                          onClick={() => handleStartTest(test.id)}
+                          className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm"
+                        >
                           Start Test
                         </button>
                       )}

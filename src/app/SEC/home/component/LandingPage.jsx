@@ -102,7 +102,7 @@ export default function LandingPage({ userName = '' }) {
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+    <div className="min-h-screen md:h-auto h-screen bg-gray-50 flex flex-col md:overflow-visible overflow-hidden">
       <FestiveHeader userName={userName || 'Guest'} />
 
       {/* Main Content */}
