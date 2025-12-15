@@ -60,21 +60,35 @@ type PassbookData = {
 
 const statsCardsConfig = [
   { id: 'units', label: 'Total Units Sold', key: 'units', gradient: 'from-[#176CF3] to-[#3056FF]' },
-  { id: 'total-earned', label: 'Total Earned Incentive', key: 'totalEarned', gradient: 'from-[#16A34A] to-[#22C55E]' },
   { id: 'paid', label: 'Paid Incentive', key: 'paid', gradient: 'from-[#9333EA] to-[#EC4899]' },
   { id: 'net', label: 'Net Balance', key: 'net', gradient: 'from-[#2563EB] to-[#4F46E5]' },
 ] as const;
 
 const parseDate = (ddmmyyyy: string) => {
-  const [dd, mm, yyyy] = ddmmyyyy.split('-').map(Number);
-  return new Date(yyyy, (mm || 1) - 1, dd || 1);
+  try {
+    const [dd, mm, yyyy] = ddmmyyyy.split('-').map(Number);
+    const date = new Date(yyyy || new Date().getFullYear(), (mm || 1) - 1, dd || 1);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return new Date(); // Return current date as fallback
+    }
+    return date;
+  } catch (error) {
+    console.warn('Invalid date format:', ddmmyyyy);
+    return new Date(); // Return current date as fallback
+  }
 };
 
 const formatMonthYear = (dateStr: string) => {
-  const d = parseDate(dateStr);
-  const monthName = d.toLocaleDateString('en-IN', { month: 'long' });
-  const yearShort = d.getFullYear().toString().slice(-2);
-  return `${monthName} ${yearShort}`;
+  try {
+    const d = parseDate(dateStr);
+    const monthName = d.toLocaleDateString('en-IN', { month: 'long' });
+    const yearShort = d.getFullYear().toString().slice(-2);
+    return `${monthName} ${yearShort}`;
+  } catch (error) {
+    console.warn('Error formatting date:', dateStr);
+    return 'Invalid Date';
+  }
 };
 
 export default function IncentivePassbookPage() {
@@ -95,6 +109,7 @@ export default function IncentivePassbookPage() {
   const [showIncentiveModal, setShowIncentiveModal] = useState(false);
   const [selectedIncentiveData, setSelectedIncentiveData] = useState<any>(null);
   const [loadingIncentiveDetails, setLoadingIncentiveDetails] = useState(false);
+  const [numberOfSECs, setNumberOfSECs] = useState<number>(3);
 
   // Fetch passbook data from API
   useEffect(() => {
@@ -123,7 +138,7 @@ export default function IncentivePassbookPage() {
         if (passbookResult.success && passbookResult.data) {
           setPassbookData(passbookResult.data);
         } else {
-          setError('Invalid response from server');
+          setError(passbookResult.error || 'Invalid response from server');
           return;
         }
 
@@ -156,7 +171,7 @@ export default function IncentivePassbookPage() {
   
   // Get unique months from sales summary
   const allMonths = Array.from(
-    new Set(salesSummaryData.map((r) => formatMonthYear(r.date)))
+    new Set(salesSummaryData.filter(r => r && r.date).map((r) => formatMonthYear(r.date)))
   );
 
   // Get unique months from spot incentive sales summary
@@ -304,6 +319,24 @@ export default function IncentivePassbookPage() {
               0%, 100% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
               50% { box-shadow: 0 0 12px rgba(99, 102, 241, 0.4), 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
             }
+            
+            /* Mobile dropdown positioning fix */
+            @media (max-width: 768px) {
+              select {
+                background-position: right 8px center;
+                background-size: 16px;
+              }
+              
+              .modal-dropdown {
+                position: relative;
+                z-index: 10001;
+              }
+              
+              .modal-dropdown select {
+                position: relative;
+                z-index: 10001;
+              }
+            }
           `}</style>
 
           {/* Filter chips */}
@@ -363,12 +396,19 @@ export default function IncentivePassbookPage() {
             </button>
             <button
               type="button"
-              onClick={() => downloadReport(filteredMonthlySales.map(row => ({
-                date: row.date,
-                adld: row.adld.toString(),
-                combo: row.combo.toString(),
-                units: row.units
-              })))}
+              onClick={() => {
+                try {
+                  downloadReport(filteredMonthlySales.map(row => ({
+                    date: row?.date || '',
+                    adld: (row?.adld || 0).toString(),
+                    combo: (row?.combo || 0).toString(),
+                    units: row?.units || 0
+                  })));
+                } catch (error) {
+                  console.error('Error downloading report:', error);
+                  alert('Failed to download report. Please try again.');
+                }
+              }}
               className="w-full bg-gradient-to-r from-[#0EA5E9] via-[#2563EB] to-[#4F46E5] text-white text-sm font-semibold py-2.5 rounded-xl shadow"
             >
               Download Report
@@ -413,19 +453,23 @@ export default function IncentivePassbookPage() {
       {/* Incentive Details Modal */}
       {showIncentiveModal && selectedIncentiveData && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto"
           style={{ zIndex: 9999 }}
           onClick={() => setShowIncentiveModal(false)}
         >
           <div 
-            className="bg-white rounded-lg max-w-md w-full max-h-[90vh] flex flex-col"
+            className="bg-white rounded-lg max-w-md w-full max-h-[90vh] flex flex-col my-8 mx-auto relative"
             onClick={(e) => e.stopPropagation()}
+            style={{ 
+              position: 'relative',
+              zIndex: 10000
+            }}
           >
             {/* Header */}
             <div className="bg-gray-100 px-4 py-3 rounded-t-lg flex-shrink-0">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Incentive Breakdown - {selectedIncentiveData.month}
+                  Incentive Breakdown - {selectedIncentiveData?.month || 'N/A'}
                 </h3>
                 <button
                   onClick={() => setShowIncentiveModal(false)}
@@ -439,7 +483,7 @@ export default function IncentivePassbookPage() {
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4" style={{ position: 'relative', zIndex: 1 }}>
               {/* Details Section */}
               <div className="mb-6">
                 <div className="overflow-hidden rounded-xl border border-gray-200 shadow-lg bg-white">
@@ -457,11 +501,30 @@ export default function IncentivePassbookPage() {
                     </tr>
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-3 text-gray-600">Number Of SECs</td>
-                      <td className="px-4 py-3 font-medium text-right text-gray-900">3</td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="relative inline-block modal-dropdown">
+                          <select
+                            value={numberOfSECs}
+                            onChange={(e) => setNumberOfSECs(Number(e.target.value))}
+                            className="border border-gray-300 rounded px-2 py-1 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 min-w-[60px]"
+                          >
+                            <option value={1}>1</option>
+                            <option value={2}>2</option>
+                            <option value={3}>3</option>
+                            <option value={4}>4</option>
+                            <option value={5}>5</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </td>
                     </tr>
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-3 text-gray-600">Total Units Sold [25 Dec]</td>
-                      <td className="px-4 py-3 font-medium text-right text-gray-900">{selectedIncentiveData.units}</td>
+                      <td className="px-4 py-3 font-medium text-right text-gray-900">{selectedIncentiveData?.units || 0}</td>
                     </tr>
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-3 text-gray-600">Fold 7 Sold</td>
@@ -481,7 +544,7 @@ export default function IncentivePassbookPage() {
                     </tr>
                     <tr className="border-b border-gray-100 bg-blue-50">
                       <td className="px-4 py-3 text-blue-700 font-semibold">Total Incentive Earned</td>
-                      <td className="px-4 py-3 font-bold text-right text-blue-700">{selectedIncentiveData.incentive}</td>
+                      <td className="px-4 py-3 font-bold text-right text-blue-700">{selectedIncentiveData?.incentive || '₹0'}</td>
                     </tr>
                     <tr className="bg-orange-50">
                       <td className="px-4 py-3 text-orange-700 font-semibold rounded-bl-xl">Payment Status</td>
@@ -684,11 +747,10 @@ function MonthlyIncentiveSection({
                 className="grid grid-cols-4 gap-2 px-3 py-3 border-t border-gray-100 text-gray-800 items-center"
               >
                 <span className="text-left font-medium">{row.month}</span>
-                <div className="text-center flex items-center justify-center gap-1">
-                  <span className="font-semibold text-gray-900">{row.incentive}</span>
+                <div className="text-center">
                   <button
                     type="button"
-                    className="w-4 h-4 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold hover:bg-blue-200 transition-colors disabled:opacity-50"
+                    className="px-3 py-1 rounded-lg bg-blue-100 text-blue-600 text-xs font-medium hover:bg-blue-200 transition-colors disabled:opacity-50"
                     title="View incentive calculation details"
                     disabled={loadingIncentiveDetails}
                     onClick={async () => {
@@ -742,9 +804,12 @@ function MonthlyIncentiveSection({
                     }}
                   >
                     {loadingIncentiveDetails ? (
-                      <div className="animate-spin rounded-full h-2 w-2 border-b border-blue-600"></div>
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-600"></div>
+                        <span>Loading...</span>
+                      </div>
                     ) : (
-                      'i'
+                      'View Your Calculation'
                     )}
                   </button>
                 </div>

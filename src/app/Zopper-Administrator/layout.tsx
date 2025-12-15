@@ -183,6 +183,32 @@ export default function ZopperAdministratorLayout({
               <span className="text-sm leading-normal">Process Voucher Excel</span>
             </Link>
 
+            {/* Import Store Attach Rate */}
+            <Link
+              href="/Zopper-Administrator/import-store-attach-rate"
+              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${
+                isActive('/Zopper-Administrator/import-store-attach-rate')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
+              }`}
+            >
+              <span className="text-lg shrink-0">📈</span>
+              <span className="text-sm leading-normal">Import Store Attach Rate</span>
+            </Link>
+
+            {/* Import Daily Reports */}
+            <Link
+              href="/Zopper-Administrator/import-daily-reports"
+              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${
+                isActive('/Zopper-Administrator/import-daily-reports')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
+              }`}
+            >
+              <span className="text-lg shrink-0">📋</span>
+              <span className="text-sm leading-normal">Import Daily Reports</span>
+            </Link>
+
             {/* Process Invalid IMEIs */}
             <Link
               href="/Zopper-Administrator/process-invalid-imeis"

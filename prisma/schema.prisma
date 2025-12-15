@@ -48,15 +48,13 @@ model Store {
 
 model periodicAttachRate {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  storeId   String   @db.ObjectId
+  storeId   String   @unique // Each store can have only one attach rate record
   store     Store    @relation(fields: [storeId], references: [id])
-  start    String   // e.g., "2024-Q1", "2024-01". inclusive of this period
-  end      String   // e.g., "2024-Q1", "2024-01". inclusive of this period
-  attachPercentage Float    // e.g., 0.25 for 25%
+  start    String   // e.g., "01-01-2024", "dd-mm-yyyy". inclusive of this period
+  end      String   // e.g., "31-03-2024", "dd-mm-yyyy". inclusive of this period
+  attachPercentage Float    // e.g., 25%
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([storeId, start, end])
 }
 
 model SamsungSKU {
@@ -152,12 +150,12 @@ model SpotIncentiveCampaign {
   planId       String     @db.ObjectId
 
   // incentive details
-  incentiveType  IncentiveType @default(FIXED)
+  incentiveType  IncentiveType? @default(FIXED)
   incentiveValue Float // use Float or Decimal depending on your connector; stores amount or percent
 
   // schedule + status
-  startDate DateTime
-  endDate   DateTime
+  startDate DateTime?
+  endDate   DateTime?
   active    Boolean  @default(true)
 
   createdAt DateTime @default(now())
