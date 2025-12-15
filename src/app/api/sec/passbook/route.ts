@@ -41,8 +41,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Get all sales reports for this SEC user
-    // Note: Using SalesReport model from schema (spotIncentiveSalesReport in old code)
-    const salesReports: any = await (prisma.salesReport as any).findMany({
+    // Note: Using SpotIncentiveReport model from schema
+    const salesReports: any = await prisma.spotIncentiveReport.findMany({
       where: {
         secId: secUser.id,
       },
@@ -71,6 +71,9 @@ export async function GET(req: NextRequest) {
     });
 
     // Get all sales summaries for this SEC user
+    // TODO: SalesSummary model doesn't exist in schema - needs to be added
+    const salesSummaries: any[] = []; // Temporarily empty until schema is fixed
+    /* 
     const salesSummaries = await prisma.salesSummary.findMany({
       where: {
         secId: secUser.id,
@@ -88,6 +91,7 @@ export async function GET(req: NextRequest) {
         { month: 'desc' },
       ],
     });
+    */
 
     // Calculate incentives for months that don't have estimatedIncenetiveEarned
     // Wait for calculations to complete before returning data

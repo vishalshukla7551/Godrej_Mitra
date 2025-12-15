@@ -36,14 +36,27 @@ model Store {
   name  String
   city  String?
   state String?
-  numberOfSec            Int?
-  attachPercentage       Float? // percentage of sales attach rate     
-  salesReports           SalesReport[]
-  spotIncentiveCampaigns SpotIncentiveCampaign[]
-  secUsers              SEC[]
-
+  periodicAttachRates periodicAttachRate[]
+  samsungIncentiveInfo Json?  // Array<Object>: { month: String(MM-YYYY), samsungIncentiveAmount: Int, samsungIncentivePaidAt: Date | null }    
+  dailyIncentiveReports   DailyIncentiveReport[]
+  spotIncentiveReports           SpotIncentiveReport[]
+  spotIncentiveCampaigns  SpotIncentiveCampaign[]
+  secUsers                SEC[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model periodicAttachRate {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  storeId   String   @db.ObjectId
+  store     Store    @relation(fields: [storeId], references: [id])
+  start    String   // e.g., "2024-Q1", "2024-01". inclusive of this period
+  end      String   // e.g., "2024-Q1", "2024-01". inclusive of this period
+  attachPercentage Float    // e.g., 0.25 for 25%
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([storeId, start, end])
 }
 
 model SamsungSKU {
@@ -52,7 +65,8 @@ model SamsungSKU {
   ModelName              String
   ModelPrice             Int?
   plans                  Plan[]
-  salesReports           SalesReport[]
+  SpotIncentiveReport           SpotIncentiveReport[]
+  dailyIncentiveReports       DailyIncentiveReport[]
   spotIncentiveCampaigns SpotIncentiveCampaign[]
   @@map("SamsungSKU")
 }
@@ -63,13 +77,14 @@ model Plan {
   price                  Int
   samsungSKU             SamsungSKU?             @relation(fields: [samsungSKUId], references: [id])
   samsungSKUId           String?                 @db.ObjectId
-  salesReports           SalesReport[]
+  dailyIncentiveReports           DailyIncentiveReport[]
+  SpotIncentiveReport           SpotIncentiveReport[]
   spotIncentiveCampaigns SpotIncentiveCampaign[]
 
   @@map("Plan")
 }
 
-model SalesReport {
+model SpotIncentiveReport {
   id                      String                 @id @default(auto()) @map("_id") @db.ObjectId
   secId                   String                 @db.ObjectId
   secUser                 SEC                    @relation(fields: [secId], references: [id])
@@ -79,7 +94,6 @@ model SalesReport {
   samsungSKU              SamsungSKU             @relation(fields: [samsungSKUId], references: [id])
   planId                  String                 @db.ObjectId
   salesSummaryid          String?                @db.ObjectId
-  salesSummary            SalesSummary?          @relation("SalesSummaryReports", fields: [salesSummaryid], references: [id])
   plan                    Plan                   @relation(fields: [planId], references: [id])
   imei                    String
   isCompaignActive        Boolean                @default(false)
@@ -87,7 +101,7 @@ model SalesReport {
   voucherCode             String? // Optional voucher code for incentive redemption
   spotincentivepaidAt     DateTime? //paid for each sale
   metadata                Json? // Additional data related to the sales report
-  Date_of_sale            DateTime?              @default(now())
+  Date_of_sale            DateTime          
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
 
@@ -97,25 +111,28 @@ model SalesReport {
   @@index([Date_of_sale])
 }
 
-model SalesSummary {
-  id                          String        @id @default(auto()) @map("_id") @db.ObjectId
-  secId                       String        @db.ObjectId
-  secUser                     SEC           @relation(fields: [secId], references: [id])
-  totalSpotIncentiveEarned    Int
-  totalSamsungIncentiveEarned Int? // Optional - decided at payment date
-  estimatedIncenetiveEarned   Int? // Optional - estimated incentive at summary creatio
-  samsungincentivepaidAt      DateTime? //paid for  monthly sale
-  metadata                    Json? // Additional data related to the sales summary
-  salesReport                 SalesReport[] @relation("SalesSummaryReports")
-  month                       Int
-  year                        Int
-  createdAt                   DateTime      @default(now())
-  updatedAt                   DateTime      @updatedAt
+model DailyIncentiveReport {
+  id                      String                 @id @default(auto()) @map("_id") @db.ObjectId
+  secId                   String?                 @db.ObjectId
+  secUser                 SEC?                    @relation(fields: [secId], references: [id])
+  storeId                 String
+  store                   Store                  @relation(fields: [storeId], references: [id])
+  samsungSKUId            String                 @db.ObjectId
+  samsungSKU              SamsungSKU             @relation(fields: [samsungSKUId], references: [id])
+  planId                  String                 @db.ObjectId
+  plan                    Plan                   @relation(fields: [planId], references: [id])
+  imei                    String
+  metadata                Json? // Additional data related to the sales report
+  Date_of_sale            DateTime           
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
 
-  @@unique([secId, month, year], name: "secId_month_year")
+  @@unique([imei])
   @@index([secId])
-  @@index([month, year])
+  @@index([storeId])
+  @@index([Date_of_sale])
 }
+
 
 enum IncentiveType {
   FIXED // fixed amount per sale, e.g., 200 (INR)
@@ -230,9 +247,7 @@ model ZSM {
   fullName String
   phone    String
 
-  storeIds String[]
   region   String?
-  kycInfo  Json?
 
   user User @relation("UserZSM", fields: [userId], references: [id], onDelete: Cascade)
 
@@ -242,18 +257,17 @@ model ZSM {
 
 model SEC {
   id String @id @default(auto()) @map("_id") @db.ObjectId
-
   fullName    String?
   phone       String    @unique
+  secId      String?
   email       String?
   kycInfo     Json?
   lastLoginAt DateTime?
   storeId   String?
   store     Store?    @relation(fields: [storeId], references: [id])
   AgencyName   String?
-  salesReports   SalesReport[]
-  salesSummaries SalesSummary[]
-
+  SpotIncentiveReport           SpotIncentiveReport[]
+  dailyIncentiveReports       DailyIncentiveReport[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
