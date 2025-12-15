@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const currentStoreIds = user.zsmProfile.storeIds || [];
+    const currentStoreIds: string[] = []; // ZSM manages stores by region, not specific store IDs
 
     // Verify that all requested stores exist
     const requestedStores = await prisma.store.findMany({

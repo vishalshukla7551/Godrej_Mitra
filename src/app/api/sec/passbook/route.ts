@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
 
     // Get all sales summaries for this SEC user
     // TODO: SalesSummary model doesn't exist in schema - needs to be added
-    const salesSummaries: any[] = []; // Temporarily empty until schema is fixed
+    const salesSummaries: any[] = []; // Using spot incentive reports instead
     /* 
     const salesSummaries = await prisma.salesSummary.findMany({
       where: {
@@ -139,23 +139,7 @@ export async function GET(req: NextRequest) {
       console.log(`[Passbook] All calculations completed`);
       
       // Re-fetch sales summaries to get updated values
-      const updatedSalesSummaries = await prisma.salesSummary.findMany({
-        where: {
-          secId: secUser.id,
-        },
-        include: {
-          salesReport: {
-            select: {
-              id: true,
-              Date_of_sale: true,
-            },
-          },
-        },
-        orderBy: [
-          { year: 'desc' },
-          { month: 'desc' },
-        ],
-      });
+      const updatedSalesSummaries: any[] = []; // Using spot incentive reports instead
       
       // Use updated summaries for the rest of the response
       salesSummaries.length = 0;
@@ -253,9 +237,9 @@ export async function GET(req: NextRequest) {
       return {
         month: formatMonthYear(summary.month, summary.year),
         units,
-        incentive: incentiveAmount != null
+        incentive: incentiveAmount != null && incentiveAmount > 0
           ? `₹${incentiveAmount.toLocaleString('en-IN')}`
-          : 'Not calculated',
+          : incentiveAmount === 0 ? '-' : 'Not calculated',
         status,
         paymentDate: summary.samsungincentivepaidAt 
           ? formatDate(summary.samsungincentivepaidAt)
@@ -279,7 +263,7 @@ export async function GET(req: NextRequest) {
           date: formatDate(report.Date_of_sale || report.submittedAt),
           deviceName: report.samsungSKU.ModelName || report.samsungSKU.Category,
           planName: planName,
-          incentive: `₹${report.spotincentiveEarned.toLocaleString('en-IN')}`,
+          incentive: report.spotincentiveEarned > 0 ? `₹${report.spotincentiveEarned.toLocaleString('en-IN')}` : '-',
           voucherCode: report.voucherCode || '',
           isPaid: !!report.spotincentivepaidAt,
           paidAt: report.spotincentivepaidAt 
@@ -358,9 +342,9 @@ export async function GET(req: NextRequest) {
 
       monthlyFyStats[fy] = {
         units: monthlyUnits.toLocaleString('en-IN'),
-        totalEarned: `₹${monthlyEarned.toLocaleString('en-IN')}`,
-        paid: `₹${monthlyPaid.toLocaleString('en-IN')}`,
-        net: `₹${monthlyNet.toLocaleString('en-IN')}`,
+        totalEarned: monthlyEarned > 0 ? `₹${monthlyEarned.toLocaleString('en-IN')}` : '-',
+        paid: monthlyPaid > 0 ? `₹${monthlyPaid.toLocaleString('en-IN')}` : '-',
+        net: monthlyNet > 0 ? `₹${monthlyNet.toLocaleString('en-IN')}` : '-',
       };
 
       // Calculate SPOT incentive stats for this FY
@@ -389,9 +373,9 @@ export async function GET(req: NextRequest) {
 
       spotFyStats[fy] = {
         units: spotUnits.toLocaleString('en-IN'),
-        totalEarned: `₹${spotEarned.toLocaleString('en-IN')}`,
-        paid: `₹${spotPaid.toLocaleString('en-IN')}`,
-        net: `₹${spotNet.toLocaleString('en-IN')}`,
+        totalEarned: spotEarned > 0 ? `₹${spotEarned.toLocaleString('en-IN')}` : '-',
+        paid: spotPaid > 0 ? `₹${spotPaid.toLocaleString('en-IN')}` : '-',
+        net: spotNet > 0 ? `₹${spotNet.toLocaleString('en-IN')}` : '-',
       };
     }
 

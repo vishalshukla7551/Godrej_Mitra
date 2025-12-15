@@ -302,7 +302,7 @@ export async function POST(req: NextRequest) {
     // Update the sales report validation status
     const validationStatus = action === 'validate' ? 'VALIDATED' : 'DISCARDED';
     
-    const updatedReport = await prisma.salesReport.update({
+    const updatedReport = await prisma.spotIncentiveReport.update({
       where: { id: reportId },
       data: {
         metadata: {

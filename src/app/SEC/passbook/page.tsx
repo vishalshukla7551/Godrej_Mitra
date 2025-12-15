@@ -156,6 +156,12 @@ export default function IncentivePassbookPage() {
     new Set(salesSummaryData.map((r) => formatMonthYear(r.date)))
   );
 
+  // Get unique months from spot incentive sales summary
+  const spotSalesSummaryData = spotIncentiveData?.salesSummary || [];
+  const allSpotMonths: string[] = Array.from(
+    new Set(spotSalesSummaryData.map((r: any) => formatMonthYear(r.date)))
+  );
+
   // Get available FYs from API data or default
   const allFYs = passbookData?.monthlyIncentive?.fyStats 
     ? Object.keys(passbookData.monthlyIncentive.fyStats) 
@@ -201,16 +207,16 @@ export default function IncentivePassbookPage() {
   // Get FY stats from API data based on active tab
   const monthlyFyStats = passbookData?.monthlyIncentive?.fyStats?.[selectedFY] || {
     units: '0',
-    totalEarned: '₹0',
-    paid: '₹0',
-    net: '₹0',
+    totalEarned: '-',
+    paid: '-',
+    net: '-',
   };
 
   const spotFyStats = spotFyStatsFromAPI[selectedFY] || {
     units: '0',
-    totalEarned: '₹0',
-    paid: '₹0',
-    net: '₹0',
+    totalEarned: '-',
+    paid: '-',
+    net: '-',
   };
 
   // Get monthly transactions
@@ -383,9 +389,9 @@ export default function IncentivePassbookPage() {
             />
           ) : (
             <SpotIncentiveSection
-              rows={filteredMonthlySales}
+              rows={spotIncentiveData?.salesSummary || []}
               transactions={spotTransactions}
-              allMonths={allMonths}
+              allMonths={allSpotMonths}
               selectedMonth={selectedMonth}
               setSelectedMonth={setSelectedMonth}
               selectedFY={selectedFY}
@@ -395,21 +401,7 @@ export default function IncentivePassbookPage() {
             />
           )}
 
-          {/* Stats cards (common) */}
-          <div className="mt-5 mb-4 space-y-3">
-            {statsCardsConfig.map((card) => {
-              const currentFyStats = activeTab === 'monthly' ? monthlyFyStats : spotFyStats;
-              return (
-                <div
-                  key={card.id}
-                  className={`bg-gradient-to-r ${card.gradient} rounded-2xl px-4 py-4 text-white`}
-                >
-                  <p className="text-xs mb-1">{card.label}</p>
-                  <p className="text-xl font-semibold">{currentFyStats[card.key as keyof typeof currentFyStats]}</p>
-                </div>
-              );
-            })}
-          </div>
+
         </div>
       </main>
 
@@ -810,6 +802,61 @@ function SpotIncentiveSection({
   allFYs: string[];
   spotIncentiveData: any;
 }) {
+  // Helper function to check if a date falls within a financial year
+  const isDateInFY = (dateStr: string, fy: string) => {
+    try {
+      const [dd, mm, yyyy] = dateStr.split('-').map(Number);
+      const date = new Date(yyyy, mm - 1, dd);
+      
+      // Extract year from FY (e.g., "FY-25" -> 2025)
+      const fyYear = 2000 + parseInt(fy.split('-')[1]);
+      
+      // Financial year runs from April 1 to March 31
+      const fyStart = new Date(fyYear - 1, 3, 1); // April 1 of previous year
+      const fyEnd = new Date(fyYear, 2, 31); // March 31 of current year
+      
+      return date >= fyStart && date <= fyEnd;
+    } catch (error) {
+      console.error('Error parsing date:', dateStr, error);
+      return true; // Show all data if date parsing fails
+    }
+  };
+
+  // Get all available sales data and transactions
+  const allSalesData = rows || []; // Use the rows prop passed to component
+  const allTransactions = transactions || [];
+
+  // Apply FY filtering
+  let filteredSalesData = allSalesData.filter((row: any) => {
+    return isDateInFY(row.date, selectedFY);
+  });
+  
+  let filteredTransactions = allTransactions.filter((txn: any) => {
+    return isDateInFY(txn.date, selectedFY);
+  });
+
+  // Fallback: if no data for selected FY, show all data
+  if (filteredSalesData.length === 0 && allSalesData.length > 0) {
+    console.log('No sales data for', selectedFY, 'showing all data');
+    filteredSalesData = allSalesData;
+  }
+  
+  if (filteredTransactions.length === 0 && allTransactions.length > 0) {
+    console.log('No transactions for', selectedFY, 'showing all transactions');
+    filteredTransactions = allTransactions;
+  }
+
+  // Debug: Log data to console
+  console.log('SpotIncentiveSection Debug:', {
+    selectedFY,
+    allSalesData: allSalesData.length,
+    filteredSalesData: filteredSalesData.length,
+    allTransactions: allTransactions.length,
+    filteredTransactions: filteredTransactions.length,
+    spotIncentiveData: !!spotIncentiveData,
+    fyStats: spotIncentiveData?.fyStats
+  });
+
   return (
     <>
       {/* Sales Summary (same table as monthly top) */}
@@ -838,18 +885,18 @@ function SpotIncentiveSection({
         <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
           <div className="grid grid-cols-4 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
             <span>Date</span>
-            <span>ADLD</span>
-            <span>Combo</span>
+            <span className="text-center">ADLD (₹200)</span>
+            <span className="text-center">Combo (₹300)</span>
             <span className="text-right">Units</span>
           </div>
-          {rows.map((row, idx) => (
+          {filteredSalesData.map((row: any, idx: number) => (
             <div
               key={row.date + idx}
               className="grid grid-cols-4 px-3 py-2 border-t border-gray-100 text-gray-800"
             >
               <span>{row.date}</span>
-              <span>{row.adld}</span>
-              <span>{row.combo}</span>
+              <span className="text-center text-blue-600 font-medium">{row.adld}</span>
+              <span className="text-center text-purple-600 font-medium">{row.combo}</span>
               <span className="text-right">{row.units}</span>
             </div>
           ))}
@@ -858,25 +905,64 @@ function SpotIncentiveSection({
 
       {/* Spot Incentive Summary */}
       <section className="mb-5">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-[9px] text-white">
-            ⚡
-          </span>
-          <h2 className="text-sm font-semibold text-gray-900">
-            Spot Incentive Summary
-          </h2>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-[9px] text-white">
+              ⚡
+            </span>
+            <h2 className="text-sm font-semibold text-gray-900">
+              Spot Incentive Summary
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-gray-600">Financial Year</span>
+            <select
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
+              value={selectedFY}
+              onChange={(e) => setSelectedFY(e.target.value)}
+            >
+              {allFYs.map((fy: string) => (
+                <option key={fy} value={fy}>
+                  {fy}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <p className="text-[11px] text-gray-500 mb-3">Your spot incentive earnings overview</p>
 
-        {/* Summary Cards */}
+        {/* Summary Cards - 2x2 Grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">
+          {/* Total Earned Incentive */}
           <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 text-white">
-            <p className="text-[10px] opacity-90 mb-1">Total Earned</p>
-            <p className="text-lg font-bold">{spotIncentiveData?.summary?.totalEarned || '₹0'}</p>
+            <p className="text-[10px] opacity-90 mb-1">Total Earned Incentive</p>
+            <p className="text-lg font-bold">
+              {spotIncentiveData?.fyStats?.[selectedFY]?.totalEarned || '₹0'}
+            </p>
           </div>
+          
+          {/* Total Units */}
           <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-3 text-white">
             <p className="text-[10px] opacity-90 mb-1">Total Units</p>
-            <p className="text-lg font-bold">{spotIncentiveData?.summary?.totalUnits || '0'}</p>
+            <p className="text-lg font-bold">
+              {spotIncentiveData?.fyStats?.[selectedFY]?.units || '0'}
+            </p>
+          </div>
+          
+          {/* Paid Incentive */}
+          <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl p-3 text-white">
+            <p className="text-[10px] opacity-90 mb-1">Paid Incentive</p>
+            <p className="text-lg font-bold">
+              {spotIncentiveData?.fyStats?.[selectedFY]?.paid || '₹0'}
+            </p>
+          </div>
+          
+          {/* Net Balance */}
+          <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-xl p-3 text-white">
+            <p className="text-[10px] opacity-90 mb-1">Net Balance</p>
+            <p className="text-lg font-bold">
+              {spotIncentiveData?.fyStats?.[selectedFY]?.net || '₹0'}
+            </p>
           </div>
         </div>
       </section>
@@ -902,12 +988,12 @@ function SpotIncentiveSection({
             <span className="text-center">Status</span>
             <span className="text-center">IMEI</span>
           </div>
-          {transactions.length === 0 ? (
+          {filteredTransactions.length === 0 ? (
             <div className="px-3 py-4 text-center text-gray-500 text-xs">
-              No spot incentive transactions found
+              No spot incentive transactions found for {selectedFY}
             </div>
           ) : (
-            transactions.map((row, idx) => (
+            filteredTransactions.map((row, idx) => (
               <div
                 key={row.id || row.date + idx}
                 className="grid grid-cols-6 px-3 py-2 border-t border-gray-100 text-gray-800 items-center"
@@ -936,25 +1022,7 @@ function SpotIncentiveSection({
         </div>
       </section>
 
-      {/* FY Dropdown */}
-      <section className="mb-3">
-        <div className="flex justify-end">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-gray-600">Financial Year</span>
-            <select
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
-              value={selectedFY}
-              onChange={(e) => setSelectedFY(e.target.value)}
-            >
-              {allFYs.map((fy: string) => (
-                <option key={fy} value={fy}>
-                  {fy}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </section>
+
     </>
   );
 }

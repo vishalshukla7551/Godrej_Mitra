@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
 
     // Get sales reports for active campaigns within the period
     // Filter by isCompaignActive = true
-    const salesReports: any = await (prisma.spotIncentiveReport as any).findMany({
+    const salesReports: any = await prisma.spotIncentiveReport.findMany({
       where: {
         isCompaignActive: true,
         Date_of_sale: { gte: startDate },
@@ -107,6 +107,10 @@ export async function GET(req: NextRequest) {
       state: string | null;
       totalSales: number;
       totalIncentive: number;
+      adldUnits: number;
+      comboUnits: number;
+      adldRevenue: number;
+      comboRevenue: number;
     }>();
 
     // Aggregate by device (Samsung SKU)
@@ -128,12 +132,24 @@ export async function GET(req: NextRequest) {
     }>();
 
     salesReports.forEach((report: any) => {
+      // Determine if this is ADLD or Combo based on plan type
+      const isADLD = report.plan.planType === 'ADLD_1_YR';
+      const isCombo = report.plan.planType === 'COMBO_2_YRS';
+      
       // Store aggregation
       const storeKey = report.storeId;
       if (storeMap.has(storeKey)) {
         const existing = storeMap.get(storeKey)!;
         existing.totalSales += 1;
         existing.totalIncentive += report.spotincentiveEarned;
+        
+        if (isADLD) {
+          existing.adldUnits += 1;
+          existing.adldRevenue += 200; // ADLD price ₹200
+        } else if (isCombo) {
+          existing.comboUnits += 1;
+          existing.comboRevenue += 300; // Combo price ₹300
+        }
       } else {
         storeMap.set(storeKey, {
           storeId: report.store.id,
@@ -142,6 +158,10 @@ export async function GET(req: NextRequest) {
           state: report.store.state,
           totalSales: 1,
           totalIncentive: report.spotincentiveEarned,
+          adldUnits: isADLD ? 1 : 0,
+          comboUnits: isCombo ? 1 : 0,
+          adldRevenue: isADLD ? 200 : 0,
+          comboRevenue: isCombo ? 300 : 0,
         });
       }
 
@@ -185,7 +205,9 @@ export async function GET(req: NextRequest) {
       .map((store, index) => ({
         rank: index + 1,
         ...store,
-        totalIncentive: `₹${store.totalIncentive.toLocaleString('en-IN')}`,
+        totalIncentive: store.totalIncentive > 0 ? `₹${store.totalIncentive.toLocaleString('en-IN')}` : '-',
+        adldRevenue: store.adldRevenue > 0 ? `₹${store.adldRevenue.toLocaleString('en-IN')}` : '-',
+        comboRevenue: store.comboRevenue > 0 ? `₹${store.comboRevenue.toLocaleString('en-IN')}` : '-',
       }));
 
     const topDevices = Array.from(deviceMap.values())
@@ -194,7 +216,7 @@ export async function GET(req: NextRequest) {
       .map((device, index) => ({
         rank: index + 1,
         ...device,
-        totalIncentive: `₹${device.totalIncentive.toLocaleString('en-IN')}`,
+        totalIncentive: device.totalIncentive > 0 ? `₹${device.totalIncentive.toLocaleString('en-IN')}` : '-',
       }));
 
     const topPlans = Array.from(planMap.values())
@@ -203,8 +225,8 @@ export async function GET(req: NextRequest) {
       .map((plan, index) => ({
         rank: index + 1,
         ...plan,
-        planPrice: `₹${plan.planPrice.toLocaleString('en-IN')}`,
-        totalIncentive: `₹${plan.totalIncentive.toLocaleString('en-IN')}`,
+        planPrice: plan.planPrice > 0 ? `₹${plan.planPrice.toLocaleString('en-IN')}` : '-',
+        totalIncentive: plan.totalIncentive > 0 ? `₹${plan.totalIncentive.toLocaleString('en-IN')}` : '-',
       }));
 
     return NextResponse.json({

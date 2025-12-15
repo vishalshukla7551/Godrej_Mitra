@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
             id: true,
             fullName: true,
             phone: true,
-            storeIds: true
+            region: true
           }
         }
       }
@@ -33,11 +33,9 @@ export async function GET(req: NextRequest) {
 
     // Get stores associated with this ZSM
     const stores = await prisma.store.findMany({
-      where: {
-        id: {
-          in: user.zsmProfile.storeIds || []
-        }
-      },
+      where: user.zsmProfile.region ? {
+        state: user.zsmProfile.region
+      } : {},
       select: {
         id: true,
         name: true,

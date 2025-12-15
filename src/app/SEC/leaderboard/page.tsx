@@ -30,6 +30,10 @@ interface LeaderboardStore {
   state: string | null;
   totalSales: number;
   totalIncentive: string;
+  adldUnits: number;
+  comboUnits: number;
+  adldRevenue: string;
+  comboRevenue: string;
 }
 
 interface LeaderboardData {
@@ -41,11 +45,25 @@ interface LeaderboardData {
   totalSalesReports: number;
 }
 
+
+
+interface ActiveCampaignsData {
+  campaigns: any[];
+  store: {
+    id: string;
+    name: string;
+    city: string;
+  };
+  totalActiveCampaigns: number;
+}
+
 export default function SalesChampionLeaderboardPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>(
     MONTH_OPTIONS[new Date().getMonth()] ?? `November ${CURRENT_YEAR_SHORT}`,
   );
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardData | null>(null);
+
+  const [activeCampaignsData, setActiveCampaignsData] = useState<ActiveCampaignsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,13 +71,28 @@ export default function SalesChampionLeaderboardPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/sec/leaderboard?period=month&limit=20');
-      const result = await response.json();
       
-      if (result.success) {
-        setLeaderboardData(result.data);
+      // Fetch leaderboard and active campaigns data
+      const [leaderboardRes, activeCampaignsRes] = await Promise.all([
+        fetch('/api/sec/leaderboard?period=month&limit=20'),
+        fetch('/api/sec/active-campaigns')
+      ]);
+      
+      const [leaderboardResult, activeCampaignsResult] = await Promise.all([
+        leaderboardRes.json(),
+        activeCampaignsRes.json()
+      ]);
+      
+      if (leaderboardResult.success) {
+        setLeaderboardData(leaderboardResult.data);
       } else {
         setError('Failed to load leaderboard data');
+      }
+      
+
+      
+      if (activeCampaignsResult.success) {
+        setActiveCampaignsData(activeCampaignsResult.data);
       }
     } catch (err) {
       setError('Error fetching leaderboard data');
@@ -166,6 +199,59 @@ export default function SalesChampionLeaderboardPage() {
             </p>
           </div>
 
+
+
+          {/* Active Campaigns */}
+          {!loading && !error && activeCampaignsData && activeCampaignsData.campaigns.length > 0 && (
+            <div className="mb-6">
+              <div className="bg-gradient-to-r from-green-600 to-teal-600 rounded-2xl p-4 text-white">
+                <div className="text-center mb-3">
+                  <h2 className="text-lg font-bold mb-1">Active Campaigns for Your Store</h2>
+                  <p className="text-xs text-white/80">
+                    {activeCampaignsData.store.name} - {activeCampaignsData.store.city}
+                  </p>
+                  <p className="text-xs text-white/60 mt-1">
+                    {activeCampaignsData.totalActiveCampaigns} active campaign{activeCampaignsData.totalActiveCampaigns !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                
+                <div className="space-y-3">
+                  {activeCampaignsData.campaigns.slice(0, 3).map((campaign: any) => (
+                    <div key={campaign.id} className="bg-white/10 rounded-xl p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="text-sm font-semibold">{campaign.name}</h3>
+                          <p className="text-xs text-white/70">{campaign.deviceName} - {campaign.planType}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold">
+                            {campaign.incentiveType === 'FIXED' 
+                              ? `₹${campaign.incentiveValue}` 
+                              : `${campaign.incentiveValue}%`
+                            }
+                          </p>
+                          <p className="text-xs text-white/70">per sale</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between text-xs text-white/60">
+                        <span>Valid: {campaign.startDate} to {campaign.endDate}</span>
+                        <span>Plan: ₹{campaign.planPrice.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {activeCampaignsData.campaigns.length > 3 && (
+                    <div className="text-center">
+                      <p className="text-xs text-white/70">
+                        +{activeCampaignsData.campaigns.length - 3} more campaign{activeCampaignsData.campaigns.length - 3 !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Loading/Error States */}
           {loading && (
             <div className="text-center text-white py-12">
@@ -259,6 +345,12 @@ export default function SalesChampionLeaderboardPage() {
                           <th className="text-left px-2 py-2">
                             Store
                           </th>
+                          <th className="text-right px-2 py-2 w-[45px]">
+                            ADLD
+                          </th>
+                          <th className="text-right px-2 py-2 w-[45px]">
+                            Combo
+                          </th>
                           <th className="text-right px-2 py-2 w-[60px]">
                             Sales
                           </th>
@@ -293,6 +385,20 @@ export default function SalesChampionLeaderboardPage() {
                                     {store.city || store.state || 'N/A'}
                                   </span>
                                 </div>
+                              </td>
+
+                              {/* ADLD units */}
+                              <td className="px-2 py-2.5 text-right">
+                                <span className="text-[11px] font-medium text-blue-600">
+                                  {store.adldUnits > 0 ? store.adldUnits : '-'}
+                                </span>
+                              </td>
+
+                              {/* Combo units */}
+                              <td className="px-2 py-2.5 text-right">
+                                <span className="text-[11px] font-medium text-purple-600">
+                                  {store.comboUnits > 0 ? store.comboUnits : '-'}
+                                </span>
                               </td>
 
                               {/* Sales count */}

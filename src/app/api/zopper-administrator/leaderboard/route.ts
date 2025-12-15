@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Get sales reports for active campaigns within the period
-    const salesReports = await prisma.salesReport.findMany({
+    const salesReports = await prisma.spotIncentiveReport.findMany({
       where: {
         isCompaignActive: true,
         Date_of_sale: { gte: startDate },
@@ -167,7 +167,7 @@ export async function GET(req: NextRequest) {
       .map((store, index) => ({
         rank: index + 1,
         ...store,
-        totalIncentive: `₹${store.totalIncentive.toLocaleString('en-IN')}`,
+        totalIncentive: store.totalIncentive > 0 ? `₹${store.totalIncentive.toLocaleString('en-IN')}` : '-',
       }));
 
     const topDevices = Array.from(deviceMap.values())
@@ -176,7 +176,7 @@ export async function GET(req: NextRequest) {
       .map((device, index) => ({
         rank: index + 1,
         ...device,
-        totalIncentive: `₹${device.totalIncentive.toLocaleString('en-IN')}`,
+        totalIncentive: device.totalIncentive > 0 ? `₹${device.totalIncentive.toLocaleString('en-IN')}` : '-',
       }));
 
     const topPlans = Array.from(planMap.values())
@@ -185,8 +185,8 @@ export async function GET(req: NextRequest) {
       .map((plan, index) => ({
         rank: index + 1,
         ...plan,
-        planPrice: `₹${plan.planPrice.toLocaleString('en-IN')}`,
-        totalIncentive: `₹${plan.totalIncentive.toLocaleString('en-IN')}`,
+        planPrice: plan.planPrice > 0 ? `₹${plan.planPrice.toLocaleString('en-IN')}` : '-',
+        totalIncentive: plan.totalIncentive > 0 ? `₹${plan.totalIncentive.toLocaleString('en-IN')}` : '-',
       }));
 
     return NextResponse.json({

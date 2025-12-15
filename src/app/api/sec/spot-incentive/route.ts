@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     };
 
     // Transform data for frontend
-    const transactions = spotReports.map((report) => {
+    const transactions = spotReports.map((report: any) => {
       const planType = report.plan.planType;
       let planName = planType.replace(/_/g, ' ');
 
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
         date: formatDate(report.Date_of_sale),
         deviceName: report.samsungSKU.ModelName || report.samsungSKU.Category,
         planName: planName,
-        incentive: `₹${report.spotincentiveEarned.toLocaleString('en-IN')}`,
+        incentive: report.spotincentiveEarned > 0 ? `₹${report.spotincentiveEarned.toLocaleString('en-IN')}` : '-',
         incentiveAmount: report.spotincentiveEarned,
         voucherCode: report.voucherCode || 'N/A',
         isPaid: !!report.spotincentivepaidAt,
@@ -99,13 +99,48 @@ export async function GET(req: NextRequest) {
     });
 
     // Calculate summary statistics
-    const totalEarned = spotReports.reduce((sum, report) => sum + report.spotincentiveEarned, 0);
+    const totalEarned = spotReports.reduce((sum: number, report: any) => sum + report.spotincentiveEarned, 0);
     const totalPaid = spotReports
-      .filter(report => report.spotincentivepaidAt)
-      .reduce((sum, report) => sum + report.spotincentiveEarned, 0);
+      .filter((report: any) => report.spotincentivepaidAt)
+      .reduce((sum: number, report: any) => sum + report.spotincentiveEarned, 0);
     const totalPending = totalEarned - totalPaid;
     const totalUnits = spotReports.length;
-    const activeCampaignUnits = spotReports.filter(report => report.isCompaignActive).length;
+    const activeCampaignUnits = spotReports.filter((report: any) => report.isCompaignActive).length;
+
+    // Generate sales summary data grouped by date with ADLD and combo tracking
+    const salesSummaryMap = new Map<string, {
+      date: string;
+      adld: number;
+      combo: number;
+      units: number;
+    }>();
+
+    spotReports.forEach((report: any) => {
+      const dateKey = formatDate(report.Date_of_sale);
+      const isADLD = report.plan.planType === 'ADLD_1_YR';
+      const isCombo = report.plan.planType === 'COMBO_2_YRS';
+
+      if (salesSummaryMap.has(dateKey)) {
+        const existing = salesSummaryMap.get(dateKey)!;
+        existing.units += 1;
+        if (isADLD) existing.adld += 1;
+        if (isCombo) existing.combo += 1;
+      } else {
+        salesSummaryMap.set(dateKey, {
+          date: dateKey,
+          adld: isADLD ? 1 : 0,
+          combo: isCombo ? 1 : 0,
+          units: 1,
+        });
+      }
+    });
+
+    const salesSummary = Array.from(salesSummaryMap.values())
+      .sort((a, b) => {
+        const dateA = new Date(a.date.split('-').reverse().join('-'));
+        const dateB = new Date(b.date.split('-').reverse().join('-'));
+        return dateB.getTime() - dateA.getTime(); // Most recent first
+      });
 
     // Calculate Financial Year Stats
     const currentYear = new Date().getFullYear();
@@ -125,7 +160,7 @@ export async function GET(req: NextRequest) {
       const fyStart = new Date(year, 3, 1); // April 1
       const fyEnd = new Date(year + 1, 2, 31); // March 31
       
-      const fyReports = spotReports.filter((report) => {
+      const fyReports = spotReports.filter((report: any) => {
         const reportDate = new Date(report.Date_of_sale);
         return reportDate >= fyStart && reportDate <= fyEnd;
       });
@@ -134,7 +169,7 @@ export async function GET(req: NextRequest) {
       let fyEarned = 0;
       let fyPaid = 0;
 
-      fyReports.forEach((report) => {
+      fyReports.forEach((report: any) => {
         fyUnits += 1;
         fyEarned += report.spotincentiveEarned;
         if (report.spotincentivepaidAt) {
@@ -146,9 +181,9 @@ export async function GET(req: NextRequest) {
 
       fyStats[fy] = {
         units: fyUnits.toLocaleString('en-IN'),
-        totalEarned: `₹${fyEarned.toLocaleString('en-IN')}`,
-        paid: `₹${fyPaid.toLocaleString('en-IN')}`,
-        net: `₹${fyNet.toLocaleString('en-IN')}`,
+        totalEarned: fyEarned > 0 ? `₹${fyEarned.toLocaleString('en-IN')}` : '-',
+        paid: fyPaid > 0 ? `₹${fyPaid.toLocaleString('en-IN')}` : '-',
+        net: fyNet > 0 ? `₹${fyNet.toLocaleString('en-IN')}` : '-',
       };
     }
 
@@ -169,12 +204,13 @@ export async function GET(req: NextRequest) {
       success: true,
       data: {
         transactions,
+        salesSummary,
         summary: {
           totalUnits,
           activeCampaignUnits,
-          totalEarned: `₹${totalEarned.toLocaleString('en-IN')}`,
-          totalPaid: `₹${totalPaid.toLocaleString('en-IN')}`,
-          totalPending: `₹${totalPending.toLocaleString('en-IN')}`,
+          totalEarned: totalEarned > 0 ? `₹${totalEarned.toLocaleString('en-IN')}` : '-',
+          totalPaid: totalPaid > 0 ? `₹${totalPaid.toLocaleString('en-IN')}` : '-',
+          totalPending: totalPending > 0 ? `₹${totalPending.toLocaleString('en-IN')}` : '-',
         },
         fyStats,
       },

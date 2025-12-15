@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch sales reports
-    const salesReports = await prisma.salesReport.findMany({
+    const salesReports = await prisma.spotIncentiveReport.findMany({
       where,
       include: {
         secUser: {
