@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import SECHeader from '../SECHeader.jsx';
-import SECFooter from '../SECFooter.jsx';
+import FestiveHeader from '@/components/FestiveHeader';
+import FestiveFooter from '@/components/FestiveFooter';
 
 const MONTHS = [
   'January',
@@ -90,7 +90,7 @@ export default function SalesChampionLeaderboardPage() {
 
   return (
     <div className="h-screen bg-[#020617] flex flex-col overflow-hidden">
-      <SECHeader />
+      <FestiveHeader hideGreeting />
 
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="px-4 pt-4 pb-6">
@@ -321,7 +321,7 @@ export default function SalesChampionLeaderboardPage() {
         </div>
       </main>
 
-      <SECFooter />
+      <FestiveFooter />
     </div>
   );
 }

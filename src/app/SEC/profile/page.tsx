@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import SECHeader from '../SECHeader.jsx';
-import SECFooter from '../SECFooter.jsx';
+import FestiveHeader from '@/components/FestiveHeader';
+import FestiveFooter from '@/components/FestiveFooter';
 
 interface StoreInfo {
   id: string;
@@ -358,7 +358,7 @@ export default function ProfilePage() {
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
-      <SECHeader />
+      <FestiveHeader hideGreeting />
 
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="px-4 pt-4 pb-6">
@@ -828,7 +828,7 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      <SECFooter />
+      <FestiveFooter />
 
       {/* Store Change Request Modal */}
       {showStoreChangeModal && (

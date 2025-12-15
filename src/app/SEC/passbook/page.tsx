@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import SECHeader from '../SECHeader.jsx';
-import SECFooter from '../SECFooter.jsx';
+import FestiveHeader from '@/components/FestiveHeader';
+import FestiveFooter from '@/components/FestiveFooter';
 import { downloadReport } from './downloadReport';
 
 // Filter options
@@ -200,14 +200,14 @@ export default function IncentivePassbookPage() {
   if (loading) {
     return (
       <div className="h-screen bg-white flex flex-col overflow-hidden">
-        <SECHeader />
+        <FestiveHeader hideGreeting />
         <main className="flex-1 overflow-y-auto pb-32 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading passbook data...</p>
           </div>
         </main>
-        <SECFooter />
+        <FestiveFooter />
       </div>
     );
   }
@@ -215,7 +215,7 @@ export default function IncentivePassbookPage() {
   if (error) {
     return (
       <div className="h-screen bg-white flex flex-col overflow-hidden">
-        <SECHeader />
+        <FestiveHeader hideGreeting />
         <main className="flex-1 overflow-y-auto pb-32 flex items-center justify-center">
           <div className="text-center px-4">
             <p className="text-red-600 mb-4">{error}</p>
@@ -227,42 +227,74 @@ export default function IncentivePassbookPage() {
             </button>
           </div>
         </main>
-        <SECFooter />
+        <FestiveFooter />
       </div>
     );
   }
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
-      <SECHeader />
+      <FestiveHeader hideGreeting />
 
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="px-4 pt-4">
-          {/* Top Tabs */}
-          <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
+          {/* Top Tabs - 3D Segmented Control */}
+          <div className="flex bg-gray-100 rounded-2xl p-1.5 mb-4 shadow-inner">
             <button
               type="button"
               onClick={() => setActiveTab('monthly')}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium border ${
+              className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
                 activeTab === 'monthly'
-                  ? 'bg-[#176CF3] text-white border-transparent shadow-sm'
-                  : 'bg-white text-gray-600 border-gray-200'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-xl scale-[1.02] transform'
+                  : 'bg-white text-gray-600 shadow-md hover:shadow-lg'
               }`}
+              style={activeTab !== 'monthly' ? {
+                animation: 'softPulse 2.5s ease-in-out infinite',
+              } : {}}
             >
-              Monthly Incentive
+              💰 Monthly Incentive
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('spot')}
-              className={`flex-1 ml-2 py-2 rounded-lg text-sm font-medium border ${
+              className={`flex-1 ml-2 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
                 activeTab === 'spot'
-                  ? 'bg-[#176CF3] text-white border-transparent shadow-sm'
-                  : 'bg-white text-gray-600 border-gray-200'
+                  ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl scale-[1.02] transform'
+                  : 'bg-white text-gray-600 shadow-md hover:shadow-lg'
               }`}
+              style={activeTab !== 'spot' ? {
+                animation: 'softPulse 2.5s ease-in-out infinite',
+              } : {}}
             >
-              Spot Incentive
+              ⚡ Spot Incentive
             </button>
           </div>
+
+          {/* Pulse Animation Styles */}
+          <style jsx global>{`
+            @keyframes softPulse {
+              0%, 100% { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+              50% { box-shadow: 0 0 12px rgba(99, 102, 241, 0.4), 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+            }
+            
+            /* Mobile dropdown positioning fix */
+            @media (max-width: 768px) {
+              select {
+                background-position: right 8px center;
+                background-size: 16px;
+              }
+              
+              .modal-dropdown {
+                position: relative;
+                z-index: 10001;
+              }
+              
+              .modal-dropdown select {
+                position: relative;
+                z-index: 10001;
+              }
+            }
+          `}</style>
 
           {/* Filter chips */}
           <div className="flex items-center gap-2 mb-4">
@@ -379,12 +411,23 @@ export default function IncentivePassbookPage() {
         </div>
       </main>
 
-      <SECFooter />
+      <FestiveFooter />
 
       {/* Incentive Details Modal */}
       {showIncentiveModal && selectedIncentiveData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] flex flex-col">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto"
+          style={{ zIndex: 9999 }}
+          onClick={() => setShowIncentiveModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-md w-full max-h-[90vh] flex flex-col my-8 mx-auto relative"
+            onClick={(e) => e.stopPropagation()}
+            style={{ 
+              position: 'relative',
+              zIndex: 10000
+            }}
+          >
             {/* Header */}
             <div className="bg-gray-100 px-4 py-3 rounded-t-lg flex-shrink-0">
               <div className="flex justify-between items-center">
@@ -393,9 +436,9 @@ export default function IncentivePassbookPage() {
                 </h3>
                 <button
                   onClick={() => setShowIncentiveModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full p-1 transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -403,7 +446,7 @@ export default function IncentivePassbookPage() {
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4" style={{ position: 'relative', zIndex: 1 }}>
               {/* Details Section */}
               <div className="mb-6">
                 <div className="overflow-hidden rounded-xl border border-gray-200 shadow-lg bg-white">
@@ -422,17 +465,24 @@ export default function IncentivePassbookPage() {
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-3 text-gray-600">Number Of SECs</td>
                       <td className="px-4 py-3 text-right">
-                        <select
-                          value={numberOfSECs}
-                          onChange={(e) => setNumberOfSECs(Number(e.target.value))}
-                          className="border border-gray-300 rounded px-2 py-1 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value={1}>1</option>
-                          <option value={2}>2</option>
-                          <option value={3}>3</option>
-                          <option value={4}>4</option>
-                          <option value={5}>5</option>
-                        </select>
+                        <div className="relative inline-block modal-dropdown">
+                          <select
+                            value={numberOfSECs}
+                            onChange={(e) => setNumberOfSECs(Number(e.target.value))}
+                            className="border border-gray-300 rounded px-2 py-1 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 min-w-[60px]"
+                          >
+                            <option value={1}>1</option>
+                            <option value={2}>2</option>
+                            <option value={3}>3</option>
+                            <option value={4}>4</option>
+                            <option value={5}>5</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                     <tr className="border-b border-gray-100">

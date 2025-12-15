@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Confetti from 'react-confetti';
-import SECHeader from '../SECHeader.jsx';
-import SECFooter from '../SECFooter.jsx';
+// OLD CONFETTI IMPORT - Uncomment after Christmas
+// import Confetti from 'react-confetti';
+import FestiveHeader from '@/components/FestiveHeader';
+import FestiveFooter from '@/components/FestiveFooter';
+import ChristmasSuccessModal from '@/components/ChristmasSuccessModal';
 
 export default function SecIncentiveForm({ initialSecId = '' }) {
   const router = useRouter();
@@ -24,7 +26,8 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [earnedIncentive, setEarnedIncentive] = useState(0);
-  const [showConfetti, setShowConfetti] = useState(false);
+  // OLD CONFETTI STATE - Uncomment after Christmas
+  // const [showConfetti, setShowConfetti] = useState(false);
   
   // Data from APIs
   const [stores, setStores] = useState([]);
@@ -180,13 +183,14 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
       // Success - Show celebration modal
       setEarnedIncentive(data.salesReport.incentiveEarned);
-      setShowConfetti(true);
       setShowSuccessModal(true);
       
+      // OLD CONFETTI CODE - Uncomment after Christmas
+      // setShowConfetti(true);
       // Stop confetti after 4 seconds
-      setTimeout(() => {
-        setShowConfetti(false);
-      }, 4000);
+      // setTimeout(() => {
+      //   setShowConfetti(false);
+      // }, 4000);
       
       // Reset form
       setDateOfSale('');
@@ -207,7 +211,8 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
   const handleCloseSuccess = () => {
     setShowSuccessModal(false);
-    setShowConfetti(false);
+    // OLD CONFETTI CODE - Uncomment after Christmas
+    // setShowConfetti(false);
     router.push('/SEC/passbook');
   };
 
@@ -357,7 +362,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
-      <SECHeader />
+      <FestiveHeader hideGreeting />
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-32">
@@ -585,7 +590,21 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               )}
             </div>
 
-            {/* Submit Button */}
+            {/* Submit Button - Christmas Theme */}
+            <div className="pt-4 pb-6">
+              <button
+                type="submit"
+                disabled={!!imeiError || !!duplicateError || imeiExists || !imeiNumber || imeiNumber.length !== 15 || isCheckingDuplicate || isSubmitting || !storeId || !deviceId || !planId}
+                className="w-full text-white font-semibold py-4 rounded-2xl disabled:bg-gray-400 disabled:cursor-not-allowed transition-all text-base hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%)',
+                  boxShadow: '0 4px 15px rgba(220, 38, 38, 0.4)',
+                }}
+              >
+                {isSubmitting ? '🎄 Submitting...' : '🎄 Submit 🎅'}
+              </button>
+            </div>
+            {/* OLD SUBMIT BUTTON - Uncomment after Christmas
             <div className="pt-4 pb-6">
               <button
                 type="submit"
@@ -595,15 +614,23 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>
             </div>
+            */}
           </form>
         </div>
       </main>
 
 
 
-      <SECFooter />
+      <FestiveFooter />
 
-      {/* Success Celebration Modal */}
+      {/* Christmas Success Modal */}
+      <ChristmasSuccessModal
+        isOpen={showSuccessModal}
+        earnedIncentive={earnedIncentive}
+        onClose={handleCloseSuccess}
+      />
+
+      {/* OLD SUCCESS MODAL - Uncomment after Christmas and remove ChristmasSuccessModal above
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           {showConfetti && (
@@ -637,6 +664,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
           </div>
         </div>
       )}
+      */}
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
