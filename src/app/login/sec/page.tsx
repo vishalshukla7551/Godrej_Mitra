@@ -184,36 +184,34 @@ export default function SECLogin() {
       className="h-screen flex flex-col md:flex-row items-center justify-center p-4 relative overflow-x-hidden overflow-y-auto"
       style={{ backgroundColor: '#F5F6F8' }}
     >
-      {/* Gift Box - Desktop: absolute positioned on side */}
-      <Image
-        src="/images/gift-box.png"
-        alt="Christmas Gift"
-        width={200}
-        height={200}
-        className="absolute pointer-events-none z-10 hidden md:block"
-        style={{
-          top: '50%',
-          left: 'calc(50% + 160px)',
-          transform: 'translateY(20%)',
-          filter: 'drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12))',
-        }}
-        priority
-      />
-
-      {/* Card Wrapper - Anchors Santa hat to the card */}
+      {/* Card Wrapper - Anchors Santa hat and Gift box to the card */}
       <div className="relative w-full max-w-[450px] mx-auto overflow-visible">
-        {/* Santa Hat - Anchored to Card Top Left, smaller on mobile */}
+        {/* Santa Hat - Anchored to Card Top Left - Responsive positioning */}
         <Image
           src="/images/santa-hat.png"
           alt="Santa Hat"
           width={130}
           height={130}
-          className="absolute pointer-events-none z-20 w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] md:w-[130px] md:h-[130px]"
+          className="absolute pointer-events-none z-20 w-[80px] h-[80px] sm:w-[90px] sm:h-[90px] md:w-[100px] md:h-[100px] lg:w-[130px] lg:h-[130px] -top-[35px] -left-[30px] sm:-top-[60px] sm:-left-[35px] md:-top-[60px] md:-left-[40px] lg:-top-[80px] lg:-left-[60px]"
           style={{
-            top: '-35px',
-            left: '-25px',
             transform: 'rotate(-18deg)',
             filter: 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.18))',
+          }}
+          priority
+        />
+
+        {/* Gift Box - Anchored to Card Right Side (Desktop only) */}
+        <Image
+          src="/images/gift-box.png"
+          alt="Christmas Gift"
+          width={500}
+          height={500}
+          className="absolute pointer-events-none z-10 hidden md:block w-[240px] h-[240px] md:w-[300px] md:h-[300px] lg:w-[360px] lg:h-[360px]"
+          style={{
+            top: '300px',
+            right: '-250px',
+            transform: 'rotate(8deg)',
+            filter: 'drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12))',
           }}
           priority
         />

@@ -46,12 +46,13 @@ type FYStats = Record<string, {
 }>;
 
 type PassbookData = {
-  salesSummary: MonthlySale[];
   monthlyIncentive: {
+    salesSummary: MonthlySale[];
     transactions: MonthlyTxn[];
     fyStats: FYStats;
   };
   spotIncentive: {
+    salesSummary: MonthlySale[];
     transactions: SpotVoucher[];
     fyStats: FYStats;
   };
@@ -163,8 +164,10 @@ export default function IncentivePassbookPage() {
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
 
-  // Get sales summary data or empty array
-  const salesSummaryData = passbookData?.salesSummary || [];
+  // Get sales summary data based on active tab
+  const salesSummaryData = activeTab === 'monthly' 
+    ? (passbookData?.monthlyIncentive?.salesSummary || [])
+    : (passbookData?.spotIncentive?.salesSummary || []);
   
   // Get unique months from sales summary
   const allMonths = Array.from(
@@ -686,10 +689,11 @@ function MonthlyIncentiveSection({
     <>
       {/* Sales Summary */}
       <section className="mb-5">
-        <h2 className="text-sm font-semibold text-gray-900 mb-1">Sales Summary</h2>
-        <p className="text-[11px] text-gray-500 mb-2">Your recorded monthly sales</p>
-
-        <div className="flex justify-end mb-2">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900">Sales Summary</h2>
+            <p className="text-[11px] text-gray-500">Your recorded monthly sales</p>
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-gray-600">Month</span>
             <select
@@ -730,7 +734,7 @@ function MonthlyIncentiveSection({
 
       {/* Previous Transactions */}
       <section className="mb-5">
-        <h2 className="text-sm font-semibold text-gray-900 mb-1">Previous Transactions</h2>
+        <h2 className="text-sm font-semibold text-gray-900 mb-0.5">Previous Transactions</h2>
         <p className="text-[11px] text-gray-500 mb-2">Your recent incentive payments</p>
 
         <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
@@ -879,10 +883,11 @@ function SpotIncentiveSection({
     <>
       {/* Sales Summary (same table as monthly top) */}
       <section className="mb-5">
-        <h2 className="text-sm font-semibold text-gray-900 mb-1">Sales Summary</h2>
-        <p className="text-[11px] text-gray-500 mb-2">Your recorded monthly sales</p>
-
-        <div className="flex justify-end mb-2">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900">Sales Summary</h2>
+            <p className="text-[11px] text-gray-500">Your recorded monthly sales</p>
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-gray-600">Month</span>
             <select
@@ -948,7 +953,7 @@ function SpotIncentiveSection({
 
       {/* Spot Incentive Transactions */}
       <section className="mb-5">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-0.5">
           <span className="w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center text-[9px]">
             ₹
           </span>

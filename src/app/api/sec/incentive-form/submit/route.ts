@@ -6,6 +6,8 @@ import { getAuthenticatedUserFromCookies } from '@/lib/auth';
  * POST /api/sec/incentive-form/submit
  * Submit a spot incentive sales report
  * 
+ * RESTRICTED: Only saves to SpotIncentiveReport (not DailyIncentiveReport)
+ * 
  * Body:
  * {
  *   secPhone: string,
@@ -13,6 +15,7 @@ import { getAuthenticatedUserFromCookies } from '@/lib/auth';
  *   deviceId: string,
  *   planId: string,
  *   imei: string,
+ *   dateOfSale?: string (optional, defaults to now)
  * }
  */
 export async function POST(req: NextRequest) {
@@ -64,12 +67,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if IMEI already exists in SpotIncentiveReport
-    const existingReport = await prisma.spotIncentiveReport.findUnique({
+    // Check if IMEI already exists in SpotIncentiveReport ONLY
+    const existingSpotReport = await prisma.spotIncentiveReport.findUnique({
       where: { imei },
     });
 
-    if (existingReport) {
+    if (existingSpotReport) {
       return NextResponse.json(
         { error: 'This IMEI has already been submitted' },
         { status: 409 }
@@ -150,8 +153,8 @@ export async function POST(req: NextRequest) {
     // Use provided dateOfSale or default to now
     const saleDate = dateOfSale ? new Date(dateOfSale) : now;
 
-    // Create the spot incentive report
-    const salesReport = await prisma.spotIncentiveReport.create({
+    // Create the spot incentive report (RESTRICTED TO SPOT INCENTIVE ONLY)
+    const spotReport = await prisma.spotIncentiveReport.create({
       data: {
         secId: secUser.id,
         storeId: store.id,
@@ -195,21 +198,19 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // No need to update SalesSummary for spot incentives
-    // Spot incentives are tracked separately in SpotIncentiveReport
-
     return NextResponse.json(
       {
         success: true,
-        salesReport: {
-          id: salesReport.id,
-          imei: salesReport.imei,
-          incentiveEarned: salesReport.spotincentiveEarned,
-          dateOfSale: salesReport.Date_of_sale,
-          isCampaignActive: salesReport.isCompaignActive,
-          store: salesReport.store,
-          device: salesReport.samsungSKU,
-          plan: salesReport.plan,
+        message: 'Spot incentive report submitted successfully',
+        spotReport: {
+          id: spotReport.id,
+          imei: spotReport.imei,
+          incentiveEarned: spotReport.spotincentiveEarned,
+          dateOfSale: spotReport.Date_of_sale,
+          isCampaignActive: spotReport.isCompaignActive,
+          store: spotReport.store,
+          device: spotReport.samsungSKU,
+          plan: spotReport.plan,
         },
       },
       { status: 201 }

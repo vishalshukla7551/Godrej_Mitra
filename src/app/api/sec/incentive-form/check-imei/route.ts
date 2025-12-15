@@ -13,16 +13,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if IMEI exists in the database
-    // Using SpotIncentiveReport model from schema
-    const existingSale = await prisma.spotIncentiveReport.findUnique({
+    // Check if IMEI exists in SpotIncentiveReport ONLY
+    const existingSpotReport = await prisma.spotIncentiveReport.findUnique({
       where: {
         imei: imei,
       },
     });
 
+    const exists = !!existingSpotReport;
+
     return NextResponse.json({
-      exists: !!existingSale,
+      exists,
+      foundIn: existingSpotReport ? 'SpotIncentiveReport' : null,
     });
   } catch (error) {
     console.error('Error checking IMEI:', error);

@@ -28,9 +28,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Find SEC user
+    // Find SEC user with store information
     const secUser = await prisma.sEC.findUnique({
       where: { phone },
+      include: {
+        store: true,
+      },
     });
 
     if (!secUser) {
@@ -40,9 +43,44 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get all sales reports for this SEC user
-    // Note: Using SpotIncentiveReport model from schema
-    const salesReports: any = await prisma.spotIncentiveReport.findMany({
+    if (!secUser.storeId || !secUser.store) {
+      return NextResponse.json(
+        { error: 'SEC user not assigned to a store' },
+        { status: 400 }
+      );
+    }
+
+    // Get Daily Incentive Reports for Monthly tab (STORE LEVEL - all SECs at this store)
+    const dailyReports: any = await prisma.dailyIncentiveReport.findMany({
+      where: {
+        storeId: secUser.storeId,
+      },
+      include: {
+        plan: {
+          select: {
+            planType: true,
+            price: true,
+          },
+        },
+        store: {
+          select: {
+            name: true,
+          },
+        },
+        samsungSKU: {
+          select: {
+            ModelName: true,
+            Category: true,
+          },
+        },
+      },
+      orderBy: {
+        Date_of_sale: 'desc',
+      },
+    });
+
+    // Get Spot Incentive Reports for Spot tab
+    const spotReports: any = await prisma.spotIncentiveReport.findMany({
       where: {
         secId: secUser.id,
       },
@@ -70,97 +108,11 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Get all sales summaries for this SEC user
-    // TODO: SalesSummary model doesn't exist in schema - needs to be added
-    const salesSummaries: any[] = []; // Temporarily empty until schema is fixed
-    /* 
-    const salesSummaries = await prisma.salesSummary.findMany({
-      where: {
-        secId: secUser.id,
-      },
-      include: {
-        salesReport: {
-          select: {
-            id: true,
-            Date_of_sale: true,
-          },
-        },
-      },
-      orderBy: [
-        { year: 'desc' },
-        { month: 'desc' },
-      ],
-    });
-    */
-
-    // Calculate incentives for months that don't have estimatedIncenetiveEarned
-    // Wait for calculations to complete before returning data
-    console.log(`[Passbook] Found ${salesSummaries.length} sales summaries for SEC ${secUser.id}`);
+    // Get Samsung Incentive Info from Store
+    // This contains monthly incentive data: { month: "MM-YYYY", samsungIncentiveAmount: Int, samsungIncentivePaidAt: Date | null }
+    const samsungIncentiveInfo = (secUser.store.samsungIncentiveInfo as any[]) || [];
     
-    const calculationPromises = [];
-    
-    for (const summary of salesSummaries) {
-      const summaryAny = summary as any;
-      console.log(`[Passbook] Summary ${summary.month}/${summary.year}:`, {
-        estimatedIncenetiveEarned: summaryAny.estimatedIncenetiveEarned,
-        totalSamsungIncentiveEarned: summary.totalSamsungIncentiveEarned,
-        salesReportCount: summary.salesReport.length
-      });
-      
-      // Always recalculate if not paid by Samsung (totalSamsungIncentiveEarned is null)
-      // This ensures we always use the latest calculation logic
-      const needsCalculation = summary.totalSamsungIncentiveEarned == null && summary.salesReport.length > 0;
-      
-      if (needsCalculation) {
-        console.log(`[Passbook] Triggering (re)calculation for ${summary.month}/${summary.year} (current estimated: ${summaryAny.estimatedIncenetiveEarned})`);
-        try {
-          // Calculate incentive and wait for it
-          const promise = IncentiveService.calculateMonthlyIncentive(
-            secUser.id,
-            summary.month,
-            summary.year
-          ).catch((err) => {
-            console.error(`Failed to calculate incentive for ${summary.month}/${summary.year}:`, err);
-            return null;
-          });
-          calculationPromises.push(promise);
-        } catch (error) {
-          console.error(`Error triggering incentive calculation for ${summary.month}/${summary.year}:`, error);
-        }
-      } else {
-        console.log(`[Passbook] Skipping calculation for ${summary.month}/${summary.year} - already paid by Samsung`);
-      }
-    }
-
-    // Wait for all calculations to complete
-    if (calculationPromises.length > 0) {
-      console.log(`[Passbook] Waiting for ${calculationPromises.length} calculations to complete...`);
-      await Promise.all(calculationPromises);
-      console.log(`[Passbook] All calculations completed`);
-      
-      // Re-fetch sales summaries to get updated values
-      const updatedSalesSummaries = await prisma.salesSummary.findMany({
-        where: {
-          secId: secUser.id,
-        },
-        include: {
-          salesReport: {
-            select: {
-              id: true,
-              Date_of_sale: true,
-            },
-          },
-        },
-        orderBy: [
-          { year: 'desc' },
-          { month: 'desc' },
-        ],
-      });
-      
-      // Use updated summaries for the rest of the response
-      salesSummaries.length = 0;
-      salesSummaries.push(...updatedSalesSummaries);
-    }
+    console.log(`[Passbook] Found ${samsungIncentiveInfo.length} monthly incentive records for store ${secUser.storeId}`);
 
     // Format date helper
     const formatDate = (date: Date) => {
@@ -179,33 +131,32 @@ export async function GET(req: NextRequest) {
       return `${monthNames[month - 1]} ${year.toString().slice(-2)}`;
     };
 
-    // Sales Summary (common for both tabs)
-    // Group sales by date and count units by product type
-    const salesByDate: Record<string, { adld1Year: number; combo2Year: number }> = {};
+    // Monthly Sales Summary (from DailyIncentiveReport)
+    const monthlySalesByDate: Record<string, { adld1Year: number; combo2Year: number }> = {};
     
-    salesReports.forEach((report: any) => {
+    dailyReports.forEach((report: any) => {
       const date = formatDate(report.Date_of_sale || report.createdAt);
       const planType = report.plan.planType;
       
-      if (!salesByDate[date]) {
-        salesByDate[date] = { adld1Year: 0, combo2Year: 0 };
+      if (!monthlySalesByDate[date]) {
+        monthlySalesByDate[date] = { adld1Year: 0, combo2Year: 0 };
       }
       
       // Count units by plan type - check for ADLD or COMBO
-      // ADLD plans are typically 1 year, COMBO plans are typically 2 years
       if (planType.includes('ADLD')) {
-        salesByDate[date].adld1Year += 1;
+        monthlySalesByDate[date].adld1Year += 1;
       } else if (planType.includes('COMBO')) {
-        salesByDate[date].combo2Year += 1;
+        monthlySalesByDate[date].combo2Year += 1;
       }
     });
 
-    // Convert to array and sort by date (newest first)
-    const salesSummary = Object.entries(salesByDate)
+    const monthlySalesSummary = Object.entries(monthlySalesByDate)
       .map(([date, counts]) => ({
         date,
         adld1Year: counts.adld1Year,
         combo2Year: counts.combo2Year,
+        adld: counts.adld1Year,
+        combo: counts.combo2Year,
         units: counts.adld1Year + counts.combo2Year,
       }))
       .sort((a, b) => {
@@ -214,15 +165,57 @@ export async function GET(req: NextRequest) {
         return dateB.localeCompare(dateA);
       });
 
-    // Monthly Incentive Transactions (from SalesSummary)
-    // These show accumulated data for each month
-    const monthlyTransactions = salesSummaries.map((summary: any) => {
-      // Count units from related sales reports (all sales in that month)
-      const units = summary.salesReport.length;
+    // Spot Sales Summary (from SpotIncentiveReport)
+    const spotSalesByDate: Record<string, { adld1Year: number; combo2Year: number }> = {};
+    
+    spotReports.forEach((report: any) => {
+      const date = formatDate(report.Date_of_sale || report.createdAt);
+      const planType = report.plan.planType;
+      
+      if (!spotSalesByDate[date]) {
+        spotSalesByDate[date] = { adld1Year: 0, combo2Year: 0 };
+      }
+      
+      // Count units by plan type - check for ADLD or COMBO
+      if (planType.includes('ADLD')) {
+        spotSalesByDate[date].adld1Year += 1;
+      } else if (planType.includes('COMBO')) {
+        spotSalesByDate[date].combo2Year += 1;
+      }
+    });
+
+    const spotSalesSummary = Object.entries(spotSalesByDate)
+      .map(([date, counts]) => ({
+        date,
+        adld1Year: counts.adld1Year,
+        combo2Year: counts.combo2Year,
+        adld: counts.adld1Year,
+        combo: counts.combo2Year,
+        units: counts.adld1Year + counts.combo2Year,
+      }))
+      .sort((a, b) => {
+        const dateA = a.date.split('-').reverse().join('-');
+        const dateB = b.date.split('-').reverse().join('-');
+        return dateB.localeCompare(dateA);
+      });
+
+    // Monthly Incentive Transactions (from Store.samsungIncentiveInfo)
+    // These show accumulated data for each month at STORE LEVEL
+    const monthlyTransactions = samsungIncentiveInfo.map((info: any) => {
+      const [monthStr, yearStr] = info.month.split('-'); // Format: MM-YYYY
+      const month = parseInt(monthStr, 10);
+      const year = parseInt(yearStr, 10);
+      
+      // Count units from daily reports for this month at STORE LEVEL
+      const monthlyReports = dailyReports.filter((report: any) => {
+        const reportDate = new Date(report.Date_of_sale);
+        return reportDate.getMonth() + 1 === month && reportDate.getFullYear() === year;
+      });
+      const units = monthlyReports.length;
       
       // Determine status based on payment date
       let status = 'Accumulated';
-      if (summary.samsungincentivepaidAt) {
+      if (info.samsungIncentivePaidAt) {
         status = 'Paid';
       } else if (units > 0) {
         // Check if it's the current month
@@ -230,42 +223,39 @@ export async function GET(req: NextRequest) {
         const currentMonth = now.getMonth() + 1;
         const currentYear = now.getFullYear();
         
-        if (summary.month === currentMonth && summary.year === currentYear) {
+        if (month === currentMonth && year === currentYear) {
           status = 'Accumulated';
         } else {
           status = 'Due';
         }
       }
 
-      // Use totalSamsungIncentiveEarned if not null, otherwise use estimatedIncenetiveEarned
-      const incentiveAmount = summary.totalSamsungIncentiveEarned != null
-        ? summary.totalSamsungIncentiveEarned
-        : summary.estimatedIncenetiveEarned;
+      const incentiveAmount = info.samsungIncentiveAmount || 0;
 
-      console.log(`[Passbook] Monthly transaction for ${summary.month}/${summary.year}:`, {
+      console.log(`[Passbook] Monthly transaction for ${info.month}:`, {
         units,
-        totalSamsungIncentiveEarned: summary.totalSamsungIncentiveEarned,
-        estimatedIncenetiveEarned: summary.estimatedIncenetiveEarned,
+        samsungIncentiveAmount: info.samsungIncentiveAmount,
         incentiveAmount,
         status
       });
 
       return {
-        month: formatMonthYear(summary.month, summary.year),
+        month: formatMonthYear(month, year),
         units,
-        incentive: incentiveAmount != null
-          ? `₹${incentiveAmount.toLocaleString('en-IN')}`
-          : 'Not calculated',
+        incentive: `₹${incentiveAmount.toLocaleString('en-IN')}`,
         status,
-        paymentDate: summary.samsungincentivepaidAt 
-          ? formatDate(summary.samsungincentivepaidAt)
+        paymentDate: info.samsungIncentivePaidAt 
+          ? formatDate(new Date(info.samsungIncentivePaidAt))
           : '',
       };
+    }).sort((a, b) => {
+      // Sort by date descending (newest first)
+      return b.month.localeCompare(a.month);
     });
 
-    // Spot Incentive Transactions (from SalesReport)
+    // Spot Incentive Transactions (from SpotIncentiveReport)
     // Only show reports that have active campaigns (isCompaignActive = true)
-    const spotTransactions = salesReports
+    const spotTransactions = spotReports
       .filter((report: any) => report.isCompaignActive === true && report.spotincentiveEarned > 0)
       .map((report: any) => {
         const planType = report.plan.planType;
@@ -320,35 +310,33 @@ export async function GET(req: NextRequest) {
     for (let year = currentYear - 4; year <= currentYear; year++) {
       const fy = year >= 2024 ? `FY-${String(year).slice(-2)}` : `FY-${String(year).slice(-2)}`;
       
-      // Get summaries for this FY (April to March)
-      const fySummaries = salesSummaries.filter((s: any) => {
-        const summaryYear = s.year;
-        const summaryMonth = s.month;
-        
-        // FY starts in April (month 4)
-        if (summaryMonth >= 4) {
-          return summaryYear === year;
-        } else {
-          return summaryYear === year + 1;
-        }
-      });
-
-      // Calculate MONTHLY incentive stats
+      // Calculate MONTHLY incentive stats from samsungIncentiveInfo (STORE LEVEL)
+      const fyStart = new Date(year, 3, 1); // April 1
+      const fyEnd = new Date(year + 1, 2, 31); // March 31
+      
       let monthlyUnits = 0;
       let monthlyEarned = 0;
       let monthlyPaid = 0;
 
-      fySummaries.forEach((summary: any) => {
-        monthlyUnits += summary.salesReport.length;
+      // Get incentive info for this FY
+      samsungIncentiveInfo.forEach((info: any) => {
+        const [monthStr, yearStr] = info.month.split('-');
+        const month = parseInt(monthStr, 10);
+        const infoYear = parseInt(yearStr, 10);
+        const infoDate = new Date(infoYear, month - 1, 1);
         
-        // Use totalSamsungIncentiveEarned if set, otherwise use estimatedIncenetiveEarned
-        const incentiveAmount = summary.totalSamsungIncentiveEarned != null
-          ? summary.totalSamsungIncentiveEarned
-          : summary.estimatedIncenetiveEarned;
-        
-        if (incentiveAmount != null) {
+        if (infoDate >= fyStart && infoDate <= fyEnd) {
+          // Count units from daily reports for this month (STORE LEVEL)
+          const monthlyReports = dailyReports.filter((report: any) => {
+            const reportDate = new Date(report.Date_of_sale);
+            return reportDate.getMonth() + 1 === month && reportDate.getFullYear() === infoYear;
+          });
+          monthlyUnits += monthlyReports.length;
+          
+          const incentiveAmount = info.samsungIncentiveAmount || 0;
           monthlyEarned += incentiveAmount;
-          if (summary.samsungincentivepaidAt) {
+          
+          if (info.samsungIncentivePaidAt) {
             monthlyPaid += incentiveAmount;
           }
         }
@@ -365,10 +353,8 @@ export async function GET(req: NextRequest) {
 
       // Calculate SPOT incentive stats for this FY
       // Only count reports that have spot incentive (i.e., had active campaigns)
-      const fyStart = new Date(year, 3, 1); // April 1
-      const fyEnd = new Date(year + 1, 2, 31); // March 31
-      
-      const fySpotReports = salesReports.filter((report: any) => {
+      // Reuse fyStart and fyEnd from above (already defined for monthly stats)
+      const fySpotReports = spotReports.filter((report: any) => {
         const reportDate = new Date(report.Date_of_sale || report.createdAt);
         return reportDate >= fyStart && reportDate <= fyEnd && report.spotincentiveEarned > 0;
       });
@@ -419,17 +405,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        // Common sales summary for both tabs
-        salesSummary,
-        
         // Monthly incentive tab data
         monthlyIncentive: {
+          salesSummary: monthlySalesSummary,
           transactions: monthlyTransactions,
           fyStats: monthlyFyStats,
         },
         
         // Spot incentive tab data
         spotIncentive: {
+          salesSummary: spotSalesSummary,
           transactions: spotTransactions,
           fyStats: spotFyStats,
         },
