@@ -150,12 +150,12 @@ model SpotIncentiveCampaign {
   planId       String     @db.ObjectId
 
   // incentive details
-  incentiveType  IncentiveType @default(FIXED)
+  incentiveType  IncentiveType? @default(FIXED)
   incentiveValue Float // use Float or Decimal depending on your connector; stores amount or percent
 
   // schedule + status
-  startDate DateTime
-  endDate   DateTime
+  startDate DateTime?
+  endDate   DateTime?
   active    Boolean  @default(true)
 
   createdAt DateTime @default(now())
