@@ -3,6 +3,8 @@
 ## Overview
 The incentive calculation system has been updated to calculate incentives at the **store level** rather than individual SEC level. This ensures fair distribution of incentives among all SECs working at the same store.
 
+Additionally, **device-specific bonuses** have been added based on the store's attach rate for premium devices (Fold and S25 series).
+
 ## Key Changes
 
 ### Old Logic (Individual SEC Calculation)
@@ -108,8 +110,70 @@ To test the new logic:
 3. Calculate incentive for any SEC
 4. Verify all SECs at that store receive equal shares
 
+## Device-Specific Bonus Incentives
+
+### Overview
+In addition to the base incentive calculation, premium devices (Fold and S25 series) receive additional bonuses based on the store's attach rate.
+
+### Device Type Identification
+Devices are identified by concatenating `Category + ModelName` from the `SamsungSKU` model:
+- **Fold Devices**: String contains "Fold" (case-insensitive)
+- **S25 Devices**: String contains "S25" (case-insensitive)
+- **Other Devices**: No bonus applied
+
+### Bonus Structure
+
+#### Fold Devices
+- **Attach Rate < 25%**: ₹400 bonus per unit
+- **Attach Rate ≥ 25%**: ₹600 bonus per unit
+
+#### S25 Devices
+- **Attach Rate < 15%**: ₹300 bonus per unit
+- **Attach Rate ≥ 15%**: ₹500 bonus per unit
+
+### Calculation Flow
+1. Calculate base incentive (0%, 100%, or 120% based on gate/volume kicker)
+2. For each sale, identify device type
+3. Apply device-specific bonus based on store's attach rate
+4. Sum: Total Incentive = Base Incentive + Device Bonuses
+5. Divide equally among all SECs at the store
+
+### Example with Device Bonuses
+
+**Scenario:**
+- **Store**: Store001
+- **Number of SECs**: 2
+- **Attach Rate**: 20%
+- **Price Slab**: 30k-40k (₹250 per unit, gate=3, volumeKicker=8)
+- **Sales**: 
+  - 2 Fold devices (Galaxy Z Fold6)
+  - 3 S25 devices (Galaxy S25 Ultra)
+  - 3 Other devices
+- **Total Store Sales**: 8 units
+
+**Calculation:**
+1. **Base Incentive**:
+   - finalGate = 3 × 2 = 6 units
+   - finalVolumeKicker = 8 × 2 = 16 units
+   - 8 units >= 6 (gate) AND < 16 (volume kicker)
+   - Base = 8 × ₹250 × 100% = ₹2,000
+
+2. **Device Bonuses**:
+   - Fold: 2 units × ₹400 (attach 20% < 25%) = ₹800
+   - S25: 3 units × ₹500 (attach 20% ≥ 15%) = ₹1,500
+   - Other: 3 units × ₹0 = ₹0
+   - Total Bonuses = ₹2,300
+
+3. **Total Store Incentive**: ₹2,000 + ₹2,300 = ₹4,300
+
+4. **Per SEC**: ₹4,300 ÷ 2 = ₹2,150
+
+### Store Attach Rate
+The attach rate is stored in the `Store` model as `attachPercentage` (Float field). This represents the percentage of sales that include extended warranty or protection plans.
+
 ## Migration Notes
 
 - Existing `SalesSummary` records will be recalculated on next passbook view
 - No data migration required
 - The system automatically uses the new logic for all calculations
+- Stores without an `attachPercentage` value will default to 0% for bonus calculations

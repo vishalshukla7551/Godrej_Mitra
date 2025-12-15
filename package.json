@@ -9,10 +9,14 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "check-attach-rates": "tsx scripts/check-store-attach-rates.ts",
+    "set-attach-rates": "tsx scripts/set-store-attach-rates.ts",
+    "test-device-bonus": "tsx scripts/test-device-bonus-incentive.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
+    "@types/xlsx": "^0.0.35",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^11.18.2",
     "jsonwebtoken": "^9.0.2",

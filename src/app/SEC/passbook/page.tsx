@@ -61,15 +61,30 @@ const statsCardsConfig = [
 ] as const;
 
 const parseDate = (ddmmyyyy: string) => {
-  const [dd, mm, yyyy] = ddmmyyyy.split('-').map(Number);
-  return new Date(yyyy, (mm || 1) - 1, dd || 1);
+  try {
+    const [dd, mm, yyyy] = ddmmyyyy.split('-').map(Number);
+    const date = new Date(yyyy || new Date().getFullYear(), (mm || 1) - 1, dd || 1);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return new Date(); // Return current date as fallback
+    }
+    return date;
+  } catch (error) {
+    console.warn('Invalid date format:', ddmmyyyy);
+    return new Date(); // Return current date as fallback
+  }
 };
 
 const formatMonthYear = (dateStr: string) => {
-  const d = parseDate(dateStr);
-  const monthName = d.toLocaleDateString('en-IN', { month: 'long' });
-  const yearShort = d.getFullYear().toString().slice(-2);
-  return `${monthName} ${yearShort}`;
+  try {
+    const d = parseDate(dateStr);
+    const monthName = d.toLocaleDateString('en-IN', { month: 'long' });
+    const yearShort = d.getFullYear().toString().slice(-2);
+    return `${monthName} ${yearShort}`;
+  } catch (error) {
+    console.warn('Error formatting date:', dateStr);
+    return 'Invalid Date';
+  }
 };
 
 export default function IncentivePassbookPage() {
@@ -113,7 +128,7 @@ export default function IncentivePassbookPage() {
         if (result.success && result.data) {
           setPassbookData(result.data);
         } else {
-          setError('Invalid response from server');
+          setError(result.error || 'Invalid response from server');
         }
       } catch (err) {
         console.error('Error fetching passbook data:', err);
@@ -135,7 +150,7 @@ export default function IncentivePassbookPage() {
   
   // Get unique months from sales summary
   const allMonths = Array.from(
-    new Set(salesSummaryData.map((r) => formatMonthYear(r.date)))
+    new Set(salesSummaryData.filter(r => r && r.date).map((r) => formatMonthYear(r.date)))
   );
 
   // Get available FYs from API data or default
@@ -353,12 +368,19 @@ export default function IncentivePassbookPage() {
             </button>
             <button
               type="button"
-              onClick={() => downloadReport(filteredMonthlySales.map(row => ({
-                date: row.date,
-                adld: row.adld.toString(),
-                combo: row.combo.toString(),
-                units: row.units
-              })))}
+              onClick={() => {
+                try {
+                  downloadReport(filteredMonthlySales.map(row => ({
+                    date: row?.date || '',
+                    adld: (row?.adld || 0).toString(),
+                    combo: (row?.combo || 0).toString(),
+                    units: row?.units || 0
+                  })));
+                } catch (error) {
+                  console.error('Error downloading report:', error);
+                  alert('Failed to download report. Please try again.');
+                }
+              }}
               className="w-full bg-gradient-to-r from-[#0EA5E9] via-[#2563EB] to-[#4F46E5] text-white text-sm font-semibold py-2.5 rounded-xl shadow"
             >
               Download Report
@@ -432,7 +454,7 @@ export default function IncentivePassbookPage() {
             <div className="bg-gray-100 px-4 py-3 rounded-t-lg flex-shrink-0">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Incentive Breakdown - {selectedIncentiveData.month}
+                  Incentive Breakdown - {selectedIncentiveData?.month || 'N/A'}
                 </h3>
                 <button
                   onClick={() => setShowIncentiveModal(false)}
@@ -487,7 +509,7 @@ export default function IncentivePassbookPage() {
                     </tr>
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-3 text-gray-600">Total Units Sold [25 Dec]</td>
-                      <td className="px-4 py-3 font-medium text-right text-gray-900">{selectedIncentiveData.units}</td>
+                      <td className="px-4 py-3 font-medium text-right text-gray-900">{selectedIncentiveData?.units || 0}</td>
                     </tr>
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-3 text-gray-600">Fold 7 Sold</td>
@@ -507,7 +529,7 @@ export default function IncentivePassbookPage() {
                     </tr>
                     <tr className="border-b border-gray-100 bg-blue-50">
                       <td className="px-4 py-3 text-blue-700 font-semibold">Total Incentive Earned</td>
-                      <td className="px-4 py-3 font-bold text-right text-blue-700">{selectedIncentiveData.incentive}</td>
+                      <td className="px-4 py-3 font-bold text-right text-blue-700">{selectedIncentiveData?.incentive || '₹0'}</td>
                     </tr>
                     <tr className="bg-orange-50">
                       <td className="px-4 py-3 text-orange-700 font-semibold rounded-bl-xl">Payment Status</td>
