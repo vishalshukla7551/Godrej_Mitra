@@ -131,7 +131,6 @@ export async function GET(req: NextRequest) {
         storeId: string;
         storeName: string;
         city: string | null;
-        state: string | null;
         totalSales: number;
         totalIncentive: number;
       }
@@ -173,7 +172,6 @@ export async function GET(req: NextRequest) {
           storeId: report.store.id,
           storeName: report.store.name,
           city: report.store.city,
-          state: report.store.state,
           totalSales: 1,
           totalIncentive: report.spotincentiveEarned,
         });

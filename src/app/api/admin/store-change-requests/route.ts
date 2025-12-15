@@ -147,11 +147,10 @@ export async function GET(req: NextRequest) {
           }
         },
         select: {
-          id: true,
-          name: true,
-          city: true,
-          state: true
-        }
+            id: true,
+            name: true,
+            city: true,
+          }
       });
     }
 

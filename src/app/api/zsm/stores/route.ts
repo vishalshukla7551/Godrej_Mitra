@@ -21,8 +21,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       whereClause.OR = [
         { name: { contains: search, mode: 'insensitive' } },
-        { city: { contains: search, mode: 'insensitive' } },
-        { state: { contains: search, mode: 'insensitive' } }
+        { city: { contains: search, mode: 'insensitive' } }
       ];
     }
 
@@ -44,7 +43,6 @@ export async function GET(request: NextRequest) {
         id: true,
         name: true,
         city: true,
-        state: true,
       },
       orderBy: [
         { name: 'asc' }

@@ -177,7 +177,6 @@ export async function POST(req: NextRequest) {
             id: true,
             name: true,
             city: true,
-            state: true,
           },
         },
         samsungSKU: {

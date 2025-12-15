@@ -104,6 +104,7 @@ export default function IncentivePassbookPage() {
   const [passbookData, setPassbookData] = useState<PassbookData | null>(null);
   const [spotIncentiveData, setSpotIncentiveData] = useState<any>(null);
   const [storeData, setStoreData] = useState<any>(null);
+  const [secData, setSecData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -140,6 +141,7 @@ export default function IncentivePassbookPage() {
         if (passbookResult.success && passbookResult.data) {
           setPassbookData(passbookResult.data);
           setStoreData(passbookResult.data.store);
+          setSecData(passbookResult.data.sec);
         } else {
           setError(passbookResult.error || 'Invalid response from server');
           return;
@@ -432,6 +434,7 @@ export default function IncentivePassbookPage() {
               setShowIncentiveModal={setShowIncentiveModal}
               loadingIncentiveDetails={loadingIncentiveDetails}
               setLoadingIncentiveDetails={setLoadingIncentiveDetails}
+              numberOfSECs={numberOfSECs}
             />
           ) : (
             <SpotIncentiveSection
@@ -501,16 +504,13 @@ export default function IncentivePassbookPage() {
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-3 text-gray-600">Store Name</td>
                       <td className="px-4 py-3 font-medium text-right text-gray-900">
-                        {selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.storeName || 
-                         (storeData?.name ? `${storeData.name}${storeData.city ? ` - ${storeData.city}` : ''}` : 'Store Information')}
+                        {selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.storeName || 'N/A'}
                       </td>
                     </tr>
                     <tr className="border-b border-gray-100">
-                      <td className="px-4 py-3 text-gray-600">
-                        Total Units Sold{selectedIncentiveData?.latestSaleDate ? ` (till ${selectedIncentiveData.latestSaleDate})` : ''}
-                      </td>
+                      <td className="px-4 py-3 text-gray-600">Total Units Sold</td>
                       <td className="px-4 py-3 font-medium text-right text-gray-900">
-                        {selectedIncentiveData?.breakdown?.unitsSummary?.totalUnits || selectedIncentiveData?.units || 0}
+                        {selectedIncentiveData?.breakdown?.unitsSummary?.totalUnits || 0}
                       </td>
                     </tr>
                     <tr className="border-b border-gray-100">
@@ -519,7 +519,32 @@ export default function IncentivePassbookPage() {
                         <div className="relative inline-block modal-dropdown">
                           <select
                             value={numberOfSECs}
-                            onChange={(e) => setNumberOfSECs(Number(e.target.value))}
+                            onChange={async (e) => {
+                              const newNumberOfSECs = Number(e.target.value);
+                              setNumberOfSECs(newNumberOfSECs);
+                              
+                              // Recalculate with new number of SECs
+                              if (selectedIncentiveData?.month) {
+                                try {
+                                  const monthParts = selectedIncentiveData.month.split(' ');
+                                  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+                                  const monthNumber = monthNames.indexOf(monthParts[0]) + 1;
+                                  const year = 2000 + parseInt(monthParts[1]);
+                                  
+                                  const response = await fetch(`/api/sec/incentive/calculate?month=${monthNumber}&year=${year}&numberOfSECs=${newNumberOfSECs}`);
+                                  
+                                  if (response.ok) {
+                                    const result = await response.json();
+                                    setSelectedIncentiveData({
+                                      ...selectedIncentiveData,
+                                      breakdown: result.data
+                                    });
+                                  }
+                                } catch (error) {
+                                  console.error('Error recalculating incentive:', error);
+                                }
+                              }
+                            }}
                             className="border border-gray-300 rounded px-2 py-1 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-8 min-w-[60px]"
                           >
                             <option value={1}>1</option>
@@ -539,17 +564,43 @@ export default function IncentivePassbookPage() {
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-3 text-gray-600">Fold 7 Sold</td>
                       <td className="px-4 py-3 font-medium text-right text-gray-900">
-                        {selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.breakdownBySlab?.reduce((total: number, slab: any) => {
-                          return total + (slab.deviceBonuses?.foldBonus > 0 ? slab.units : 0);
-                        }, 0) || 0}
+                        {(() => {
+                          const foldCount = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.breakdownBySlab?.reduce((total: number, slab: any) => {
+                            // Calculate number of Fold devices from the bonus amount
+                            const foldBonus = slab.deviceBonuses?.foldBonus || 0;
+                            if (foldBonus === 0) return total;
+                            
+                            // Fold bonus is either ₹400 or ₹600 per device
+                            // Determine which rate was used based on attach percentage
+                            const attachRate = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.attachPercentage ?? 0;
+                            const bonusPerDevice = attachRate < 25 ? 400 : 600;
+                            const foldDevices = Math.round(foldBonus / bonusPerDevice);
+                            
+                            return total + foldDevices;
+                          }, 0) || 0;
+                          return foldCount;
+                        })()}
                       </td>
                     </tr>
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-3 text-gray-600">S25 Series Sold</td>
                       <td className="px-4 py-3 font-medium text-right text-gray-900">
-                        {selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.breakdownBySlab?.reduce((total: number, slab: any) => {
-                          return total + (slab.deviceBonuses?.s25Bonus > 0 ? slab.units : 0);
-                        }, 0) || 0}
+                        {(() => {
+                          const s25Count = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.breakdownBySlab?.reduce((total: number, slab: any) => {
+                            // Calculate number of S25 devices from the bonus amount
+                            const s25Bonus = slab.deviceBonuses?.s25Bonus || 0;
+                            if (s25Bonus === 0) return total;
+                            
+                            // S25 bonus is either ₹300 or ₹500 per device
+                            // Determine which rate was used based on attach percentage
+                            const attachRate = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.attachPercentage ?? 0;
+                            const bonusPerDevice = attachRate < 15 ? 300 : 500;
+                            const s25Devices = Math.round(s25Bonus / bonusPerDevice);
+                            
+                            return total + s25Devices;
+                          }, 0) || 0;
+                          return s25Count;
+                        })()}
                       </td>
                     </tr>
                     <tr className="border-b border-gray-100">
@@ -568,7 +619,9 @@ export default function IncentivePassbookPage() {
                     </tr>
                     <tr className="border-b border-gray-100 bg-blue-50">
                       <td className="px-4 py-3 text-blue-700 font-semibold">Total Incentive Earned</td>
-                      <td className="px-4 py-3 font-bold text-right text-blue-700">{selectedIncentiveData?.incentive || '₹0'}</td>
+                      <td className="px-4 py-3 font-bold text-right text-blue-700">
+                        ₹{selectedIncentiveData?.breakdown?.totalIncentive?.toLocaleString() || '0'}
+                      </td>
                     </tr>
                     <tr className="bg-orange-50">
                       <td className="px-4 py-3 text-orange-700 font-semibold rounded-bl-xl">Payment Status</td>
@@ -588,7 +641,7 @@ export default function IncentivePassbookPage() {
                 <h4 className="text-md font-semibold text-gray-900 mb-3">Incentive Breakdown by Price Slab</h4>
                 <div className="border border-gray-200 rounded-xl overflow-hidden shadow-lg bg-white">
                   <div className="bg-gray-50 px-3 py-2">
-                    <div className="grid grid-cols-6 gap-2 text-xs font-medium text-gray-700">
+                    <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-gray-900">
                       <span>Price Range</span>
                       <span className="text-center">Units</span>
                       <span className="text-center">Rate Applied</span>
@@ -601,7 +654,7 @@ export default function IncentivePassbookPage() {
                   <div className="max-h-48 overflow-y-auto">
                     {selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.breakdownBySlab?.length > 0 ? (
                       selectedIncentiveData.breakdown.breakdownByStore[0].breakdownBySlab.map((slab: any, index: number) => (
-                        <div key={index} className="grid grid-cols-6 gap-2 px-3 py-2 text-xs border-b border-gray-100">
+                        <div key={index} className="grid grid-cols-6 gap-2 px-3 py-2 text-xs text-gray-800 border-b border-gray-100">
                           <span className="text-xs">
                             ₹{slab.minPrice?.toLocaleString() || '0'} - {slab.maxPrice ? `₹${slab.maxPrice.toLocaleString()}` : 'No limit'}
                           </span>
@@ -622,7 +675,7 @@ export default function IncentivePassbookPage() {
                     
                     {/* Total Row */}
                     {selectedIncentiveData?.breakdown?.breakdownByStore?.[0] && (
-                      <div className="grid grid-cols-6 gap-2 px-3 py-2 text-xs bg-gray-50 font-medium border-t-2 border-gray-200">
+                      <div className="grid grid-cols-6 gap-2 px-3 py-2 text-xs bg-gray-50 font-medium text-gray-900 border-t-2 border-gray-200">
                         <span>Total</span>
                         <span className="text-center">{selectedIncentiveData?.breakdown?.unitsSummary?.totalUnits || 0}</span>
                         <span className="text-center">-</span>
@@ -678,6 +731,7 @@ function MonthlyIncentiveSection({
   setShowIncentiveModal,
   loadingIncentiveDetails,
   setLoadingIncentiveDetails,
+  numberOfSECs,
 }: {
   rows: MonthlySale[];
   transactions: MonthlyTxn[];
@@ -691,6 +745,7 @@ function MonthlyIncentiveSection({
   setShowIncentiveModal: (show: boolean) => void;
   loadingIncentiveDetails: boolean;
   setLoadingIncentiveDetails: (loading: boolean) => void;
+  numberOfSECs: number;
 }) {
   return (
     <>
@@ -772,57 +827,43 @@ function MonthlyIncentiveSection({
                       try {
                         setLoadingIncentiveDetails(true);
                         
-                        // Call the incentive calculation API
                         // Parse month from "Jan 24" format to month number and year
                         const monthParts = row.month.split(' ');
                         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
                         const monthNumber = monthNames.indexOf(monthParts[0]) + 1;
                         const year = 2000 + parseInt(monthParts[1]); // Convert "24" to 2024
                         
-                        // Get SEC ID from auth user (we need to get this from the API or context)
-                        // For now, we'll make a request to get the current user's SEC ID
-                        const userResponse = await fetch('/api/sec/profile');
-                        const userData = await userResponse.json();
-                        const secId = userData.data?.id;
-                        
-                        if (!secId || !monthNumber || !year) {
-                          throw new Error('Missing required parameters for incentive calculation');
+                        if (!monthNumber || !year) {
+                          throw new Error('Invalid month or year format');
                         }
                         
-                        const response = await fetch(`/api/sec/incentive/calculate?secId=${secId}&month=${monthNumber}&year=${year}`);
+                        // Call the incentive calculation API (no secId needed - uses auth)
+                        const response = await fetch(`/api/sec/incentive/calculate?month=${monthNumber}&year=${year}&numberOfSECs=${numberOfSECs}`);
 
-                        if (response.ok) {
-                          const result = await response.json();
-                          setSelectedIncentiveData({
-                            month: row.month,
-                            incentive: row.incentive,
-                            units: row.units,
-                            status: row.status,
-                            latestSaleDate: row.latestSaleDate,
-                            breakdown: result.data // Store the detailed breakdown from API
-                          });
-                        } else {
-                          // Fallback to basic data if API fails
-                          setSelectedIncentiveData({
-                            month: row.month,
-                            incentive: row.incentive,
-                            units: row.units,
-                            status: row.status,
-                            latestSaleDate: row.latestSaleDate
-                          });
+                        if (!response.ok) {
+                          const errorData = await response.json();
+                          console.error('API error:', errorData);
+                          alert(`Failed to calculate incentive: ${errorData.error || 'Unknown error'}`);
+                          return;
                         }
+
+                        const result = await response.json();
+                        
+                        if (!result.success || !result.data) {
+                          alert('Failed to get incentive calculation data');
+                          return;
+                        }
+
+                        // Only show modal if we have API data
+                        setSelectedIncentiveData({
+                          month: row.month,
+                          breakdown: result.data // ONLY use API data
+                        });
                         setShowIncentiveModal(true);
                       } catch (error) {
                         console.error('Error fetching incentive details:', error);
-                        // Fallback to basic data if API fails
-                        setSelectedIncentiveData({
-                          month: row.month,
-                          incentive: row.incentive,
-                          units: row.units,
-                          status: row.status,
-                          latestSaleDate: row.latestSaleDate
-                        });
-                        setShowIncentiveModal(true);
+                        alert('Failed to load incentive calculation. Please try again.');
+                        // Don't show modal if API fails
                       } finally {
                         setLoadingIncentiveDetails(false);
                       }

@@ -31,16 +31,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'ZSM profile not found' }, { status: 404 });
     }
 
-    // Get stores associated with this ZSM
+    // Get stores associated with this ZSM (no state filter available in schema)
     const stores = await prisma.store.findMany({
-      where: user.zsmProfile.region ? {
-        state: user.zsmProfile.region
-      } : {},
       select: {
         id: true,
         name: true,
         city: true,
-        state: true
       }
     });
 

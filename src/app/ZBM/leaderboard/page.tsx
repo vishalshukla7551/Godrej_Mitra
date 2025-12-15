@@ -8,7 +8,6 @@ interface LeaderboardItem {
   storeId: string;
   storeName: string;
   city: string | null;
-  state: string | null;
   totalSales: number;
   totalIncentive: string;
 }

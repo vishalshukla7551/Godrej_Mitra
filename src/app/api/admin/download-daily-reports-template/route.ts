@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
       'Updated At'
     ];
 
-    const planData = [planHeaders];
+    const planData: (string | number | null)[][] = [planHeaders];
 
     // Add plan data rows
     plans.forEach(plan => {
@@ -82,8 +82,8 @@ export async function GET(req: NextRequest) {
         plan.samsungSKU?.ModelName || '',
         plan.samsungSKU?.Category || '',
         plan.samsungSKU?.ModelPrice || '',
-        plan.createdAt ? new Date(plan.createdAt).toLocaleDateString('en-GB') : '',
-        plan.updatedAt ? new Date(plan.updatedAt).toLocaleDateString('en-GB') : ''
+        '',
+        ''
       ]);
     });
 

@@ -27,7 +27,6 @@ interface LeaderboardStore {
   storeId: string;
   storeName: string;
   city: string | null;
-  state: string | null;
   totalSales: number;
   totalIncentive: string;
   adldUnits: number;
@@ -382,7 +381,7 @@ export default function SalesChampionLeaderboardPage() {
                                     {store.storeName}
                                   </span>
                                   <span className="text-[9px] text-gray-500 leading-tight">
-                                    {store.city || store.state || 'N/A'}
+                                    {store.city || 'N/A'}
                                   </span>
                                 </div>
                               </td>

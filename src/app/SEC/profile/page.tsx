@@ -8,7 +8,6 @@ interface StoreInfo {
   id: string;
   name: string;
   city: string | null;
-  state: string | null;
 }
 
 interface StoreChangeRequest {
@@ -929,12 +928,12 @@ export default function ProfilePage() {
                                 </span>
                               )}
                             </div>
-                            {(store.city || store.state) && (
+                            {(store.city) && (
                               <div className={`text-xs ${
                                 isSelected ? 'text-blue-700' : 
                                 isCurrent ? 'text-gray-400' : 'text-gray-500'
                               }`}>
-                                {[store.city, store.state].filter(Boolean).join(', ')}
+                                {[store.city].filter(Boolean).join(', ')}
                               </div>
                             )}
                           </div>

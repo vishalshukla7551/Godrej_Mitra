@@ -5,18 +5,19 @@ This API calculates the monthly incentive for a SEC (Samsung Experience Consulta
 
 ## Endpoint
 ```
-GET /api/sec/incentive/calculate?secId=<secId>&month=<month>&year=<year>
+GET /api/sec/incentive/calculate?month=<month>&year=<year>
+GET /api/sec/incentive/calculate?secId=<secId>&month=<month>&year=<year> (Admin only)
 ```
 
 ## Query Parameters
-- `secId` (required): The SEC user ID
 - `month` (required): Month number (1-12)
 - `year` (required): Year (e.g., 2025)
+- `secId` (optional): The SEC user ID - **only required for Admin users**
 
 ## Authentication
 - Requires valid authentication cookie
-- SEC users can only view their own incentives
-- Admin users can view any SEC's incentives
+- **SEC users**: Automatically uses their own ID from authentication (no secId parameter needed)
+- **Admin users**: Must provide secId parameter to view any SEC's incentives
 
 ## Incentive Calculation Rules
 
@@ -100,10 +101,16 @@ The calculated incentive is automatically saved to the `SalesSummary` table:
 
 ## Example Usage
 
-### Calculate December 2025 incentive for a SEC
+### Calculate December 2025 incentive (SEC user)
+```bash
+curl -X GET "http://localhost:3000/api/sec/incentive/calculate?month=12&year=2025" \
+  -H "Cookie: auth-token=your-sec-token-here"
+```
+
+### Calculate December 2025 incentive for a specific SEC (Admin user)
 ```bash
 curl -X GET "http://localhost:3000/api/sec/incentive/calculate?secId=507f1f77bcf86cd799439011&month=12&year=2025" \
-  -H "Cookie: auth-token=your-token-here"
+  -H "Cookie: auth-token=your-admin-token-here"
 ```
 
 ### Response
@@ -130,6 +137,12 @@ curl -X GET "http://localhost:3000/api/sec/incentive/calculate?secId=507f1f77bcf
 }
 ```
 
+```json
+{
+  "error": "secId is required for admin users"
+}
+```
+
 ### 401 Unauthorized
 ```json
 {
@@ -137,10 +150,10 @@ curl -X GET "http://localhost:3000/api/sec/incentive/calculate?secId=507f1f77bcf
 }
 ```
 
-### 403 Forbidden
+### 404 Not Found
 ```json
 {
-  "error": "Forbidden: You can only view your own incentives"
+  "error": "SEC user not found"
 }
 ```
 

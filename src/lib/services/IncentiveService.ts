@@ -55,6 +55,37 @@ interface GroupedSales {
 
 export class IncentiveService {
   /**
+   * Get the attach rate for a store based on a specific date
+   * When multiple periods contain the sale date, picks the smallest period (closest end date)
+   * Example: If periods are Dec 1-5, Dec 1-10, Dec 1-15 and sale is Dec 7,
+   * it will pick Dec 1-10 (smallest period containing Dec 7)
+   */
+  static async getAttachRateForStoreAndDate(
+    storeId: string,
+    dateOfSale: Date
+  ): Promise<number | null> {
+    // Find the attach rate where:
+    // 1. storeId matches
+    // 2. dateOfSale is between start and end (inclusive)
+    // 3. If multiple match, get the one with the closest (smallest) end date
+    const attachRate = await (prisma as any).periodicAttachRate.findFirst({
+      where: {
+        storeId: storeId,
+        start: { lte: dateOfSale },  // start <= dateOfSale
+        end: { gte: dateOfSale }     // end >= dateOfSale
+      },
+      orderBy: {
+        end: 'asc'  // Get the period with the closest end date (smallest period)
+      },
+      select: {
+        attachPercentage: true
+      }
+    });
+
+    return attachRate?.attachPercentage ?? null;
+  }
+
+  /**
    * Identify device type based on Category and ModelName
    */
   static identifyDeviceType(category: string, modelName: string): DeviceType {
@@ -236,11 +267,13 @@ export class IncentiveService {
   /**
    * Calculate monthly incentive for a SEC user
    * NEW LOGIC: Calculate at store level (all SECs combined), then divide by numberOfSec
+   * @param numberOfSec - Number of SECs at the store (provided by frontend)
    */
   static async calculateMonthlyIncentive(
     secId: string,
     month: number,
-    year: number
+    year: number,
+    numberOfSec: number
   ): Promise<IncentiveCalculationResult> {
     // Validate inputs
     if (!secId || month < 1 || month > 12 || year < 2000) {
@@ -276,22 +309,19 @@ export class IncentiveService {
     }
 
     const storeId = secUser.storeId;
-    const numberOfSec = secUser.store?.numberOfSec || 1;
-    const attachPercentage = secUser.store?.attachPercentage ?? null;
 
     console.log(`\n========================================`);
     console.log(`🏪 STORE-LEVEL CALCULATION`);
     console.log(`   SEC ID: ${secId}`);
     console.log(`   Store ID: ${storeId}`);
     console.log(`   Store Name: ${secUser.store?.name || 'Unknown'}`);
-    console.log(`   Number of SECs: ${numberOfSec}`);
-    console.log(`   Attach Rate (raw): ${JSON.stringify(secUser.store?.attachPercentage)}`);
-    console.log(`   Attach Rate (display): ${attachPercentage !== null ? attachPercentage + '%' : 'N/A'}`);
+    console.log(`   Number of SECs: ${numberOfSec} (from frontend)`);
     console.log(`   Period: ${month}/${year}`);
+    console.log(`   Attach Rate: Will be fetched per sale from periodicAttachRate`);
     console.log(`========================================\n`);
 
     // Load ALL sales reports for the ENTIRE STORE in the specified month (all SECs combined)
-    const salesReports = await (prisma as any).salesReport.findMany({
+    const salesReports = await (prisma as any).dailyIncentiveReport.findMany({
       where: {
         storeId: storeId,
         Date_of_sale: {
@@ -333,17 +363,6 @@ export class IncentiveService {
       const modelName = report.samsungSKU.ModelName || '';
       const deviceType = this.identifyDeviceType(category, modelName);
       
-      console.log(`\n--- Report ${i + 1}/${salesReports.length} ---`);
-      console.log(`  Report ID: ${report.id}`);
-      console.log(`  SEC: ${report.secUser?.phone || report.secId}`);
-      console.log(`  Store: ${report.store.name} (${report.storeId})`);
-      console.log(`  Store numberOfSec: ${report.store.numberOfSec || 1}`);
-      console.log(`  SKU: ${report.samsungSKU.ModelName}`);
-      console.log(`  Category: ${category}`);
-      console.log(`  Device Type: ${deviceType}`);
-      console.log(`  Model Price: ₹${modelPrice.toLocaleString()}`);
-      console.log(`  Date of Sale: ${report.Date_of_sale}`);
-      
       const slab = await this.getSlabForPrice(modelPrice);
 
       if (!slab) {
@@ -351,20 +370,20 @@ export class IncentiveService {
         continue;
       }
 
-      console.log(`  ✓ Matched Slab:`);
-      console.log(`    - Range: ₹${slab.minPrice?.toLocaleString() || 0} - ${slab.maxPrice ? '₹' + slab.maxPrice.toLocaleString() : 'No limit'}`);
-      console.log(`    - Incentive per unit: ₹${slab.incentiveAmount}`);
-      console.log(`    - Gate: ${slab.gate} units per SEC`);
-      console.log(`    - Volume Kicker: ${slab.volumeKicker} units per SEC`);
-
       const groupKey = `${report.storeId}_${slab.id}`;
 
       if (!groupedSales.has(groupKey)) {
+        // Fetch attach rate for this sale's date
+        const attachPercentage = await this.getAttachRateForStoreAndDate(
+          report.storeId,
+          report.Date_of_sale
+        );
+
         groupedSales.set(groupKey, {
           storeId: report.store.id,
           storeName: report.store.name,
-          numberOfSec: report.store.numberOfSec || 1,
-          attachPercentage: report.store.attachPercentage ?? null,
+          numberOfSec: numberOfSec,
+          attachPercentage: attachPercentage,
           slabId: slab.id,
           slab: {
             minPrice: slab.minPrice,
@@ -375,9 +394,6 @@ export class IncentiveService {
           },
           sales: []
         });
-        console.log(`  📦 Created new group: ${groupKey}`);
-      } else {
-        console.log(`  📦 Added to existing group: ${groupKey}`);
       }
 
       groupedSales.get(groupKey)!.sales.push({
@@ -393,38 +409,63 @@ export class IncentiveService {
     console.log(`📦 TOTAL GROUPS CREATED: ${groupedSales.size}`);
     console.log(`========================================\n`);
 
-    // Calculate incentives for each group
+    // NEW LOGIC: Calculate TOTAL units across ALL slabs first
+    // Then determine the rate based on total units
+    // Apply that rate to ALL slabs
+    
     const breakdownByStore: IncentiveCalculationResult['breakdownByStore'] = [];
     let totalIncentive = 0;
     let totalUnits = 0;
-    let unitsAboveGate = 0;
-    let unitsAboveVolumeKicker = 0;
+    
+    // Calculate total units across all groups
+    for (const group of groupedSales.values()) {
+      totalUnits += group.sales.length;
+    }
+    
+    // Use the first group's gate/volumeKicker values (they should be the same for all groups in same store)
+    const firstGroup = Array.from(groupedSales.values())[0];
+    const finalGate = firstGroup.slab.gate * firstGroup.numberOfSec;
+    const finalVolumeKicker = firstGroup.slab.volumeKicker * firstGroup.numberOfSec;
+    
+    // Log store-level information ONCE
+    console.log(`\n╔════════════════════════════════════════════════════════════╗`);
+    console.log(`║                    STORE-LEVEL SUMMARY                     ║`);
+    console.log(`╚════════════════════════════════════════════════════════════╝`);
+    console.log(`  Store: ${firstGroup.storeName} (${firstGroup.storeId})`);
+    console.log(`  Number of SECs: ${firstGroup.numberOfSec}`);
+    console.log(`  Attach Rate: ${firstGroup.attachPercentage !== null ? firstGroup.attachPercentage + '%' : 'N/A'}`);
+    console.log(`  Total Units (All Slabs): ${totalUnits}`);
+    console.log(`  Final Gate: ${finalGate} units`);
+    console.log(`  Final Volume Kicker: ${finalVolumeKicker} units`);
+    
+    // Determine the rate based on TOTAL units
+    let globalAppliedRate = 0;
+    if (totalUnits < finalGate) {
+      globalAppliedRate = 0;
+      console.log(`\n  🎯 RATE DECISION: ${totalUnits} < ${finalGate} → 0% (Below Gate)`);
+    } else if (totalUnits < finalVolumeKicker) {
+      globalAppliedRate = 1.0;
+      console.log(`\n  🎯 RATE DECISION: ${totalUnits} >= ${finalGate} AND < ${finalVolumeKicker} → 100%`);
+    } else {
+      globalAppliedRate = 1.2;
+      console.log(`\n  🎯 RATE DECISION: ${totalUnits} >= ${finalVolumeKicker} → 120% (Volume Kicker!)`);
+    }
+    
+    console.log(`\n========================================`);
+    console.log(`📊 CALCULATING INCENTIVES BY SLAB (${globalAppliedRate === 0 ? '0%' : globalAppliedRate === 1.0 ? '100%' : '120%'} rate)`);
+    console.log(`========================================\n`);
 
     // Group by store for the breakdown
     const storeGroups = new Map<string, typeof breakdownByStore[0]>();
+    let unitsAboveGate = 0;
+    let unitsAboveVolumeKicker = 0;
 
     let groupIndex = 0;
     for (const [groupKey, group] of groupedSales.entries()) {
       groupIndex++;
       const units = group.sales.length;
-      const finalGate = group.slab.gate * group.numberOfSec;
-      const finalVolumeKicker = group.slab.volumeKicker * group.numberOfSec;
 
-      console.log(`\n╔════════════════════════════════════════════════════════════╗`);
-      console.log(`║  GROUP ${groupIndex}/${groupedSales.size}: ${groupKey.padEnd(48)} ║`);
-      console.log(`╚════════════════════════════════════════════════════════════╝`);
-      console.log(`  Store: ${group.storeName} (${group.storeId})`);
-      console.log(`  Number of SECs in store: ${group.numberOfSec}`);
-      console.log(`  Store Attach Rate (raw): ${JSON.stringify(group.attachPercentage)}`);
-      console.log(`  Store Attach Rate (display): ${group.attachPercentage !== null ? group.attachPercentage + '%' : 'N/A'}`);
-      console.log(`  Price Slab: ₹${group.slab.minPrice?.toLocaleString() || 0} - ${group.slab.maxPrice ? '₹' + group.slab.maxPrice.toLocaleString() : 'No limit'}`);
-      console.log(`  Base Incentive per unit: ₹${group.slab.incentiveAmount}`);
-      console.log(`  Gate per SEC: ${group.slab.gate} units`);
-      console.log(`  Volume Kicker per SEC: ${group.slab.volumeKicker} units`);
-      console.log(`\n  📐 Calculated Thresholds:`);
-      console.log(`    Final Gate = ${group.slab.gate} × ${group.numberOfSec} = ${finalGate} units`);
-      console.log(`    Final Volume Kicker = ${group.slab.volumeKicker} × ${group.numberOfSec} = ${finalVolumeKicker} units`);
-      console.log(`\n  📦 Sales in this group: ${units} units`);
+      console.log(`\n[Slab ${groupIndex}/${groupedSales.size}] ₹${group.slab.minPrice?.toLocaleString() || 0} - ${group.slab.maxPrice ? '₹' + group.slab.maxPrice.toLocaleString() : 'No limit'}`);
       
       // Count device types
       const deviceCounts = group.sales.reduce((acc, sale) => {
@@ -432,40 +473,59 @@ export class IncentiveService {
         return acc;
       }, {} as Record<DeviceType, number>);
       
-      console.log(`    Device breakdown: ${Object.entries(deviceCounts).map(([type, count]) => `${type}=${count}`).join(', ')}`);
-      console.log(`    Sales IDs: ${group.sales.map((s: any) => s.id.substring(0, 8)).join(', ')}`);
+      if (Object.keys(deviceCounts).length > 0) {
+        console.log(`  Devices: ${Object.entries(deviceCounts).map(([type, count]) => `${type}=${count}`).join(', ')}`);
+      }
 
-      const { 
-        totalIncentive: groupIncentive, 
-        appliedRate,
-        baseIncentive,
-        deviceBonuses
-      } = this.calculateGroupIncentive(
-        units,
-        group.slab.incentiveAmount,
-        finalGate,
-        finalVolumeKicker,
-        group.sales,
-        group.attachPercentage
-      );
+      // Calculate base incentive using global rate
+      const baseIncentive = units * group.slab.incentiveAmount * globalAppliedRate;
+      
+      console.log(`\n  📊 Base Incentive Calculation:`);
+      console.log(`     ${units} units × ₹${group.slab.incentiveAmount} × ${globalAppliedRate === 0 ? '0%' : globalAppliedRate === 1.0 ? '100%' : '120%'} = ₹${baseIncentive.toLocaleString()}`);
+      
+      // Calculate device-specific bonuses
+      let foldBonus = 0;
+      let s25Bonus = 0;
+      let foldCount = 0;
+      let s25Count = 0;
+      
+      for (const sale of group.sales) {
+        const bonus = this.calculateDeviceBonus(sale.deviceType, group.attachPercentage);
+        
+        if (sale.deviceType === 'FOLD') {
+          foldBonus += bonus;
+          foldCount++;
+        } else if (sale.deviceType === 'S25') {
+          s25Bonus += bonus;
+          s25Count++;
+        }
+      }
 
-      console.log(`  💰 Group Incentive Breakdown:`);
-      console.log(`    - Base Incentive: ₹${baseIncentive.toLocaleString()}`);
-      console.log(`    - Fold Bonus: ₹${deviceBonuses.foldBonus.toLocaleString()}`);
-      console.log(`    - S25 Bonus: ₹${deviceBonuses.s25Bonus.toLocaleString()}`);
-      console.log(`    - TOTAL: ₹${groupIncentive.toLocaleString()}`);
-      console.log(`  📈 Applied Rate: ${appliedRate === 0 ? '0%' : appliedRate === 1.0 ? '100%' : '120%'}`);
+      const totalDeviceBonus = foldBonus + s25Bonus;
+      
+      // Log device bonuses with logic explanation
+      if (foldCount > 0 || s25Count > 0) {
+        console.log(`\n  🎁 Device-Specific Bonuses:`);
+        const attachRate = group.attachPercentage ?? 0;
+        
+        if (foldCount > 0) {
+          const bonusPerUnit = this.calculateDeviceBonus('FOLD', group.attachPercentage);
+          const logic = attachRate < 25 ? `Attach ${attachRate}% < 25% → ₹400/unit` : `Attach ${attachRate}% ≥ 25% → ₹600/unit`;
+          console.log(`     FOLD: ${foldCount} units × ₹${bonusPerUnit} = ₹${foldBonus.toLocaleString()} (${logic})`);
+        }
+        
+        if (s25Count > 0) {
+          const bonusPerUnit = this.calculateDeviceBonus('S25', group.attachPercentage);
+          const logic = attachRate < 15 ? `Attach ${attachRate}% < 15% → ₹300/unit` : `Attach ${attachRate}% ≥ 15% → ₹500/unit`;
+          console.log(`     S25: ${s25Count} units × ₹${bonusPerUnit} = ₹${s25Bonus.toLocaleString()} (${logic})`);
+        }
+      }
+
+      const groupIncentive = baseIncentive + totalDeviceBonus;
+
+      console.log(`\n  💰 Slab Total: ₹${baseIncentive.toLocaleString()} (base) + ₹${totalDeviceBonus.toLocaleString()} (bonuses) = ₹${groupIncentive.toLocaleString()}`);
 
       totalIncentive += groupIncentive;
-      totalUnits += units;
-
-      if (units > finalGate) {
-        unitsAboveGate += (units - finalGate);
-      }
-
-      if (units > finalVolumeKicker) {
-        unitsAboveVolumeKicker += (units - finalVolumeKicker);
-      }
 
       // Add to store breakdown
       if (!storeGroups.has(group.storeId)) {
@@ -486,11 +546,19 @@ export class IncentiveService {
         maxPrice: group.slab.maxPrice,
         units,
         incentiveAmount: group.slab.incentiveAmount,
-        appliedRate,
+        appliedRate: globalAppliedRate,
         baseIncentive,
-        deviceBonuses,
+        deviceBonuses: { foldBonus, s25Bonus },
         totalIncentive: groupIncentive
       });
+    }
+    
+    // Calculate units above gate/volumeKicker
+    if (totalUnits > finalGate) {
+      unitsAboveGate = totalUnits - finalGate;
+    }
+    if (totalUnits > finalVolumeKicker) {
+      unitsAboveVolumeKicker = totalUnits - finalVolumeKicker;
     }
 
     // Convert store groups to array
@@ -512,30 +580,6 @@ export class IncentiveService {
 
     console.log(`\n  Number of SECs at store: ${numberOfSec}`);
     console.log(`  INCENTIVE PER SEC: Rs.${secShare.toLocaleString()}\n`);
-
-    // Upsert into SalesSummary
-    await (prisma as any).salesSummary.upsert({
-      where: {
-        secId_month_year: {
-          secId,
-          month,
-          year
-        }
-      },
-      update: {
-        estimatedIncenetiveEarned: secShare,
-        updatedAt: new Date()
-      },
-      create: {
-        secId,
-        month,
-        year,
-        totalSpotIncentiveEarned: 0,
-        estimatedIncenetiveEarned: secShare
-      }
-    });
-
-    console.log(`Saved to SalesSummary for SEC ${secId}: Rs.${secShare.toLocaleString()}\n`);
 
     return {
       totalIncentive: secShare, // Return the SEC's share, not the total store incentive

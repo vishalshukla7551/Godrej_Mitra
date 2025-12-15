@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { IncentiveService } from '@/lib/services/IncentiveService';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-// GET /api/sec/incentive/calculate?secId=<secId>&month=<month>&year=<year>
+// GET /api/sec/incentive/calculate?month=<month>&year=<year>&numberOfSECs=<numberOfSECs>
 // Calculate monthly incentive for a SEC user
 export async function GET(req: NextRequest) {
   try {
@@ -19,18 +20,11 @@ export async function GET(req: NextRequest) {
 
     // Extract query parameters
     const { searchParams } = new URL(req.url);
-    const secId = searchParams.get('secId');
     const monthStr = searchParams.get('month');
     const yearStr = searchParams.get('year');
+    const numberOfSecStr = searchParams.get('numberOfSECs');
 
     // Validation
-    if (!secId) {
-      return NextResponse.json(
-        { error: 'secId is required' },
-        { status: 400 }
-      );
-    }
-
     if (!monthStr || !yearStr) {
       return NextResponse.json(
         { error: 'month and year are required' },
@@ -55,13 +49,46 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Authorization check - SEC users can only view their own incentives
-    // `getAuthenticatedUserFromCookies` sets `id` to the SEC identifier for SEC users,
-    // so compare `authUser.id` here instead of a non-existent `secId` property.
-    if (authUser.role === 'SEC' && authUser.id !== secId) {
+    // Get SEC phone from auth (consistent with passbook API)
+    const phone = authUser.username;
+    if (!phone) {
       return NextResponse.json(
-        { error: 'Forbidden: You can only view your own incentives' },
-        { status: 403 }
+        { error: 'Missing SEC identifier' },
+        { status: 400 }
+      );
+    }
+    
+    // Fetch SEC user with store information using phone number
+    const secUser = await prisma.sEC.findUnique({
+      where: { phone },
+      include: {
+        store: true
+      }
+    });
+
+    if (!secUser || !secUser.storeId) {
+      return NextResponse.json(
+        { error: 'SEC user not found or not assigned to a store' },
+        { status: 404 }
+      );
+    }
+    
+    // Use the actual SEC ObjectID for the calculation
+    const secId = secUser.id;
+
+    // Get number of SECs from query parameter (required)
+    if (!numberOfSecStr) {
+      return NextResponse.json(
+        { error: 'numberOfSECs is required' },
+        { status: 400 }
+      );
+    }
+
+    const numberOfSec = parseInt(numberOfSecStr);
+    if (isNaN(numberOfSec) || numberOfSec < 1) {
+      return NextResponse.json(
+        { error: 'Invalid numberOfSECs. Must be at least 1' },
+        { status: 400 }
       );
     }
 
@@ -69,7 +96,8 @@ export async function GET(req: NextRequest) {
     const result = await IncentiveService.calculateMonthlyIncentive(
       secId,
       month,
-      year
+      year,
+      numberOfSec
     );
 
     return NextResponse.json({
@@ -78,6 +106,9 @@ export async function GET(req: NextRequest) {
         secId,
         month,
         year,
+        numberOfSECs: numberOfSec,
+        storeId: secUser.storeId,
+        storeName: secUser.store?.name ?? null,
         ...result
       }
     });

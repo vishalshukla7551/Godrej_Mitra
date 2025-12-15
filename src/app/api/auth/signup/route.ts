@@ -17,7 +17,6 @@ export async function GET() {
         id: s.id,
         name: s.name,
         city: s.city,
-        state: s.state,
       })),
       zbms: zbms.map((z) => ({
         id: z.id,

@@ -36,7 +36,7 @@ export default function LeaderboardPage() {
         const mapped = stores.map((store: any) => ({
           rank: store.rank ?? 0,
           store: store.storeName ?? '—',
-          city: store.city || store.state || '—',
+          city: store.city || '—',
           totalIncentive:
             typeof store.totalIncentive === 'string'
               ? store.totalIncentive

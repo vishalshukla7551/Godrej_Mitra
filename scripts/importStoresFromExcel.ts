@@ -124,15 +124,15 @@ async function main() {
   // Show all stores now in DB
   const allStores = await prisma.store.findMany({ orderBy: { name: 'asc' } });
   console.log(`\nTotal stores in database: ${allStores.length}`);
-  if (allStores.length <= 20) {
+    if (allStores.length <= 20) {
     console.log('\nAll stores:');
     allStores.forEach((store, idx) => {
-      console.log(`  ${idx + 1}. ${store.name} - ${store.city || 'N/A'} - ${store.state || 'N/A'}`);
+      console.log(`  ${idx + 1}. ${store.name} - ${store.city || 'N/A'}`);
     });
   } else {
     console.log(`\nShowing first 10 stores (total: ${allStores.length}):`);
     allStores.slice(0, 10).forEach((store, idx) => {
-      console.log(`  ${idx + 1}. ${store.name} - ${store.city || 'N/A'} - ${store.state || 'N/A'}`);
+      console.log(`  ${idx + 1}. ${store.name} - ${store.city || 'N/A'}`);
     });
     console.log('  ...');
   }

@@ -19,7 +19,6 @@ interface StoreInfo {
   id: string;
   name: string;
   city: string | null;
-  state: string | null;
 }
 
 interface StoreChangeRequest {
@@ -131,7 +130,7 @@ export default function ProfilePage() {
           // show all mapped store names in a single read-only field
           storeName: allStoreNames || primaryStore?.name || '',
           storeAddress: primaryStore
-            ? [primaryStore.city, primaryStore.state].filter(Boolean).join(', ')
+            ? [primaryStore.city].filter(Boolean).join(', ')
             : '',
         }));
 
@@ -1016,9 +1015,9 @@ export default function ProfilePage() {
                                 </span>
                               )}
                             </div>
-                            {(store.city || store.state) && (
+                            {store.city && (
                               <div className={`text-sm ${isSelected ? 'text-blue-700' : 'text-gray-500'}`}>
-                                {[store.city, store.state].filter(Boolean).join(', ')}
+                                {store.city}
                               </div>
                             )}
                           </div>

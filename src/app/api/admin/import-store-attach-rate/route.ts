@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
         console.log(`[Import] Creating/updating attach rate for store ${storeId}, period ${validStartPeriod} to ${validEndPeriod}, rate ${attachRate}`);
         
         // First check if a record exists for this store
-        const existingRecord = await prisma.periodicAttachRate.findUnique({
+        const existingRecord = await prisma.periodicAttachRate.findFirst({
           where: {
             storeId: storeId
           }
@@ -191,11 +191,9 @@ export async function POST(req: NextRequest) {
 
         let attachRateRecord;
         if (existingRecord) {
-          // Update existing record
+          // Update existing record by id
           attachRateRecord = await prisma.periodicAttachRate.update({
-            where: {
-              storeId: storeId
-            },
+            where: { id: existingRecord.id },
             data: {
               start: validStartPeriod,
               end: validEndPeriod,

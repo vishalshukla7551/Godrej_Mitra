@@ -41,13 +41,11 @@ interface StoreChangeRequest {
     id: string;
     name: string;
     city: string | null;
-    state: string | null;
   }>;
   requestedStores: Array<{
     id: string;
     name: string;
     city: string | null;
-    state: string | null;
   }>;
 }
 

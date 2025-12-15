@@ -32,12 +32,6 @@ export async function GET(req: NextRequest) {
             contains: search,
             mode: 'insensitive'
           }
-        },
-        {
-          state: {
-            contains: search,
-            mode: 'insensitive'
-          }
         }
       ];
     }
@@ -48,7 +42,6 @@ export async function GET(req: NextRequest) {
         id: true,
         name: true,
         city: true,
-        state: true
       },
       orderBy: [
         { name: 'asc' },
@@ -72,11 +65,10 @@ export async function GET(req: NextRequest) {
               }
             },
             select: {
-              id: true,
-              name: true,
-              city: true,
-              state: true
-            }
+                id: true,
+                name: true,
+                city: true,
+              }
           });
           
           // Add the additional stores at the beginning

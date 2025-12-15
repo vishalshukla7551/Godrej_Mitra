@@ -11,15 +11,8 @@ export async function POST(request: NextRequest) {
     const secId = cookieStore.get('secId')?.value || 'unknown';
     const phone = cookieStore.get('phone')?.value;
 
-    await prisma.proctoringEvent.create({
-      data: {
-        secId,
-        phone,
-        sessionToken,
-        eventType: eventType as any,
-        details,
-      },
-    });
+    // Proctoring event model not present in Prisma schema — log to server console instead
+    console.log('Proctoring event:', { secId, phone, sessionToken, eventType, details });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -9,11 +9,11 @@ function buildStoreId(n: number): string {
 async function main() {
   // ----- STORES -----
   const stores = [
-    { id: buildStoreId(1), name: 'Croma - Mumbai Oberoi Mall', city: 'Mumbai', state: 'Maharashtra' },
-    { id: buildStoreId(2), name: 'Croma - Noida Mall of India', city: 'Noida', state: 'Uttar Pradesh' },
-    { id: buildStoreId(3), name: 'Vijay Sales - Pune Chinchwad', city: 'Pune', state: 'Maharashtra' },
-    { id: buildStoreId(4), name: 'Croma - Bengaluru Indiranagar', city: 'Bengaluru', state: 'Karnataka' },
-    { id: buildStoreId(5), name: 'Croma - Delhi Rohini', city: 'Delhi', state: 'Delhi' },
+    { id: buildStoreId(1), name: 'Croma - Mumbai Oberoi Mall', city: 'Mumbai' },
+    { id: buildStoreId(2), name: 'Croma - Noida Mall of India', city: 'Noida' },
+    { id: buildStoreId(3), name: 'Vijay Sales - Pune Chinchwad', city: 'Pune' },
+    { id: buildStoreId(4), name: 'Croma - Bengaluru Indiranagar', city: 'Bengaluru' },
+    { id: buildStoreId(5), name: 'Croma - Delhi Rohini', city: 'Delhi' },
   ];
 
   for (const store of stores) {
@@ -22,9 +22,12 @@ async function main() {
       update: {
         name: store.name,
         city: store.city,
-        state: store.state,
       },
-      create: store,
+      create: {
+        id: store.id,
+        name: store.name,
+        city: store.city,
+      },
     });
   }
 

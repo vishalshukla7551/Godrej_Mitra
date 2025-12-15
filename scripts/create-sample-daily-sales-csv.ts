@@ -16,7 +16,6 @@ async function createSampleDailySalesCSV() {
         id: true,
         name: true,
         city: true,
-        state: true
       },
       orderBy: { name: 'asc' }
     });
@@ -54,7 +53,7 @@ async function createSampleDailySalesCSV() {
     console.log('\n📊 Available Data Summary:');
     console.log('\nStores:');
     stores.forEach((store, index) => {
-      console.log(`  ${index + 1}. ${store.id} - ${store.name} (${store.city}, ${store.state})`);
+      console.log(`  ${index + 1}. ${store.id} - ${store.name} (${store.city || 'N/A'})`);
     });
 
     console.log('\nSamsung SKUs:');

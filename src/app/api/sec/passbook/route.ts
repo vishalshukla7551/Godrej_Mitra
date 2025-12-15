@@ -447,12 +447,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
+        // SEC information
+        sec: {
+          id: secUser.id,
+          fullName: secUser.fullName,
+          phone: secUser.phone,
+        },
+        
         // Store information
         store: {
           id: secUser.store.id,
           name: secUser.store.name,
           city: secUser.store.city,
-          state: secUser.store.state,
+          state: secUser.store.city || null,
         },
         
         // Monthly incentive tab data

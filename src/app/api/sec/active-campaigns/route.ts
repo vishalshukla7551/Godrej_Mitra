@@ -89,8 +89,8 @@ export async function GET(req: NextRequest) {
       planPrice: campaign.plan.price,
       incentiveType: campaign.incentiveType,
       incentiveValue: campaign.incentiveValue,
-      startDate: campaign.startDate.toISOString().split('T')[0],
-      endDate: campaign.endDate.toISOString().split('T')[0],
+      startDate: campaign.startDate ? campaign.startDate.toISOString().split('T')[0] : null,
+      endDate: campaign.endDate ? campaign.endDate.toISOString().split('T')[0] : null,
       storeName: campaign.store.name,
       storeCity: campaign.store.city,
     }));

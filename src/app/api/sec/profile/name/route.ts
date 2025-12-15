@@ -84,11 +84,10 @@ export async function POST(req: NextRequest) {
         storeId: true,
         store: {
           select: {
-            id: true,
-            name: true,
-            city: true,
-            state: true,
-          },
+                id: true,
+                name: true,
+                city: true,
+              },
         },
       },
     });

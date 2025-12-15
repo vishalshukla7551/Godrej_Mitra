@@ -35,7 +35,8 @@ model Store {
   id    String  @id @map("_id")
   name  String
   city  String?
-  state String?
+  
+  attachPercentage Float?  // Current attach rate percentage for device bonuses (nullable)
   periodicAttachRates periodicAttachRate[]
   samsungIncentiveInfo Json?  // Array<Object>: { month: String(MM-YYYY), samsungIncentiveAmount: Int, samsungIncentivePaidAt: Date | null }    
   dailyIncentiveReports   DailyIncentiveReport[]
@@ -48,13 +49,16 @@ model Store {
 
 model periodicAttachRate {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  storeId   String   @unique // Each store can have only one attach rate record
+  storeId   String   // Allow multiple attach rate periods per store
   store     Store    @relation(fields: [storeId], references: [id])
-  start    String   // e.g., "01-01-2024", "dd-mm-yyyy". inclusive of this period
-  end      String   // e.g., "31-03-2024", "dd-mm-yyyy". inclusive of this period
+  start     DateTime // Start date of this attach rate period (inclusive)
+  end       DateTime // End date of this attach rate period (inclusive)
   attachPercentage Float    // e.g., 25%
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([storeId, start, end]) // Prevent duplicate periods for same store
+  @@index([storeId, end]) // Optimize queries by storeId and end date
 }
 
 model SamsungSKU {

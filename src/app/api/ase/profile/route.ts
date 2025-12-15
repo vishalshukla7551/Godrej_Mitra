@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    let stores: { id: string; name: string; city: string | null; state: string | null }[] = [];
+    let stores: { id: string; name: string; city: string | null }[] = [];
 
     if (aseProfile.storeIds && aseProfile.storeIds.length > 0) {
       stores = await prisma.store.findMany({
@@ -43,7 +43,6 @@ export async function GET(req: NextRequest) {
           id: true,
           name: true,
           city: true,
-          state: true,
         },
       });
     }
