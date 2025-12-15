@@ -56,7 +56,6 @@ type PassbookData = {
 
 const statsCardsConfig = [
   { id: 'units', label: 'Total Units Sold', key: 'units', gradient: 'from-[#176CF3] to-[#3056FF]' },
-  { id: 'total-earned', label: 'Total Earned Incentive', key: 'totalEarned', gradient: 'from-[#16A34A] to-[#22C55E]' },
   { id: 'paid', label: 'Paid Incentive', key: 'paid', gradient: 'from-[#9333EA] to-[#EC4899]' },
   { id: 'net', label: 'Net Balance', key: 'net', gradient: 'from-[#2563EB] to-[#4F46E5]' },
 ] as const;
@@ -90,6 +89,7 @@ export default function IncentivePassbookPage() {
   const [showIncentiveModal, setShowIncentiveModal] = useState(false);
   const [selectedIncentiveData, setSelectedIncentiveData] = useState<any>(null);
   const [loadingIncentiveDetails, setLoadingIncentiveDetails] = useState(false);
+  const [numberOfSECs, setNumberOfSECs] = useState<number>(3);
 
   // Fetch passbook data from API
   useEffect(() => {
@@ -421,7 +421,19 @@ export default function IncentivePassbookPage() {
                     </tr>
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-3 text-gray-600">Number Of SECs</td>
-                      <td className="px-4 py-3 font-medium text-right text-gray-900">3</td>
+                      <td className="px-4 py-3 text-right">
+                        <select
+                          value={numberOfSECs}
+                          onChange={(e) => setNumberOfSECs(Number(e.target.value))}
+                          className="border border-gray-300 rounded px-2 py-1 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value={1}>1</option>
+                          <option value={2}>2</option>
+                          <option value={3}>3</option>
+                          <option value={4}>4</option>
+                          <option value={5}>5</option>
+                        </select>
+                      </td>
                     </tr>
                     <tr className="border-b border-gray-100">
                       <td className="px-4 py-3 text-gray-600">Total Units Sold [25 Dec]</td>
@@ -647,11 +659,10 @@ function MonthlyIncentiveSection({
                 className="grid grid-cols-4 gap-2 px-3 py-3 border-t border-gray-100 text-gray-800 items-center"
               >
                 <span className="text-left font-medium">{row.month}</span>
-                <div className="text-center flex items-center justify-center gap-1">
-                  <span className="font-semibold text-gray-900">{row.incentive}</span>
+                <div className="text-center">
                   <button
                     type="button"
-                    className="w-4 h-4 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold hover:bg-blue-200 transition-colors disabled:opacity-50"
+                    className="px-3 py-1 rounded-lg bg-blue-100 text-blue-600 text-xs font-medium hover:bg-blue-200 transition-colors disabled:opacity-50"
                     title="View incentive calculation details"
                     disabled={loadingIncentiveDetails}
                     onClick={async () => {
@@ -705,9 +716,12 @@ function MonthlyIncentiveSection({
                     }}
                   >
                     {loadingIncentiveDetails ? (
-                      <div className="animate-spin rounded-full h-2 w-2 border-b border-blue-600"></div>
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-600"></div>
+                        <span>Loading...</span>
+                      </div>
                     ) : (
-                      'i'
+                      'View Your Calculation'
                     )}
                   </button>
                 </div>

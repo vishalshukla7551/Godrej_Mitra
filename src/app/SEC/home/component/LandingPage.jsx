@@ -16,7 +16,7 @@ export default function LandingPage({ userName = '' }) {
       subtitle: 'SPOT INCENTIVE LIVE',
       description: 'GET YOUR INCENTIVE INSTANT',
       highlights: [
-        '💰 ₹100 VOUCHER on every ADDL sold',
+        '💰 ₹100 VOUCHER on every ADLD sold',
         '🎁 ₹300 VOUCHER on every Combo sold',
       ],
       validity: 'Valid for 18 Oct to 26 Oct',
