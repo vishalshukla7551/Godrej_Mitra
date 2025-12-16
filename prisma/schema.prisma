@@ -35,7 +35,7 @@ model Store {
   id    String  @id @map("_id")
   name  String
   city  String?
-  
+  numberOfSec Int?  // Number of SECs associated with the store (nullable)
   attachPercentage Float?  // Current attach rate percentage for device bonuses (nullable)
   periodicAttachRates periodicAttachRate[]
   samsungIncentiveInfo Json?  // Array<Object>: { month: String(MM-YYYY), samsungIncentiveAmount: Int, samsungIncentivePaidAt: Date | null }    
