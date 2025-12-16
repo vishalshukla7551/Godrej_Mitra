@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import SECHeader from "../SEC/SECHeader.jsx";
-import SECFooter from "../SEC/SECFooter.jsx";
+import SECHeader from "../../SECHeader.jsx";
+import SECFooter from "../../SECFooter.jsx";
 
 export default function IncentiveCalculatorPage() {
   const [deviceType, setDeviceType] = useState("");

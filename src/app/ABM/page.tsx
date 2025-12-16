@@ -43,5 +43,5 @@ export default function ABMPage() {
     { title: 'Store Settings', description: 'Manage your store configuration', href: '/ABM/profile', badge: 'Configure', color: 'orange' as const, icon: <SettingsIcon /> },
   ];
 
-  return <ChristmasDashboard userName={abmName} loading={loading} cards={cards} />;
+  return <ChristmasDashboard userName={abmName} loading={loading} cards={cards} hideSanta={true} />;
 }

@@ -18,6 +18,7 @@ interface ChristmasDashboardProps {
   loading: boolean;
   cards: DashboardCard[];
   logoutPath?: string;
+  hideSanta?: boolean;
 }
 
 const colorClasses = {
@@ -27,7 +28,7 @@ const colorClasses = {
   purple: { bg: 'from-purple-600 to-indigo-500', badge: 'bg-purple-600' },
 };
 
-export default function ChristmasDashboard({ userName, loading, cards, logoutPath = '/login/role' }: ChristmasDashboardProps) {
+export default function ChristmasDashboard({ userName, loading, cards, logoutPath = '/login/role', hideSanta = false }: ChristmasDashboardProps) {
   return (
     <div className="flex-1 relative overflow-hidden min-h-screen" style={{ background: 'linear-gradient(180deg, #0b2a3d 0%, #0f172a 100%)' }}>
       <Snowfall snowflakeCount={100} style={{ position: 'fixed', width: '100%', height: '100%', zIndex: 1 }} />
@@ -50,7 +51,7 @@ export default function ChristmasDashboard({ userName, loading, cards, logoutPat
       {/* Header */}
       <div className="relative z-20 flex justify-between items-center px-10 pt-8">
         <div className="relative">
-          <div className="absolute -top-8 -left-2 text-4xl transform -rotate-12">🎅</div>
+          {!hideSanta && <div className="absolute -top-8 -left-2 text-4xl transform -rotate-12">🎅</div>}
           <p className="text-neutral-50 text-3xl font-semibold">{loading ? 'Hello User,' : `Hello ${userName},`}</p>
           <p className="text-white/80 text-lg">Welcome! Choose your action below</p>
         </div>

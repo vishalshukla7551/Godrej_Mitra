@@ -48,5 +48,5 @@ export default function ASEPage() {
     { title: 'Store Settings', description: 'Manage your store configuration', href: '/ASE/profile', badge: 'Configure', color: 'orange' as const, icon: <SettingsIcon /> },
   ];
 
-  return <ChristmasDashboard userName={aseName} loading={loading} cards={cards} />;
+  return <ChristmasDashboard userName={aseName} loading={loading} cards={cards} hideSanta={true} />;
 }

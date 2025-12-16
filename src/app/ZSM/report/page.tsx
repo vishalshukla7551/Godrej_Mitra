@@ -46,6 +46,7 @@ export default function ReportPage() {
     unpaidCount: 0
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const planTypes = ["ADLD", "COMBO"];
   const [stores, setStores] = useState<string[]>([]);
@@ -53,37 +54,92 @@ export default function ReportPage() {
 
   useEffect(() => {
     fetchReports();
-  }, [planSearch, storeSearch, deviceSearch]);
+  }, [activeTab, planSearch, storeSearch, deviceSearch]);
 
   const fetchReports = async () => {
     try {
       setLoading(true);
+      setError(null);
       const params = new URLSearchParams();
-      if (planSearch && planTypes.includes(planSearch)) {
-        params.append('planFilter', planSearch);
-      }
-      if (storeSearch) {
-        params.append('storeFilter', storeSearch);
-      }
-      if (deviceSearch) {
-        params.append('deviceFilter', deviceSearch);
+      
+      // Use different parameter names based on the API
+      if (activeTab === 'monthly') {
+        if (planSearch && planTypes.includes(planSearch)) {
+          params.append('planType', planSearch + '_1_YR');
+        }
+        if (storeSearch) {
+          params.append('store', storeSearch);
+        }
+        if (deviceSearch) {
+          params.append('device', deviceSearch);
+        }
+      } else {
+        if (planSearch && planTypes.includes(planSearch)) {
+          params.append('planFilter', planSearch);
+        }
+        if (storeSearch) {
+          params.append('storeFilter', storeSearch);
+        }
+        if (deviceSearch) {
+          params.append('deviceFilter', deviceSearch);
+        }
       }
 
-      const response = await fetch(`/api/zsm/report?${params.toString()}`);
+      // Use different API endpoints based on active tab
+      const endpoint = activeTab === 'monthly' ? '/api/zsm/monthly-report' : '/api/zsm/report';
+      const response = await fetch(`${endpoint}?${params.toString()}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Failed to fetch data (${response.status}): ${errorData.error || response.statusText}`);
+      }
       const result = await response.json();
 
       if (result.success) {
-        setReports(result.data.reports);
-        setSummary(result.data.summary);
+        if (activeTab === 'monthly') {
+          // Handle monthly report API response structure
+          setReports(result.data.reports.map((r: any) => ({
+            id: r.id,
+            dateOfSale: r.dateOfSale,
+            secId: r.secId || 'N/A',
+            secName: r.secName,
+            secPhone: r.secPhone,
+            storeName: r.storeName,
+            storeCity: r.storeCity,
+            deviceName: r.deviceName,
+            deviceCategory: r.deviceCategory,
+            planType: r.planType,
+            imei: r.imei,
+            incentive: 0, // Monthly reports don't have incentive amounts
+            isPaid: false
+          })));
+          setSummary({
+            activeStores: result.data.summary.uniqueStores || 0,
+            activeSECs: 0, // Monthly API doesn't track this
+            totalReports: result.data.summary.totalReports || 0,
+            paidCount: 0,
+            unpaidCount: 0
+          });
+          
+          // Extract filter options from monthly API
+          const uniqueStores = result.data.filters?.availableStores || [];
+          const uniqueDevices = result.data.filters?.availableDevices || [];
+          setStores(uniqueStores);
+          setDevices(uniqueDevices);
+        } else {
+          // Handle spot report API response structure (existing)
+          setReports(result.data.reports);
+          setSummary(result.data.summary);
 
-        // Extract unique stores and devices for dropdowns
-        const uniqueStores = [...new Set(result.data.reports.map((r: ReportData) => r.storeName))] as string[];
-        const uniqueDevices = [...new Set(result.data.reports.map((r: ReportData) => r.deviceName))] as string[];
-        setStores(uniqueStores);
-        setDevices(uniqueDevices);
+          // Extract unique stores and devices for dropdowns
+          const uniqueStores = [...new Set(result.data.reports.map((r: ReportData) => r.storeName))] as string[];
+          const uniqueDevices = [...new Set(result.data.reports.map((r: ReportData) => r.deviceName))] as string[];
+          setStores(uniqueStores);
+          setDevices(uniqueDevices);
+        }
       }
     } catch (error) {
       console.error('Error fetching reports:', error);
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -306,7 +362,6 @@ export default function ReportPage() {
                 <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Date of Sale</th>
-                    <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">SEC Name</th>
                     <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Store Name</th>
                     <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Device Name</th>
                     <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Plan Type</th>
@@ -316,13 +371,23 @@ export default function ReportPage() {
                 <tbody className="divide-y divide-neutral-100">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="text-center text-neutral-500 text-sm p-8">
+                      <td colSpan={5} className="text-center text-neutral-500 text-sm p-8">
                         Loading reports...
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={5} className="text-center text-red-500 text-sm p-8">
+                        Error: {error}
+                        <br />
+                        <button onClick={fetchReports} className="mt-2 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm">
+                          Retry
+                        </button>
                       </td>
                     </tr>
                   ) : reports.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center text-neutral-500 text-sm p-8">
+                      <td colSpan={5} className="text-center text-neutral-500 text-sm p-8">
                         No reports found
                       </td>
                     </tr>
@@ -331,10 +396,6 @@ export default function ReportPage() {
                       <tr key={report.id} className="hover:bg-neutral-50 transition">
                         <td className="text-neutral-600 text-sm p-4">
                           {new Date(report.dateOfSale).toLocaleDateString()}
-                        </td>
-                        <td className="text-neutral-900 text-sm font-medium p-4">
-                          <div>{report.secName}</div>
-                          <div className="text-neutral-500 text-xs">{report.secPhone}</div>
                         </td>
                         <td className="text-neutral-900 text-sm p-4">{report.storeName}</td>
                         <td className="text-neutral-600 text-sm p-4">{report.deviceName}</td>
@@ -378,7 +439,6 @@ export default function ReportPage() {
             <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
                 <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Date of Sale</th>
-                <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">SEC Name</th>
                 <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Store Name</th>
                 <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Device Name</th>
                 <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Plan Type</th>
@@ -388,13 +448,23 @@ export default function ReportPage() {
             <tbody className="divide-y divide-neutral-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="text-center text-neutral-500 text-sm p-8">
+                  <td colSpan={5} className="text-center text-neutral-500 text-sm p-8">
                     Loading reports...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={5} className="text-center text-red-500 text-sm p-8">
+                    Error: {error}
+                    <br />
+                    <button onClick={fetchReports} className="mt-2 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm">
+                      Retry
+                    </button>
                   </td>
                 </tr>
               ) : reports.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center text-neutral-500 text-sm p-8">
+                  <td colSpan={5} className="text-center text-neutral-500 text-sm p-8">
                     No reports found
                   </td>
                 </tr>
@@ -403,10 +473,6 @@ export default function ReportPage() {
                   <tr key={report.id} className="hover:bg-neutral-50 transition">
                     <td className="text-neutral-600 text-sm p-4">
                       {new Date(report.dateOfSale).toLocaleDateString()}
-                    </td>
-                    <td className="text-neutral-900 text-sm font-medium p-4">
-                      <div>{report.secName}</div>
-                      <div className="text-neutral-500 text-xs">{report.secPhone}</div>
                     </td>
                     <td className="text-neutral-900 text-sm p-4">{report.storeName}</td>
                     <td className="text-neutral-600 text-sm p-4">{report.deviceName}</td>

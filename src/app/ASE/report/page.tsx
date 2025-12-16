@@ -31,9 +31,9 @@ type ReportTab = 'monthly' | 'spot';
 
 export default function ReportPage() {
   const [activeTab, setActiveTab] = useState<ReportTab>('spot');
-  const [planFilter, setPlanFilter] = useState("");
-  const [storeFilter, setStoreFilter] = useState("");
-  const [deviceFilter, setDeviceFilter] = useState("");
+  const [planSearch, setPlanSearch] = useState("");
+  const [storeSearch, setStoreSearch] = useState("");
+  const [deviceSearch, setDeviceSearch] = useState("");
   
   const [reports, setReports] = useState<Report[]>([]);
   const [summary, setSummary] = useState<Summary>({
@@ -50,17 +50,71 @@ export default function ReportPage() {
     try {
       setLoading(true);
       setError(null);
-      const params = new URLSearchParams({
-        ...(planFilter && { planFilter }),
-        ...(storeFilter && { storeFilter }),
-        ...(deviceFilter && { deviceFilter })
-      });
-      const response = await fetch(`/api/ase/report?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch data');
+      
+      const params = new URLSearchParams();
+      
+      // Use different parameter names based on the API
+      if (activeTab === 'monthly') {
+        if (planSearch) {
+          params.append('planType', planSearch.includes('_') ? planSearch : planSearch + '_1_YR');
+        }
+        if (storeSearch) {
+          params.append('store', storeSearch);
+        }
+        if (deviceSearch) {
+          params.append('device', deviceSearch);
+        }
+      } else {
+        if (planSearch) {
+          params.append('planFilter', planSearch);
+        }
+        if (storeSearch) {
+          params.append('storeFilter', storeSearch);
+        }
+        if (deviceSearch) {
+          params.append('deviceFilter', deviceSearch);
+        }
+      }
+
+      // Use different API endpoints based on active tab
+      const endpoint = activeTab === 'monthly' ? '/api/ase/monthly-report' : '/api/ase/report';
+      const response = await fetch(`${endpoint}?${params}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Failed to fetch data (${response.status}): ${errorData.error || response.statusText}`);
+      }
       const result = await response.json();
+      
       if (result.success) {
-        setReports(result.data.reports);
-        setSummary(result.data.summary);
+        if (activeTab === 'monthly') {
+          // Handle monthly report API response structure
+          setReports(result.data.reports.map((r: any) => ({
+            id: r.id,
+            dateOfSale: r.dateOfSale,
+            secId: r.secId || 'N/A',
+            secName: r.secName,
+            secPhone: r.secPhone,
+            storeName: r.storeName,
+            storeCity: r.storeCity,
+            deviceName: r.deviceName,
+            deviceCategory: r.deviceCategory,
+            planType: r.planType,
+            imei: r.imei,
+            incentive: 0, // Monthly reports don't have incentive amounts
+            isPaid: false
+          })));
+          setSummary({
+            activeStores: result.data.summary.uniqueStores || 0,
+            activeSECs: 0, // Monthly API doesn't track this
+            totalReports: result.data.summary.totalReports || 0,
+            paidCount: 0,
+            unpaidCount: 0
+          });
+        } else {
+          // Handle spot report API response structure (existing)
+          setReports(result.data.reports);
+          setSummary(result.data.summary);
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -69,7 +123,7 @@ export default function ReportPage() {
     }
   };
 
-  useEffect(() => { fetchData(); }, [planFilter, storeFilter, deviceFilter]);
+  useEffect(() => { fetchData(); }, [activeTab, planSearch, storeSearch, deviceSearch]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -115,7 +169,6 @@ export default function ReportPage() {
                 <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Date of Sale</th>
-                    <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">SEC Name</th>
                     <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Store Name</th>
                     <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Device Name</th>
                     <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Plan Type</th>
@@ -125,15 +178,11 @@ export default function ReportPage() {
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
                   {reports.length === 0 ? (
-                    <tr><td colSpan={7} className="text-center py-8 text-neutral-500">No reports found.</td></tr>
+                    <tr><td colSpan={6} className="text-center py-8 text-neutral-500">No reports found.</td></tr>
                   ) : (
                     reports.map((row) => (
                       <tr key={row.id} className="hover:bg-neutral-50 transition">
                         <td className="text-neutral-600 text-sm p-4">{formatDate(row.dateOfSale)}</td>
-                        <td className="text-neutral-900 text-sm font-medium p-4">
-                          <div>{row.secName}</div>
-                          <div className="text-xs text-neutral-500">{row.secPhone}</div>
-                        </td>
                         <td className="text-neutral-900 text-sm p-4">
                           <div>{row.storeName}</div>
                           {row.storeCity && <div className="text-xs text-neutral-500">{row.storeCity}</div>}
@@ -186,9 +235,9 @@ export default function ReportPage() {
           <button onClick={() => setActiveTab('spot')} className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'spot' ? 'bg-blue-600 text-white shadow-lg' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}>Spot Report</button>
         </div>
         <div className="flex items-center gap-4">
-          <input type="text" placeholder="Filter by Plan Type" value={planFilter} onChange={(e) => setPlanFilter(e.target.value)} className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48" />
-          <input type="text" placeholder="Filter by Store" value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)} className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64" />
-          <input type="text" placeholder="Filter by Device" value={deviceFilter} onChange={(e) => setDeviceFilter(e.target.value)} className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-56" />
+          <input type="text" placeholder="Filter by Plan Type" value={planSearch} onChange={(e) => setPlanSearch(e.target.value)} className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48" />
+          <input type="text" placeholder="Filter by Store" value={storeSearch} onChange={(e) => setStoreSearch(e.target.value)} className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64" />
+          <input type="text" placeholder="Filter by Device" value={deviceSearch} onChange={(e) => setDeviceSearch(e.target.value)} className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-56" />
         </div>
       </header>
       {activeTab === 'monthly' && renderContent()}

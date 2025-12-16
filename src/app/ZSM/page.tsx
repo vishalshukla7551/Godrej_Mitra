@@ -48,5 +48,5 @@ export default function ZSMPage() {
     { title: 'Store Settings', description: 'Manage your store configuration', href: '/ZSM/profile', badge: 'Configure', color: 'orange' as const, icon: <SettingsIcon /> },
   ];
 
-  return <ChristmasDashboard userName={zsmName} loading={loading} cards={cards} />;
+  return <ChristmasDashboard userName={zsmName} loading={loading} cards={cards} hideSanta={true} />;
 }

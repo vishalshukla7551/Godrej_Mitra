@@ -39,9 +39,9 @@ export default function ReportPage() {
   const [activeTab, setActiveTab] = useState<ReportTab>('spot');
   
   // Text values actually sent to the API as filters
-  const [planFilter, setPlanFilter] = useState("");
-  const [storeFilter, setStoreFilter] = useState("");
-  const [deviceFilter, setDeviceFilter] = useState("");
+  const [planSearch, setPlanSearch] = useState("");
+  const [storeSearch, setStoreSearch] = useState("");
+  const [deviceSearch, setDeviceSearch] = useState("");
 
   // Dropdown state
   const [showPlanDropdown, setShowPlanDropdown] = useState(false);
@@ -71,42 +71,100 @@ export default function ReportPage() {
       setLoading(true);
       setError(null);
       
-      const params = new URLSearchParams({
-        ...(planFilter && { planFilter }),
-        ...(storeFilter && { storeFilter }),
-        ...(deviceFilter && { deviceFilter })
-      });
-
-      const response = await fetch(`/api/zbm/report?${params}`);
+      const params = new URLSearchParams();
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch data');
+      // Use different parameter names based on the API
+      if (activeTab === 'monthly') {
+        if (planSearch) {
+          params.append('planType', planSearch.includes('_') ? planSearch : planSearch + '_1_YR');
+        }
+        if (storeSearch) {
+          params.append('store', storeSearch);
+        }
+        if (deviceSearch) {
+          params.append('device', deviceSearch);
+        }
+      } else {
+        if (planSearch) {
+          params.append('planFilter', planSearch);
+        }
+        if (storeSearch) {
+          params.append('storeFilter', storeSearch);
+        }
+        if (deviceSearch) {
+          params.append('deviceFilter', deviceSearch);
+        }
       }
 
-      const result: ApiResponse = await response.json();
+      // Use different API endpoints based on active tab
+      const endpoint = activeTab === 'monthly' ? '/api/zbm/monthly-report' : '/api/zbm/report';
+      const response = await fetch(`${endpoint}?${params}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Failed to fetch data (${response.status}): ${errorData.error || response.statusText}`);
+      }
+
+      const result = await response.json();
       
       if (result.success) {
-        setData(result.data.reports);
-        setSummary(result.data.summary);
-
-        // On initial load, derive unique filter options for the dropdowns
-        if (!filtersInitialized) {
-          const reports = result.data.reports;
-
-          const uniquePlans = Array.from(
-            new Set(reports.map((r) => r.planType))
-          );
-          const uniqueStores = Array.from(
-            new Set(reports.map((r) => r.storeName))
-          );
-          const uniqueDevices = Array.from(
-            new Set(reports.map((r) => r.deviceName))
-          );
-
+        if (activeTab === 'monthly') {
+          // Handle monthly report API response structure
+          const monthlyReports = result.data.reports.map((r: any) => ({
+            id: r.id,
+            dateOfSale: r.dateOfSale,
+            secId: r.secId || 'N/A',
+            secName: r.secName,
+            secPhone: r.secPhone,
+            storeName: r.storeName,
+            storeCity: r.storeCity,
+            deviceName: r.deviceName,
+            deviceCategory: r.deviceCategory,
+            planType: r.planType,
+            imei: r.imei,
+            incentive: 0, // Monthly reports don't have incentive amounts
+            isPaid: false
+          }));
+          setData(monthlyReports);
+          setSummary({
+            activeStores: result.data.summary.uniqueStores || 0,
+            activeSECs: 0, // Monthly API doesn't track this
+            totalReports: result.data.summary.totalReports || 0,
+            paidCount: 0,
+            unpaidCount: 0
+          });
+          
+          // Extract filter options from monthly API
+          const uniquePlans = (result.data.filters?.availablePlans || []) as string[];
+          const uniqueStores = (result.data.filters?.availableStores || []) as string[];
+          const uniqueDevices = (result.data.filters?.availableDevices || []) as string[];
           setPlanOptions(uniquePlans);
           setStoreOptions(uniqueStores);
           setDeviceOptions(uniqueDevices);
-          setFiltersInitialized(true);
+        } else {
+          // Handle spot report API response structure (existing)
+          setData(result.data.reports);
+          setSummary(result.data.summary);
+
+          // On initial load, derive unique filter options for the dropdowns
+          if (!filtersInitialized) {
+            const reports = result.data.reports;
+
+            const uniquePlans = Array.from(
+              new Set(reports.map((r: any) => r.planType))
+            ) as string[];
+            const uniqueStores = Array.from(
+              new Set(reports.map((r: any) => r.storeName))
+            ) as string[];
+            const uniqueDevices = Array.from(
+              new Set(reports.map((r: any) => r.deviceName))
+            ) as string[];
+
+            setPlanOptions(uniquePlans);
+            setStoreOptions(uniqueStores);
+            setDeviceOptions(uniqueDevices);
+            setFiltersInitialized(true);
+          }
         }
       } else {
         throw new Error('API returned error');
@@ -124,7 +182,7 @@ export default function ReportPage() {
   // Fetch data on component mount and when filters change
   useEffect(() => {
     fetchData();
-  }, [planFilter, storeFilter, deviceFilter]);
+  }, [activeTab, planSearch, storeSearch, deviceSearch]);
 
   const formatDate = (isoString: string) => {
     if (!isoString) return 'N/A';
@@ -223,8 +281,8 @@ export default function ReportPage() {
             <input
               type="text"
               placeholder="Select Plan Type"
-              value={planFilter}
-              onChange={(e) => setPlanFilter(e.target.value)}
+              value={planSearch}
+              onChange={(e) => setPlanSearch(e.target.value)}
               onFocus={() => setShowPlanDropdown(true)}
               onBlur={() => setTimeout(() => setShowPlanDropdown(false), 200)}
               className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-neutral-750 transition w-48"
@@ -246,13 +304,13 @@ export default function ReportPage() {
               <div className="absolute z-10 mt-1 w-full bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg max-h-60 overflow-auto">
                 {planOptions
                   .filter((plan) =>
-                    plan.toLowerCase().includes(planFilter.toLowerCase())
+                    plan.toLowerCase().includes(planSearch.toLowerCase())
                   )
                   .map((plan) => (
                     <div
                       key={plan}
                       onMouseDown={() => {
-                        setPlanFilter(plan);
+                        setPlanSearch(plan);
                         setShowPlanDropdown(false);
                       }}
                       className="px-4 py-2 text-sm text-white hover:bg-neutral-700 cursor-pointer"
@@ -269,8 +327,8 @@ export default function ReportPage() {
             <input
               type="text"
               placeholder="Select Store"
-              value={storeFilter}
-              onChange={(e) => setStoreFilter(e.target.value)}
+              value={storeSearch}
+              onChange={(e) => setStoreSearch(e.target.value)}
               onFocus={() => setShowStoreDropdown(true)}
               onBlur={() => setTimeout(() => setShowStoreDropdown(false), 200)}
               className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 hover:bg-neutral-750 transition w-64"
@@ -292,13 +350,13 @@ export default function ReportPage() {
               <div className="absolute z-10 mt-1 w-full bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg max-h-60 overflow-auto">
                 {storeOptions
                   .filter((store) =>
-                    store.toLowerCase().includes(storeFilter.toLowerCase())
+                    store.toLowerCase().includes(storeSearch.toLowerCase())
                   )
                   .map((store) => (
                     <div
                       key={store}
                       onMouseDown={() => {
-                        setStoreFilter(store);
+                        setStoreSearch(store);
                         setShowStoreDropdown(false);
                       }}
                       className="px-4 py-2 text-sm text-white hover:bg-neutral-700 cursor-pointer"
@@ -315,8 +373,8 @@ export default function ReportPage() {
             <input
               type="text"
               placeholder="Select Device"
-              value={deviceFilter}
-              onChange={(e) => setDeviceFilter(e.target.value)}
+              value={deviceSearch}
+              onChange={(e) => setDeviceSearch(e.target.value)}
               onFocus={() => setShowDeviceDropdown(true)}
               onBlur={() => setTimeout(() => setShowDeviceDropdown(false), 200)}
               className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 hover:bg-neutral-750 transition w-56"
@@ -338,13 +396,13 @@ export default function ReportPage() {
               <div className="absolute z-10 mt-1 w-full bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg max-h-60 overflow-auto">
                 {deviceOptions
                   .filter((device) =>
-                    device.toLowerCase().includes(deviceFilter.toLowerCase())
+                    device.toLowerCase().includes(deviceSearch.toLowerCase())
                   )
                   .map((device) => (
                     <div
                       key={device}
                       onMouseDown={() => {
-                        setDeviceFilter(device);
+                        setDeviceSearch(device);
                         setShowDeviceDropdown(false);
                       }}
                       className="px-4 py-2 text-sm text-white hover:bg-neutral-700 cursor-pointer"
@@ -408,7 +466,6 @@ export default function ReportPage() {
                   <thead className="bg-neutral-50 border-b border-neutral-200">
                     <tr>
                       <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Date of Sale</th>
-                      <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">SEC ID</th>
                       <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Store Name</th>
                       <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Device Name</th>
                       <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Plan Type</th>
@@ -418,7 +475,7 @@ export default function ReportPage() {
                   <tbody className="divide-y divide-neutral-100">
                     {data.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-neutral-500">
+                        <td colSpan={5} className="p-8 text-center text-neutral-500">
                           No sales reports found matching your criteria.
                         </td>
                       </tr>
@@ -426,10 +483,6 @@ export default function ReportPage() {
                       data.map((row) => (
                         <tr key={row.id} className="hover:bg-neutral-50 transition">
                           <td className="text-neutral-600 text-sm p-4">{formatDate(row.dateOfSale)}</td>
-                          <td className="text-neutral-900 text-sm font-medium p-4">
-                            <div>{row.secName}</div>
-                            <div className="text-neutral-500 text-xs">{row.secPhone}</div>
-                          </td>
                           <td className="text-neutral-900 text-sm p-4">
                             <div>{row.storeName}</div>
                             {row.storeCity && <div className="text-neutral-500 text-xs">{row.storeCity}</div>}
