@@ -3,28 +3,28 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 import { Role } from '@prisma/client';
 
-// GET /api/zsm/kyc/info
-// Get KYC information for the authenticated ZSM user
+// GET /api/zse/kyc/info
+// Get KYC information for the authenticated ZSE user
 export async function GET(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== ('ZSM' as Role)) {
+    if (!authUser || authUser.role !== ('ZSE' as Role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Find the ZSM user
+    // Find the ZSE user
     const user = await prisma.user.findUnique({
       where: { id: authUser.id },
       include: {
-        zsmProfile: true
+        zseProfile: true
       }
     });
 
-    if (!user || !user.zsmProfile) {
+    if (!user || !user.zseProfile) {
       return NextResponse.json(
-        { error: 'ZSM profile not found' },
+        { error: 'ZSE profile not found' },
         { status: 404 }
       );
     }
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       panVerifiedAt: metadata?.panVerifiedAt || null
     });
   } catch (error) {
-    console.error('Error in GET /api/zsm/kyc/info', error);
+    console.error('Error in GET /api/zse/kyc/info', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

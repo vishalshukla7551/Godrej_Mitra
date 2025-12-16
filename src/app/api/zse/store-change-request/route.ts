@@ -7,19 +7,19 @@ export async function GET(request: NextRequest) {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
     
-    if (!authUser || authUser.role !== 'ZSM') {
+    if (!authUser || authUser.role !== 'ZSE') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
       where: { id: authUser.id },
       include: {
-        zsmProfile: true
+        zseProfile: true
       }
     });
 
-    if (!user || !user.zsmProfile) {
-      return NextResponse.json({ success: false, error: 'ZSM not found' }, { status: 404 });
+    if (!user || !user.zseProfile) {
+      return NextResponse.json({ success: false, error: 'ZSE not found' }, { status: 404 });
     }
 
     // Check if there's a pending store change request in metadata
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
     
-    if (!authUser || authUser.role !== 'ZSM') {
+    if (!authUser || authUser.role !== 'ZSE') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -58,12 +58,12 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { id: authUser.id },
       include: {
-        zsmProfile: true
+        zseProfile: true
       }
     });
 
-    if (!user || !user.zsmProfile) {
-      return NextResponse.json({ success: false, error: 'ZSM not found' }, { status: 404 });
+    if (!user || !user.zseProfile) {
+      return NextResponse.json({ success: false, error: 'ZSE not found' }, { status: 404 });
     }
 
     // Check if there's already a pending request (only block if PENDING)
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const currentStoreIds: string[] = []; // ZSM manages stores by region, not specific store IDs
+    const currentStoreIds: string[] = []; // ZSE manages stores by region, not specific store IDs
 
     // Verify that all requested stores exist
     const requestedStores = await prisma.store.findMany({

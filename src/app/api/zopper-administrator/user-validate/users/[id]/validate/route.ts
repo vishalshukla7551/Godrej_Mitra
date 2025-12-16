@@ -35,9 +35,9 @@ export async function POST(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    if (!['ABM', 'ASE', 'ZBM', 'ZSM'].includes(user.role as any)) {
+    if (!['ABM', 'ASE', 'ZBM', 'ZSE'].includes(user.role as any)) {
       return NextResponse.json(
-        { error: 'Only ABM/ASE/ZBM/ZSM users are managed here' },
+        { error: 'Only ABM/ASE/ZBM/ZSE users are managed here' },
         { status: 400 },
       );
     }
@@ -75,7 +75,7 @@ export async function POST(
     const isValidObjectId = (id: string) => /^[0-9a-fA-F]{24}$/.test(id);
     const validManagerId = managerId && isValidObjectId(managerId) ? managerId : undefined;
 
-    // For ABM/ASE, managerId is required because zbmId/zsmId is non-nullable in Prisma schema
+    // For ABM/ASE, managerId is required because zbmId/zseId is non-nullable in Prisma schema
     if ((user.role === 'ABM' || user.role === 'ASE') && !validManagerId) {
       return NextResponse.json(
         { error: 'Manager selection is required for ABM/ASE before approval.' },
@@ -102,7 +102,7 @@ export async function POST(
             fullName,
             phone,
             storeIds,
-            zsmId: validManagerId!,
+            zseId: validManagerId!,
           },
         });
       } else if (user.role === 'ZBM') {
@@ -114,8 +114,8 @@ export async function POST(
             region: finalMetadata.region || null,
           },
         });
-      } else if (user.role === 'ZSM') {
-        await tx.zSM.create({
+      } else if (user.role === 'ZSE') {
+        await tx.zSE.create({
           data: {
             userId: user.id,
             fullName,

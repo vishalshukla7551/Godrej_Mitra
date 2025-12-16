@@ -11,7 +11,7 @@ enum Role {
   ABM
   ASE
   ZBM
-  ZSM
+  ZSE
   SEC
   SAMSUNG_ADMINISTRATOR
   ZOPPER_ADMINISTRATOR
@@ -187,7 +187,7 @@ model User {
   abmProfile          ABM?          @relation("UserABM")
   aseProfile          ASE?          @relation("UserASE")
   zbmProfile          ZBM?          @relation("UserZBM")
-  zsmProfile          ZSM?          @relation("UserZSM")
+  zseProfile          ZSE?          @relation("UserZSE")
   samsungAdminProfile SamsungAdmin? @relation("UserSamsungAdmin")
   zopperAdminProfile  ZopperAdmin?  @relation("UserZopperAdmin")
 
@@ -219,9 +219,10 @@ model ASE {
   phone    String
 
   storeIds String[]
-  zsmId    String   @db.ObjectId
+  zseId    String   @db.ObjectId
 
   user User @relation("UserASE", fields: [userId], references: [id], onDelete: Cascade)
+  zse  ZSE  @relation("ZSEToASE", fields: [zseId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -242,7 +243,7 @@ model ZBM {
   updatedAt DateTime @updatedAt
 }
 
-model ZSM {
+model ZSE {
   id     String @id @default(auto()) @map("_id") @db.ObjectId
   userId String @unique @db.ObjectId
 
@@ -251,10 +252,13 @@ model ZSM {
 
   region   String?
 
-  user User @relation("UserZSM", fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation("UserZSE", fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Relationships
+  ases ASE[] @relation("ZSEToASE")
 }
 
 model SEC {

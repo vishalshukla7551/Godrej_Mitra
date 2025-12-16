@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
     
-    if (!authUser || authUser.role !== 'ZSM') {
+    if (!authUser || authUser.role !== 'ZSE') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 

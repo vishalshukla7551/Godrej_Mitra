@@ -6,8 +6,8 @@ export function getHomePathForRole(role: string): string {
       return '/ASE';
     case 'ZBM':
       return '/ZBM';
-    case 'ZSM':
-      return '/ZSM';
+    case 'ZSE':
+      return '/ZSE';
     case 'SEC':
       return '/SEC/home';
     case 'SAMSUNG_ADMINISTRATOR':

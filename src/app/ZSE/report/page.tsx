@@ -69,7 +69,7 @@ export default function ReportPage() {
         params.append('deviceFilter', deviceSearch);
       }
 
-      const response = await fetch(`/api/zsm/report?${params.toString()}`);
+      const response = await fetch(`/api/zse/report?${params.toString()}`);
       const result = await response.json();
 
       if (result.success) {

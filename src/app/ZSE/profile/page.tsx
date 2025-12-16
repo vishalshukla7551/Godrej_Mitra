@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { clientLogout } from '@/lib/clientLogout';
 
-interface ZSMProfileApiResponse {
+interface ZSEProfileApiResponse {
   success: boolean;
   data?: {
-    zsm: {
+    zse: {
       id: string;
       fullName: string;
       phone: string;
@@ -39,7 +39,7 @@ interface AllStoresResponse {
   };
 }
 
-export default function ZSMProfilePage() {
+export default function ZSEProfilePage() {
   const [formData, setFormData] = useState({
     // Personal Details
     fullName: '',
@@ -47,14 +47,14 @@ export default function ZSMProfilePage() {
     email: '',
     dateOfBirth: '',
     
-    // Store Details (prefilled from mapped Store for this ZSM)
+    // Store Details (prefilled from mapped Store for this ZSE)
     storeName: '',
     storeAddress: '',
     storeCategory: '',
     
-    // Agency & ZSM
+    // Agency & ZSE
     agencyName: '',
-    zsmCode: '',
+    zseCode: '',
     referralCode: '',
     
     // Banking Details
@@ -85,7 +85,7 @@ export default function ZSMProfilePage() {
 
   const fetchKycInfo = async () => {
     try {
-      const response = await fetch('/api/zsm/kyc/info');
+      const response = await fetch('/api/zse/kyc/info');
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.hasKycInfo) {
@@ -102,17 +102,17 @@ export default function ZSMProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch('/api/zsm/profile');
+        const res = await fetch('/api/zse/profile');
         if (!res.ok) {
-          throw new Error('Failed to load ZSM profile');
+          throw new Error('Failed to load ZSE profile');
         }
 
-        const json = (await res.json()) as ZSMProfileApiResponse;
+        const json = (await res.json()) as ZSEProfileApiResponse;
         if (!json.success || !json.data) {
-          throw new Error(json.error || 'Failed to load ZSM profile');
+          throw new Error(json.error || 'Failed to load ZSE profile');
         }
 
-        const { zsm, stores: apiStores } = json.data;
+        const { zse, stores: apiStores } = json.data;
 
         // Save all mapped stores
         setStores(apiStores || []);
@@ -123,9 +123,9 @@ export default function ZSMProfilePage() {
 
         setFormData(prev => ({
           ...prev,
-          // personal details we know from ZSM profile
-          fullName: zsm.fullName || prev.fullName,
-          phoneNumber: zsm.phone || prev.phoneNumber,
+          // personal details we know from ZSE profile
+          fullName: zse.fullName || prev.fullName,
+          phoneNumber: zse.phone || prev.phoneNumber,
           // show all mapped store names in a single read-only field
           storeName: allStoreNames || primaryStore?.name || '',
           storeAddress: primaryStore
@@ -134,7 +134,7 @@ export default function ZSMProfilePage() {
         }));
 
         // Fetch pending store change request
-        const requestRes = await fetch('/api/zsm/store-change-request');
+        const requestRes = await fetch('/api/zse/store-change-request');
         if (requestRes.ok) {
           const requestJson = await requestRes.json();
           if (requestJson.success && requestJson.data.pendingRequest) {
@@ -163,7 +163,7 @@ export default function ZSMProfilePage() {
         params.append('includeIds', selectedStoreIds.join(','));
       }
       
-      const res = await fetch(`/api/zsm/stores?${params}`);
+      const res = await fetch(`/api/zse/stores?${params}`);
       if (res.ok) {
         const json: AllStoresResponse = await res.json();
         if (json.success) {
@@ -187,7 +187,7 @@ export default function ZSMProfilePage() {
     }
     
     try {
-      const res = await fetch(`/api/zsm/stores?${params}`);
+      const res = await fetch(`/api/zse/stores?${params}`);
       if (res.ok) {
         const json: AllStoresResponse = await res.json();
         if (json.success) {
@@ -215,7 +215,7 @@ export default function ZSMProfilePage() {
 
     setSubmittingRequest(true);
     try {
-      const res = await fetch('/api/zsm/store-change-request', {
+      const res = await fetch('/api/zse/store-change-request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -233,7 +233,7 @@ export default function ZSMProfilePage() {
         setChangeReason('');
         setSelectedStoreIds([]);
         // Refresh pending request
-        const requestRes = await fetch('/api/zsm/store-change-request');
+        const requestRes = await fetch('/api/zse/store-change-request');
         if (requestRes.ok) {
           const requestJson = await requestRes.json();
           if (requestJson.success && requestJson.data.pendingRequest) {
@@ -264,7 +264,7 @@ export default function ZSMProfilePage() {
     try {
       setVerifyingPan(true);
 
-      const response = await fetch('/api/zsm/kyc/verify-pan', {
+      const response = await fetch('/api/zse/kyc/verify-pan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -601,7 +601,7 @@ export default function ZSMProfilePage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Agency & ZSM</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Agency & ZSE</h2>
               </div>
               <div className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-sm font-semibold">
                 ₹1068.24
@@ -624,13 +624,13 @@ export default function ZSMProfilePage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ZSM Code
+                  ZSE Code
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter ZSM code"
-                  value={formData.zsmCode}
-                  onChange={(e) => setFormData({ ...formData, zsmCode: e.target.value })}
+                  placeholder="Enter ZSE code"
+                  value={formData.zseCode}
+                  onChange={(e) => setFormData({ ...formData, zseCode: e.target.value })}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder:text-gray-400"
                 />
               </div>

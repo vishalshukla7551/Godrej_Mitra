@@ -3,14 +3,14 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 import { Role } from '@prisma/client';
 
-// POST /api/zsm/kyc/verify-pan
-// Verifies PAN using Karza API and updates ZSM user's name
+// POST /api/zse/kyc/verify-pan
+// Verifies PAN using Karza API and updates ZSE user's name
 export async function POST(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== ('ZSM' as Role)) {
+    if (!authUser || authUser.role !== ('ZSE' as Role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -33,24 +33,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find the ZSM user
+    // Find the ZSE user
     const user = await prisma.user.findUnique({
       where: { id: authUser.id },
       include: {
-        zsmProfile: true
+        zseProfile: true
       }
     });
 
-    if (!user || !user.zsmProfile) {
+    if (!user || !user.zseProfile) {
       return NextResponse.json(
-        { error: 'ZSM profile not found' },
+        { error: 'ZSE profile not found' },
         { status: 404 }
       );
     }
 
     try {
       // Log the request details for debugging
-      console.log('Making Karza API request for ZSM:', {
+      console.log('Making Karza API request for ZSE:', {
         url: process.env.KARZA_API_URL || 'https://api.karza.in/v3/pan-profile',
         pan: pan,
         hasApiKey: !!(process.env.KARZA_API_KEY || 'AujA2Y0w0N4HdUw'),
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
       // Check if we're in mock mode for development/testing
       if (process.env.KARZA_MOCK_MODE === 'true') {
-        console.log('Using mock Karza API response for ZSM development');
+        console.log('Using mock Karza API response for ZSE development');
         
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -69,9 +69,9 @@ export async function POST(req: NextRequest) {
           requestId: "mock-request-id-" + Date.now(),
           result: {
             pan: pan,
-            name: "MOCK ZSM USER NAME",
+            name: "MOCK ZSE USER NAME",
             firstName: "MOCK",
-            middleName: "ZSM",
+            middleName: "ZSE",
             lastName: "USER",
             gender: "male",
             dob: "1990-01-01",
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
         };
         
         const panData = mockResponse;
-        console.log('Mock Karza API response for ZSM:', panData);
+        console.log('Mock Karza API response for ZSE:', panData);
         
         // Continue with the rest of the logic using mock data
         const fullName = panData.result.name;
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
           rawPanData: panData, // store full mock PAN JSON as well
         };
 
-        // Update ZSM user's name and store KYC info in User metadata
+        // Update ZSE user's name and store KYC info in User metadata
         const updatedMetadata = {
           ...(user.metadata as any || {}),
           kycInfo: kycInfo,
@@ -113,9 +113,9 @@ export async function POST(req: NextRequest) {
           panVerifiedAt: new Date().toISOString()
         };
 
-        // Update ZSM profile name and User metadata
-        await prisma.zSM.update({
-          where: { id: user.zsmProfile.id },
+        // Update ZSE profile name and User metadata
+        await prisma.zSE.update({
+          where: { id: user.zseProfile.id },
           data: {
             fullName: cleanedFullName
           }
@@ -134,9 +134,9 @@ export async function POST(req: NextRequest) {
           panVerified: true,
           fullName: cleanedFullName,
           kycInfo: kycInfo,
-          zsmUser: {
-            id: user.zsmProfile.id,
-            phone: user.zsmProfile.phone,
+          zseUser: {
+            id: user.zseProfile.id,
+            phone: user.zseProfile.phone,
             fullName: cleanedFullName,
           },
           mockMode: true
@@ -156,11 +156,11 @@ export async function POST(req: NextRequest) {
         }),
       });
 
-      console.log('Karza API response status for ZSM:', karzaResponse.status);
+      console.log('Karza API response status for ZSE:', karzaResponse.status);
 
       if (!karzaResponse.ok) {
         const errorData = await karzaResponse.json().catch(() => null);
-        console.error('Karza API error response for ZSM:', errorData);
+        console.error('Karza API error response for ZSE:', errorData);
         return NextResponse.json(
           { 
             error: 'PAN verification failed', 
@@ -173,11 +173,11 @@ export async function POST(req: NextRequest) {
       }
 
       const panData = await karzaResponse.json();
-      console.log('Karza API success response for ZSM:', panData);
+      console.log('Karza API success response for ZSE:', panData);
 
       // Check if the API response is successful
       if (!panData.result) {
-        console.error('No result in Karza API response for ZSM:', panData);
+        console.error('No result in Karza API response for ZSE:', panData);
         return NextResponse.json(
           { error: 'Invalid PAN verification response', response: panData },
           { status: 400 }
@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
         rawPanData: panData, // store full PAN JSON as well
       };
 
-      // Update ZSM user's name and store KYC info in User metadata
+      // Update ZSE user's name and store KYC info in User metadata
       const updatedMetadata = {
         ...(user.metadata as any || {}),
         kycInfo: kycInfo,
@@ -214,9 +214,9 @@ export async function POST(req: NextRequest) {
         panVerifiedAt: new Date().toISOString()
       };
 
-      // Update ZSM profile name and User metadata
-      await prisma.zSM.update({
-        where: { id: user.zsmProfile.id },
+      // Update ZSE profile name and User metadata
+      await prisma.zSE.update({
+        where: { id: user.zseProfile.id },
         data: {
           fullName: cleanedFullName
         }
@@ -235,14 +235,14 @@ export async function POST(req: NextRequest) {
         panVerified: true,
         fullName: cleanedFullName,
         kycInfo: kycInfo,
-        zsmUser: {
-          id: user.zsmProfile.id,
-          phone: user.zsmProfile.phone,
+        zseUser: {
+          id: user.zseProfile.id,
+          phone: user.zseProfile.phone,
           fullName: cleanedFullName,
         },
       });
     } catch (apiError) {
-      console.error('Karza API Error for ZSM:', apiError);
+      console.error('Karza API Error for ZSE:', apiError);
       
       // Provide more detailed error information
       let errorMessage = 'PAN verification service unavailable';
@@ -267,7 +267,7 @@ export async function POST(req: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Error in POST /api/zsm/kyc/verify-pan', error);
+    console.error('Error in POST /api/zse/kyc/verify-pan', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

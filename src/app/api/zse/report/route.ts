@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
-// GET /api/zsm/report
+// GET /api/zse/report
 export async function GET(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== 'ZSM') {
+    if (!authUser || authUser.role !== 'ZSE') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get ZSM profile
-    const zsmProfile = await prisma.zSM.findUnique({
+    // Get ZSE profile
+    const zseProfile = await prisma.zSE.findUnique({
       where: { userId: authUser.id },
       select: {
         id: true,
@@ -21,13 +21,13 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    if (!zsmProfile) {
-      return NextResponse.json({ error: 'ZSM profile not found' }, { status: 404 });
+    if (!zseProfile) {
+      return NextResponse.json({ error: 'ZSE profile not found' }, { status: 404 });
     }
 
-    // Get all ASEs under this ZSM
+    // Get all ASEs under this ZSE
     const aseProfiles = await prisma.aSE.findMany({
-      where: { zsmId: zsmProfile.id },
+      where: { zseId: zseProfile.id },
       select: {
         storeIds: true
       }
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     const storeFilter = searchParams.get('storeFilter') || '';
     const deviceFilter = searchParams.get('deviceFilter') || '';
 
-    // Build where clause - only for ZSM's stores (via ASEs)
+    // Build where clause - only for ZSE's stores (via ASEs)
     const where: any = {
       storeId: {
         in: allStoreIds
@@ -160,7 +160,7 @@ export async function GET(req: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error in GET /api/zsm/report', error);
+    console.error('Error in GET /api/zse/report', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

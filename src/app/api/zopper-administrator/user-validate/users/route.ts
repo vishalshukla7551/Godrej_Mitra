@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
 // GET /api/user-validate/users?status=PENDING|APPROVED|BLOCKED
-// Lists non-admin users (ABM/ASE/ZBM/ZSM) for the User Validation page.
+// Lists non-admin users (ABM/ASE/ZBM/ZSE) for the User Validation page.
 // It also flattens role-specific profile info and metadata into top-level fields
 // so the frontend can easily render name / phone / email / mappings.
 export async function GET(req: Request) {
@@ -24,12 +24,12 @@ export async function GET(req: Request) {
       );
     }
 
-    const [users, zbms, zsms] = await Promise.all([
+    const [users, zbms, zses] = await Promise.all([
       prisma.user.findMany({
         where: {
           validation: status as any,
           role: {
-            in: ['ABM', 'ASE', 'ZBM', 'ZSM'],
+            in: ['ABM', 'ASE', 'ZBM', 'ZSE'],
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -37,18 +37,18 @@ export async function GET(req: Request) {
           abmProfile: true,
           aseProfile: true,
           zbmProfile: true,
-          zsmProfile: true,
+          zseProfile: true,
         },
       } as any),
       prisma.zBM.findMany({ select: { id: true, fullName: true, region: true } }),
-      prisma.zSM.findMany({ select: { id: true, fullName: true, region: true } }),
+      prisma.zSE.findMany({ select: { id: true, fullName: true, region: true } }),
     ]);
 
     const zbmMap = new Map(
       zbms.map((z) => [z.id, `${z.fullName}${z.region ? ` (${z.region})` : ''}`]),
     );
-    const zsmMap = new Map(
-      zsms.map((z) => [z.id, `${z.fullName}${z.region ? ` (${z.region})` : ''}`]),
+    const zseMap = new Map(
+      zses.map((z) => [z.id, `${z.fullName}${z.region ? ` (${z.region})` : ''}`]),
     );
 
     const safeUsers = users.map((u: any) => {
@@ -58,7 +58,7 @@ export async function GET(req: Request) {
 
       // Derive display fields from metadata first (for PENDING users),
       // then from role-specific profile models (for APPROVED users).
-      const profile = u.abmProfile || u.aseProfile || u.zbmProfile || u.zsmProfile || {};
+      const profile = u.abmProfile || u.aseProfile || u.zbmProfile || u.zseProfile || {};
 
       const fullName = metadata.fullName || profile.fullName || null;
       const phoneNumber = metadata.phoneNumber || metadata.phone || profile.phone || null;
@@ -74,10 +74,10 @@ export async function GET(req: Request) {
 
       const managerId =
         metadata.managerId ||
-        (u.abmProfile?.zbmId ?? u.aseProfile?.zsmId ?? null);
+        (u.abmProfile?.zbmId ?? u.aseProfile?.zseId ?? null);
 
       const managerName = managerId
-        ? zbmMap.get(managerId) || zsmMap.get(managerId) || null
+        ? zbmMap.get(managerId) || zseMap.get(managerId) || null
         : null;
 
       const roleProfileId =

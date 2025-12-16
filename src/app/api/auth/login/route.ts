@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         abmProfile: true,
         aseProfile: true,
         zbmProfile: true,
-        zsmProfile: true,
+        zseProfile: true,
         samsungAdminProfile: true,
         zopperAdminProfile: true,
       },
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       anyUser.abmProfile ||
       anyUser.aseProfile ||
       anyUser.zbmProfile ||
-      anyUser.zsmProfile ||
+      anyUser.zseProfile ||
       anyUser.samsungAdminProfile ||
       anyUser.zopperAdminProfile ||
       null;

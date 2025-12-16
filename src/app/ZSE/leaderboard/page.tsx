@@ -24,7 +24,7 @@ export default function LeaderboardPage() {
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/zsm/leaderboard?period=${period}&limit=10`);
+      const response = await fetch(`/api/zse/leaderboard?period=${period}&limit=10`);
       const result = await response.json();
 
       if (result.success) {
