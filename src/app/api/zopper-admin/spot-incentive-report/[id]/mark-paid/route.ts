@@ -8,11 +8,14 @@ import { getAuthenticatedUserFromCookies } from '@/lib/auth';
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } | Promise<{ id: string }> }
 ) {
   try {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
+
+    // Normalize params (some Next versions provide params as a Promise)
+    const params = await Promise.resolve(context.params);
 
     if (!authUser || authUser.role !== 'ZOPPER_ADMINISTRATOR') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

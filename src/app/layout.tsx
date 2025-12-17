@@ -1,19 +1,8 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import { GlobalAuthInterceptor } from "@/components/GlobalAuthInterceptor";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-});
+// Google fonts removed for build-time reliability; using system fonts via CSS
 
 export const metadata: Metadata = {
   title: "SalesDost - Welcome",
@@ -29,9 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${plusJakartaSans.variable} ${inter.variable} antialiased`}
-      >
+      <body className={`antialiased`}>
         {/* Global client-side 401 handler: if any fetch returns 401, trigger logout */}
         <GlobalAuthInterceptor />
         <AuthGate>
