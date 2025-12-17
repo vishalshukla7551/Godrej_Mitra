@@ -43,7 +43,7 @@ export default function ASEPage() {
   }, []);
 
   const cards = [
-    { title: 'Incentive Wallet', description: 'Track your earnings', href: '/ASE/wallet', badge: '₹12,450 Available', color: 'green' as const, icon: <WalletIcon /> },
+    { title: 'Passbook', description: 'Track your earnings', href: '/ASE/wallet', badge: 'View History', color: 'green' as const, icon: <WalletIcon /> },
     { title: 'View Reports', description: 'Check your stores performance', href: '/ASE/report', badge: 'Analytics Ready', color: 'blue' as const, icon: <ReportIcon /> },
     { title: 'Store Settings', description: 'Manage your store configuration', href: '/ASE/profile', badge: 'Configure', color: 'orange' as const, icon: <SettingsIcon /> },
   ];

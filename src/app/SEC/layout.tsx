@@ -17,8 +17,8 @@ export default function SECLayout({
   useEffect(() => {
     if (loading || !user) return;
 
-    // Skip profile check if already on the name page
-    if (pathname === '/SEC/name') {
+    // Skip profile check if already on the onboarding page
+    if (pathname === '/SEC/onboarding') {
       setCheckingProfile(false);
       return;
     }
@@ -30,7 +30,7 @@ export default function SECLayout({
 
     // Redirect to name page if fullName or store details are missing
     if (!fullName || (!storeId && !storeName)) {
-      router.replace('/SEC/name');
+      router.replace('/SEC/onboarding');
       return;
     }
 

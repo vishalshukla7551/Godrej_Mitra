@@ -30,7 +30,7 @@ interface Summary {
 type ReportTab = 'monthly' | 'spot';
 
 export default function ReportPage() {
-  const [activeTab, setActiveTab] = useState<ReportTab>('spot');
+  const [activeTab, setActiveTab] = useState<ReportTab>('monthly');
   const [planSearch, setPlanSearch] = useState("");
   const [storeSearch, setStoreSearch] = useState("");
   const [deviceSearch, setDeviceSearch] = useState("");
@@ -127,7 +127,11 @@ export default function ReportPage() {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-IN');
+    // Parse DD/MM/YYYY format
+    const [day, month, year] = dateString.split('/').map(Number);
+    if (!day || !month || !year) return dateString; // Return as-is if parsing fails
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('en-IN');
   };
 
   const renderContent = () => (

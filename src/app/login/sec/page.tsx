@@ -163,7 +163,7 @@ export default function SECLogin() {
       // one-time name capture screen before landing on the home dashboard.
       if (data.needsName) {
         // Use window.location.href to ensure localStorage is fully written before redirect
-        window.location.href = '/SEC/name';
+        window.location.href = '/SEC/onboarding';
         return;
       }
 

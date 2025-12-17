@@ -39,7 +39,7 @@ export default function FestiveHeader({ userName = 'Guest', hideGreeting = false
 
     const pathname = window.location.pathname || '';
 
-    if (!pathname.startsWith('/SEC') || pathname === '/SEC/name') {
+    if (!pathname.startsWith('/SEC') || pathname === '/SEC/onboarding') {
       return;
     }
 
@@ -51,7 +51,7 @@ export default function FestiveHeader({ userName = 'Guest', hideGreeting = false
       const fullName = (auth?.fullName || '').trim();
 
       if (!fullName) {
-        window.location.href = '/SEC/name';
+        window.location.href = '/SEC/onboarding';
       }
     } catch {
       // ignore JSON parse errors

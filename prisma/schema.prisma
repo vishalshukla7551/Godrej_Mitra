@@ -202,7 +202,7 @@ model ABM {
   fullName String
   phone    String
 
-  storeIds String[]
+  storeIds String[] // Array of Store IDs
   zbmId    String   @db.ObjectId
 
   user User @relation("UserABM", fields: [userId], references: [id], onDelete: Cascade)
@@ -218,7 +218,7 @@ model ASE {
   fullName String
   phone    String
 
-  storeIds String[]
+  storeIds String[] // Array of Store IDs
   zseId    String   @db.ObjectId
 
   user User @relation("UserASE", fields: [userId], references: [id], onDelete: Cascade)
@@ -265,7 +265,7 @@ model SEC {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   fullName    String?
   phone       String    @unique
-  secId      String?
+  employeeId      String?  // Unique employee identifier
   email       String?
   kycInfo     Json?
   lastLoginAt DateTime?

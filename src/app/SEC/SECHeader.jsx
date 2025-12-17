@@ -32,8 +32,8 @@ export default function SECHeader() {
 
     const pathname = window.location.pathname || '';
 
-    // Only apply on SEC routes, and avoid redirect loop on the name page itself
-    if (!pathname.startsWith('/SEC') || pathname === '/SEC/name') {
+    // Only apply on SEC routes, and avoid redirect loop on the onboarding page itself
+    if (!pathname.startsWith('/SEC') || pathname === '/SEC/onboarding') {
       return;
     }
 
@@ -45,7 +45,7 @@ export default function SECHeader() {
       const fullName = (auth?.fullName || '').trim();
 
       if (!fullName) {
-        window.location.href = '/SEC/name';
+        window.location.href = '/SEC/onboarding';
       }
     } catch {
       // ignore JSON parse errors

@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
     const firstName: string | undefined = body?.firstName;
     const lastName: string | undefined = body?.lastName;
     const storeId: string | undefined = body?.storeId;
+    const employId: string | undefined = body?.employId;
 
     if (!firstName || typeof firstName !== 'string') {
       return NextResponse.json(
@@ -53,6 +54,11 @@ export async function POST(req: NextRequest) {
       updatedAt: new Date(),
     };
 
+    if (employId && typeof employId === 'string') {
+      // Prisma schema field is `employeeId`; map the incoming `employId` to it.
+      updateData.employeeId = employId.trim();
+    }
+
     // Only update store connection if storeId is provided
     if (storeId) {
       updateData.store = {
@@ -65,6 +71,11 @@ export async function POST(req: NextRequest) {
       fullName,
       lastLoginAt: new Date(),
     };
+
+    if (employId && typeof employId === 'string') {
+      // Prisma schema field is `employeeId`; map the incoming `employId` to it.
+      createData.employeeId = employId.trim();
+    }
 
     // Connect store on create if provided
     if (storeId) {
@@ -81,6 +92,7 @@ export async function POST(req: NextRequest) {
         id: true,
         phone: true,
         fullName: true,
+        employeeId: true,
         storeId: true,
         store: {
           select: {
@@ -97,6 +109,7 @@ export async function POST(req: NextRequest) {
       id: secRecord.id,
       phone: secRecord.phone,
       fullName: secRecord.fullName,
+      employId: secRecord.employeeId,
       storeId: secRecord.storeId,
       store: secRecord.store,
     });

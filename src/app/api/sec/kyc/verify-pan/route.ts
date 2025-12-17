@@ -157,7 +157,8 @@ export async function POST(req: NextRequest) {
       // Prepare KYC info to save (complete result object)
       const kycInfo = {
         ...panData.result,
-        verifiedAt: new Date().toISOString(),
+        // store verifiedAt as a Date object so Mongo stores a BSON Date (Prisma expects DateTime)
+        verifiedAt: new Date(),
         requestId: panData.requestId,
         statusCode: panData.statusCode,
         rawPanData: panData, // store full PAN JSON as well
@@ -186,6 +187,14 @@ export async function POST(req: NextRequest) {
           }
         ]
       });
+
+      // Ensure Prisma-visible `updatedAt` is a BSON Date (some older records may have string values)
+      try {
+        await prisma.sEC.update({ where: { phone }, data: { updatedAt: new Date() } });
+      } catch (e) {
+        // ignore - best effort
+        console.warn('Failed to normalize updatedAt for SEC record', e);
+      }
 
       // Get the updated record
       const updatedSec = await prisma.sEC.findUnique({
