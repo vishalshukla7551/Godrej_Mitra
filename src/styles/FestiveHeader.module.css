@@ -1,9 +1,7 @@
 .header {
   position: relative;
-  min-height: 200px;
   background: linear-gradient(180deg, #1565C0 0%, #42A5F5 60%, #64B5F6 100%);
   overflow: visible;
-  padding-top: 0;
 }
 
 /* Snowflakes */
@@ -57,7 +55,7 @@
 .content {
   position: relative;
   z-index: 100;
-  padding: 100px 16px 40px;
+  padding: 16px 16px 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -216,12 +214,8 @@
 
 /* Responsive */
 @media (max-width: 640px) {
-  .header {
-    min-height: 180px;
-  }
-  
   .content {
-    padding: 90px 12px 35px;
+    padding: 12px 12px 35px;
   }
   
   .santaHat {
