@@ -26,10 +26,7 @@ The Monthly Report APIs provide access to data from the `DailyIncentiveReport` s
 - **Access**: ZSM users only
 - **Data Scope**: All reports (region-based filtering can be added)
 
-### 5. ZBM Monthly Report
-- **Endpoint**: `GET /api/zbm/monthly-report`
-- **Access**: ZBM users only
-- **Data Scope**: All reports (region-based filtering can be added)
+
 
 ## Query Parameters
 
@@ -49,7 +46,7 @@ All endpoints support the following optional query parameters:
 {
   "success": true,
   "data": {
-    "sec/abm/ase/zsm/zbm": {
+    "sec/abm/ase/zsm": {
       "id": "user_id",
       "fullName": "User Name",
       "phone": "1234567890"

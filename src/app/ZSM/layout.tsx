@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRequireAuth } from '@/lib/clientAuth';
 
-export default function ZBMLayout({
+export default function ZSMLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { loading } = useRequireAuth(['ZBM']);
+  const { loading } = useRequireAuth(['ZSM']);
 
   if (loading) {
     return null; // or a loading spinner
@@ -73,9 +73,9 @@ export default function ZBMLayout({
           <div className="space-y-1 px-3">
             {/* Home */}
             <Link
-              href="/ZBM"
+              href="/ZSM"
               className={`w-full flex items-center space-x-2 rounded-lg py-2 px-3 select-none ${
-                isActive('/ZBM')
+                isActive('/ZSM')
                   ? 'bg-blue-600 text-white font-semibold'
                   : 'text-white hover:bg-white/5'
               }`}
@@ -101,9 +101,9 @@ export default function ZBMLayout({
 
             {/* Report */}
             <Link
-              href="/ZBM/report"
+              href="/ZSM/report"
               className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
-                isActive('/ZBM/report')
+                isActive('/ZSM/report')
                   ? 'bg-blue-600 text-white font-semibold'
                   : 'text-white hover:bg-white/5'
               }`}
@@ -137,9 +137,9 @@ export default function ZBMLayout({
 
             {/* View Leaderboard */}
             <Link
-              href="/ZBM/leaderboard"
+              href="/ZSM/leaderboard"
               className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
-                isActive('/ZBM/leaderboard')
+                isActive('/ZSM/leaderboard')
                   ? 'bg-blue-600 text-white font-semibold'
                   : 'text-white hover:bg-white/5'
               }`}
@@ -194,9 +194,9 @@ export default function ZBMLayout({
 
             {/* Profile */}
             <Link
-              href="/ZBM/profile"
+              href="/ZSM/profile"
               className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
-                isActive('/ZBM/profile')
+                isActive('/ZSM/profile')
                   ? 'bg-blue-600 text-white font-semibold'
                   : 'text-white hover:bg-white/5'
               }`}

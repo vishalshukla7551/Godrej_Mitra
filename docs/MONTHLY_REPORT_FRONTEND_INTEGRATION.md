@@ -24,13 +24,7 @@ The monthly report functionality has been successfully integrated into the front
 - **Spot API**: `/api/zsm/report` (existing)
 - **Data Source**: Monthly tab uses `DailyIncentiveReport`, Spot tab uses `SpotIncentiveReport`
 
-### 4. ZBM Report Page (`/ZBM/report`)
-- **File**: `src/app/ZBM/report/page.tsx`
-- **Monthly API**: `/api/zbm/monthly-report`
-- **Spot API**: `/api/zbm/report` (existing)
-- **Data Source**: Monthly tab uses `DailyIncentiveReport`, Spot tab uses `SpotIncentiveReport`
-
-### 5. SEC Passbook Page (`/SEC/passbook`)
+### 4. SEC Passbook Page (`/SEC/passbook`)
 - **File**: `src/app/SEC/passbook/page.tsx`
 - **API**: `/api/sec/passbook` (existing - already uses `DailyIncentiveReport`)
 - **Note**: SEC users don't have a separate report page; they use the passbook which already shows both monthly and spot data correctly
@@ -160,7 +154,7 @@ if (activeTab === 'monthly') {
 ## Testing
 
 ### 1. **Manual Testing Steps**
-1. Navigate to any role's report page (ABM/ASE/ZSM/ZBM)
+1. Navigate to any role's report page (ABM/ASE/ZSM)
 2. Verify "Monthly Report" tab loads data from monthly API
 3. Switch to "Spot Report" tab and verify it loads spot data
 4. Test filtering on both tabs
@@ -224,4 +218,4 @@ console.log('Reports count:', result.data.reports.length);
 
 The monthly report frontend integration is now complete and provides users with access to both monthly (daily incentive) and spot incentive data through a unified interface. The implementation maintains backward compatibility with existing spot report functionality while adding the new monthly report capabilities.
 
-All role-based pages (ABM, ASE, ZSM, ZBM) now have access to monthly reports from the `DailyIncentiveReport` schema, while SEC users continue to use their existing passbook which already provides the correct data from both sources.
+All role-based pages (ABM, ASE, ZSM) now have access to monthly reports from the `DailyIncentiveReport` schema, while SEC users continue to use their existing passbook which already provides the correct data from both sources.

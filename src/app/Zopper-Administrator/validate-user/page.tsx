@@ -108,7 +108,7 @@ export default function ZopperUserValidationPage() {
   const [activeTab, setActiveTab] = useState<"PENDING" | "APPROVED">("PENDING");
 
   const [storeOptions, setStoreOptions] = useState<StoreOption[]>(STORE_OPTIONS_STATIC);
-  const [zbmOptions, setZbmOptions] = useState<ManagerOption[]>([]);
+  const [zsmOptions, setZsmOptions] = useState<ManagerOption[]>([]);
   const [zseOptions, setZseOptions] = useState<ManagerOption[]>([]);
   const [pendingUsers, setPendingUsers] = useState<AdminUser[]>([]);
   const [approvedUsers, setApprovedUsers] = useState<AdminUser[]>([]);
@@ -153,7 +153,7 @@ export default function ZopperUserValidationPage() {
           label: s.name,
         }));
 
-        const zbms: ManagerOption[] = (data.zbms || []).map((z: any) => ({
+        const zsms: ManagerOption[] = (data.zsms || []).map((z: any) => ({
           id: z.id,
           label: `${z.fullName} (${z.region || "N/A"})`,
         }));
@@ -164,7 +164,7 @@ export default function ZopperUserValidationPage() {
         }));
 
         setStoreOptions(stores.length ? stores : STORE_OPTIONS_STATIC);
-        setZbmOptions(zbms);
+        setZsmOptions(zsms);
         setZseOptions(zses);
       } catch (e) {
         console.error("Failed to load master options", e);
@@ -263,7 +263,7 @@ export default function ZopperUserValidationPage() {
           const res = await fetch(`/api/zopper-administrator/user-validate/abm/${editingUser.roleProfileId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ storeIds: editStoreIds, zbmId: editManagerId || undefined }),
+            body: JSON.stringify({ storeIds: editStoreIds, zsmId: editManagerId || undefined }),
           });
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
@@ -381,7 +381,7 @@ export default function ZopperUserValidationPage() {
               {users.map((user) => {
                 const storeCount = user.storeIds?.length || 0;
                 const isExpanded = expandedStoreUserId === user.id;
-                const managerLabel = (user.role === "ABM" ? zbmOptions : zseOptions).find(
+                const managerLabel = (user.role === "ABM" ? zsmOptions : zseOptions).find(
                   (m) => m.id === user.managerId,
                 )?.label;
 
@@ -435,7 +435,7 @@ export default function ZopperUserValidationPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
-                      {user.role !== "ZBM" && user.role !== "ZSE" && (
+                      {user.role !== "ZSM" && user.role !== "ZSE" && (
                         <button
                           onClick={() => startEdit(user)}
                         disabled={actionLoadingId === user.id}
@@ -530,17 +530,17 @@ export default function ZopperUserValidationPage() {
           {(editingUser.role === "ABM" || editingUser.role === "ASE") && (
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-900">
-                  {editingUser.role === "ABM" ? "Select ZBM" : "Select ZSE"}
+                  {editingUser.role === "ABM" ? "Select ZSM" : "Select ZSE"}
                 </label>
                 <input
                   type="text"
                   value={editManagerSearch}
                   onChange={(e) => setEditManagerSearch(e.target.value)}
-                  placeholder={editingUser.role === "ABM" ? "Search ZBM..." : "Search ZSE..."}
+                  placeholder={editingUser.role === "ABM" ? "Search ZSM..." : "Search ZSE..."}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100">
-                  {(editingUser.role === "ABM" ? zbmOptions : zseOptions)
+                  {(editingUser.role === "ABM" ? zsmOptions : zseOptions)
                     .filter((manager) =>
                       manager.label.toLowerCase().includes(editManagerSearch.toLowerCase()),
                     )

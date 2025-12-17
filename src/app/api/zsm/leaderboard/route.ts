@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
 /**
- * GET /api/zbm/leaderboard
- * Returns top stores, devices, plans for ZBM's region (via ABM's assigned stores)
+ * GET /api/zsm/leaderboard
+ * Returns top stores, devices, plans for ZSM's region (via ABM's assigned stores)
  * - period query: 'week' | 'month' | 'all' (default: 'month')
  * - limit query: number (default: 10)
  */
@@ -13,12 +13,12 @@ export async function GET(req: NextRequest) {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== 'ZBM') {
+    if (!authUser || authUser.role !== 'ZSM') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get ZBM profile
-    const zbmProfile = await prisma.zBM.findUnique({
+    // Get ZSM profile
+    const zsmProfile = await prisma.zSM.findUnique({
       where: { userId: authUser.id },
       select: {
         id: true,
@@ -26,13 +26,13 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    if (!zbmProfile) {
-      return NextResponse.json({ error: 'ZBM profile not found' }, { status: 404 });
+    if (!zsmProfile) {
+      return NextResponse.json({ error: 'ZSM profile not found' }, { status: 404 });
     }
 
-    // Get all ABMs under this ZBM
+    // Get all ABMs under this ZSM
     const abmProfiles = await prisma.aBM.findMany({
-      where: { zbmId: zbmProfile.id },
+      where: { zsmId: zsmProfile.id },
       select: {
         storeIds: true
       }
@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
         break;
     }
 
-    // Get active campaigns for ZBM's stores
+    // Get active campaigns for ZSM's stores
     const activeCampaigns = await prisma.spotIncentiveCampaign.findMany({
       where: {
         active: true,
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Get sales reports for ZBM's stores within the period
+    // Get sales reports for ZSM's stores within the period
     const salesReports = await prisma.spotIncentiveReport.findMany({
       where: {
         isCompaignActive: true,
@@ -251,7 +251,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/zbm/leaderboard', error);
+    console.error('Error in GET /api/zsm/leaderboard', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

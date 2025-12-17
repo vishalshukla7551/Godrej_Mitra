@@ -10,7 +10,7 @@ datasource db {
 enum Role {
   ABM
   ASE
-  ZBM
+  ZSM
   ZSE
   SEC
   SAMSUNG_ADMINISTRATOR
@@ -186,7 +186,7 @@ model User {
 
   abmProfile          ABM?          @relation("UserABM")
   aseProfile          ASE?          @relation("UserASE")
-  zbmProfile          ZBM?          @relation("UserZBM")
+  zsmProfile          ZSM?          @relation("UserZSM")
   zseProfile          ZSE?          @relation("UserZSE")
   samsungAdminProfile SamsungAdmin? @relation("UserSamsungAdmin")
   zopperAdminProfile  ZopperAdmin?  @relation("UserZopperAdmin")
@@ -203,7 +203,7 @@ model ABM {
   phone    String
 
   storeIds String[]
-  zbmId    String   @db.ObjectId
+  zsmId    String   @db.ObjectId
 
   user User @relation("UserABM", fields: [userId], references: [id], onDelete: Cascade)
 
@@ -228,7 +228,7 @@ model ASE {
   updatedAt DateTime @updatedAt
 }
 
-model ZBM {
+model ZSM {
   id     String @id @default(auto()) @map("_id") @db.ObjectId
   userId String @unique @db.ObjectId
 
@@ -237,7 +237,7 @@ model ZBM {
 
   region String?
 
-  user User @relation("UserZBM", fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation("UserZSM", fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

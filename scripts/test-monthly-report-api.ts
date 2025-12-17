@@ -10,7 +10,6 @@ const testEndpoints = [
   '/api/abm/monthly-report', 
   '/api/ase/monthly-report',
   '/api/zsm/monthly-report',
-  '/api/zbm/monthly-report',
 ];
 
 async function testMonthlyReportAPI() {

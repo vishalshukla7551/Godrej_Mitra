@@ -6,7 +6,7 @@ React was throwing an error: "The final argument passed to useEffect changed siz
 ## Root Cause
 The report pages had inconsistent variable names for filter states:
 - **ABM & ZSM**: Used `planSearch`, `storeSearch`, `deviceSearch`
-- **ASE & ZBM**: Used `planFilter`, `storeFilter`, `deviceFilter`
+- **ASE & ZSM**: Used `planFilter`, `storeFilter`, `deviceFilter`
 
 This inconsistency caused React to detect changing dependency array sizes when switching between pages or during renders.
 
@@ -44,7 +44,7 @@ Fixed all references in:
 - Changed `deviceFilter` → `deviceSearch`
 - Updated all references and handlers
 
-### 2. ZBM Report Page (`src/app/ZBM/report/page.tsx`)
+### 2. ZSM Report Page (`src/app/ZSM/report/page.tsx`)
 - Changed `planFilter` → `planSearch`
 - Changed `storeFilter` → `storeSearch`
 - Changed `deviceFilter` → `deviceSearch`

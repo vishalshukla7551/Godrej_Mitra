@@ -31,8 +31,8 @@ async function main() {
     });
   }
 
-  // ----- HELPERS FOR ZBM / ZSM -----
-  async function ensureZbm(
+  // ----- HELPERS FOR ZSM -----
+  async function ensureZsm(
     username: string,
     fullName: string,
     phone: string,
@@ -45,14 +45,14 @@ async function main() {
         data: {
           username,
           password: 'Password@123', // demo only
-          role: Role.ZBM,
+          role: Role.ZSM,
           validation: Validation.APPROVED,
           metadata: {},
         },
       });
     }
 
-    await prisma.zBM.upsert({
+    await prisma.zSM.upsert({
       where: { userId: user.id },
       update: {
         fullName,
@@ -68,49 +68,14 @@ async function main() {
     });
   }
 
-  // ZSM role/model doesn't exist in schema - commented out
-  // async function ensureZsm(
-  //   username: string,
-  //   fullName: string,
-  //   phone: string,
-  //   region: string,
-  // ) {
-  //   let user = await prisma.user.findUnique({ where: { username } });
-  //   if (!user) {
-  //     user = await prisma.user.create({
-  //       data: {
-  //         username,
-  //         password: 'Password@123',
-  //         role: Role.ZSM,
-  //         validation: Validation.APPROVED,
-  //         metadata: {},
-  //       },
-  //     });
-  //   }
-  //   await prisma.zSM.upsert({
-  //     where: { userId: user.id },
-  //     update: { fullName, phone, region },
-  //     create: { userId: user.id, fullName, phone, region },
-  //   });
-  // }
-
-  // ----- 5 ZBMs (Indian names) -----
+  // ----- 5 ZSMs (Indian names) -----
   await Promise.all([
-    ensureZbm('zbm.mumbai', 'Rajesh Sharma', '9876543210', 'Mumbai'),
-    ensureZbm('zbm.delhi', 'Amit Verma', '9876501234', 'Delhi NCR'),
-    ensureZbm('zbm.pune', 'Sandeep Kulkarni', '9876512345', 'Pune'),
-    ensureZbm('zbm.bengaluru', 'Rohit Nair', '9876523456', 'Bengaluru'),
-    ensureZbm('zbm.kolkata', 'Anirban Ghosh', '9876534567', 'Kolkata'),
+    ensureZsm('zsm.mumbai', 'Rajesh Sharma', '9876543210', 'Mumbai'),
+    ensureZsm('zsm.delhi', 'Amit Verma', '9876501234', 'Delhi NCR'),
+    ensureZsm('zsm.pune', 'Sandeep Kulkarni', '9876512345', 'Pune'),
+    ensureZsm('zsm.bengaluru', 'Rohit Nair', '9876523456', 'Bengaluru'),
+    ensureZsm('zsm.kolkata', 'Anirban Ghosh', '9876534567', 'Kolkata'),
   ]);
-
-  // ----- 5 ZSMs (Indian names) - ZSM role doesn't exist, skipping -----
-  // await Promise.all([
-  //   ensureZsm('zsm.mumbai', 'Neha Gupta', '9867543210', 'Mumbai'),
-  //   ensureZsm('zsm.delhi', 'Pooja Singh', '9867501234', 'Delhi NCR'),
-  //   ensureZsm('zsm.pune', 'Kiran Patil', '9867512345', 'Pune'),
-  //   ensureZsm('zsm.bengaluru', 'Smita Rao', '9867523456', 'Bengaluru'),
-  //   ensureZsm('zsm.kolkata', 'Soumya Banerjee', '9867534567', 'Kolkata'),
-  // ]);
 }
 
 main()

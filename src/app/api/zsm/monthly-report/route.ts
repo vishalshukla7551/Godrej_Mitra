@@ -3,27 +3,27 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
 /**
- * GET /api/zbm/monthly-report
- * Get monthly report data for ZBM user from DailyIncentiveReport schema
- * Shows data from all stores in ZBM's region
+ * GET /api/zsm/monthly-report
+ * Get monthly report data for ZSM user from DailyIncentiveReport schema
+ * Shows data from all stores in ZSM's region
  */
 export async function GET(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== 'ZBM') {
+    if (!authUser || authUser.role !== 'ZSM') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get ZBM profile
-    const zbmProfile = await prisma.zBM.findUnique({
+    // Get ZSM profile
+    const zsmProfile = await prisma.zSM.findUnique({
       where: { userId: authUser.id },
     });
 
-    if (!zbmProfile) {
+    if (!zsmProfile) {
       return NextResponse.json(
-        { error: 'ZBM profile not found' },
+        { error: 'ZSM profile not found' },
         { status: 404 }
       );
     }
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const endDate = url.searchParams.get('endDate');
 
     // Build where clause for filtering
-    // Note: ZBM doesn't have specific store assignments in the schema,
+    // Note: ZSM doesn't have specific store assignments in the schema,
     // so we'll show all stores for now. You can modify this based on your business logic.
     const whereClause: any = {};
 
@@ -220,12 +220,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        // ZBM info
-        zbm: {
-          id: zbmProfile.id,
-          fullName: zbmProfile.fullName,
-          phone: zbmProfile.phone,
-          region: zbmProfile.region,
+        // ZSM info
+        zsm: {
+          id: zsmProfile.id,
+          fullName: zsmProfile.fullName,
+          phone: zsmProfile.phone,
+          region: zsmProfile.region,
         },
         
         // Reports data
@@ -267,7 +267,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/zbm/monthly-report', error);
+    console.error('Error in GET /api/zsm/monthly-report', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

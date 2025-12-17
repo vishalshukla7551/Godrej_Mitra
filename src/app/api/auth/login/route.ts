@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       include: {
         abmProfile: true,
         aseProfile: true,
-        zbmProfile: true,
+        zsmProfile: true,
         zseProfile: true,
         samsungAdminProfile: true,
         zopperAdminProfile: true,
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     const rawProfile =
       anyUser.abmProfile ||
       anyUser.aseProfile ||
-      anyUser.zbmProfile ||
+      anyUser.zsmProfile ||
       anyUser.zseProfile ||
       anyUser.samsungAdminProfile ||
       anyUser.zopperAdminProfile ||

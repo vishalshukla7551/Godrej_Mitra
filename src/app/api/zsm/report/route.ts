@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
-// GET /api/zbm/report
+// GET /api/zsm/report
 export async function GET(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== 'ZBM') {
+    if (!authUser || authUser.role !== 'ZSM') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get ZBM profile
-    const zbmProfile = await prisma.zBM.findUnique({
+    // Get ZSM profile
+    const zsmProfile = await prisma.zSM.findUnique({
       where: { userId: authUser.id },
       select: {
         id: true,
@@ -21,13 +21,13 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    if (!zbmProfile) {
-      return NextResponse.json({ error: 'ZBM profile not found' }, { status: 404 });
+    if (!zsmProfile) {
+      return NextResponse.json({ error: 'ZSM profile not found' }, { status: 404 });
     }
 
-    // Get all ABMs under this ZBM
+    // Get all ABMs under this ZSM
     const abmProfiles = await prisma.aBM.findMany({
-      where: { zbmId: zbmProfile.id },
+      where: { zsmId: zsmProfile.id },
       select: {
         storeIds: true
       }
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     const storeFilter = searchParams.get('storeFilter') || '';
     const deviceFilter = searchParams.get('deviceFilter') || '';
 
-    // Build where clause - only for ZBM's stores (via ABMs)
+    // Build where clause - only for ZSM's stores (via ABMs)
     const where: any = {
       storeId: {
         in: allStoreIds
@@ -160,7 +160,7 @@ export async function GET(req: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error in GET /api/zbm/report', error);
+    console.error('Error in GET /api/zsm/report', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

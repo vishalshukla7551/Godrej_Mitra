@@ -2,18 +2,18 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // PATCH /api/user-validate/abm/[id]
-// Body: { storeIds?: string[]; zbmId?: string }
+// Body: { storeIds?: string[]; zsmId?: string }
 // Updates store / manager mapping for an ABM profile.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: abmId } = await params;
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { storeIds, zbmId } = body as { storeIds?: string[]; zbmId?: string };
+    const { storeIds, zsmId } = body as { storeIds?: string[]; zsmId?: string };
 
-    if ((!storeIds || storeIds.length === 0) && !zbmId) {
+    if ((!storeIds || storeIds.length === 0) && !zsmId) {
       return NextResponse.json(
-        { error: 'At least one of storeIds or zbmId must be provided' },
+        { error: 'At least one of storeIds or zsmId must be provided' },
         { status: 400 },
       );
     }
@@ -23,15 +23,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: 'ABM profile not found' }, { status: 404 });
     }
 
-    // Validate if zbmId is a valid MongoDB ObjectId (24 hex chars)
+    // Validate if zsmId is a valid MongoDB ObjectId (24 hex chars)
     const isValidObjectId = (id: string) => /^[0-9a-fA-F]{24}$/.test(id);
-    const validZbmId = zbmId && isValidObjectId(zbmId) ? zbmId : undefined;
+    const validZsmId = zsmId && isValidObjectId(zsmId) ? zsmId : undefined;
 
     const updated = await prisma.aBM.update({
       where: { id: abmId },
       data: {
         ...(storeIds && storeIds.length ? { storeIds } : {}),
-        ...(validZbmId ? { zbmId: validZbmId } : {}),
+        ...(validZsmId ? { zsmId: validZsmId } : {}),
       },
     });
 

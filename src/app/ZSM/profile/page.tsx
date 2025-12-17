@@ -1,13 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { clientLogout } from '@/lib/clientLogout';
 
-interface ZBMProfileApiResponse {
+interface ZSMProfileApiResponse {
   success: boolean;
   data?: {
-    zbm: {
+    zsm: {
       id: string;
       fullName: string;
       phone: string;
@@ -17,7 +16,7 @@ interface ZBMProfileApiResponse {
   error?: string;
 }
 
-export default function ZBMProfilePage() {
+export default function ZSMProfilePage() {
   const [formData, setFormData] = useState({
     fullName: '',
     phoneNumber: '',
@@ -32,23 +31,23 @@ export default function ZBMProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch('/api/zbm/profile');
+        const res = await fetch('/api/zsm/profile');
         if (!res.ok) {
-          throw new Error('Failed to load ZBM profile');
+          throw new Error('Failed to load ZSM profile');
         }
 
-        const json = (await res.json()) as ZBMProfileApiResponse;
+        const json = (await res.json()) as ZSMProfileApiResponse;
         if (!json.success || !json.data) {
-          throw new Error(json.error || 'Failed to load ZBM profile');
+          throw new Error(json.error || 'Failed to load ZSM profile');
         }
 
-        const { zbm } = json.data;
+        const { zsm } = json.data;
 
         setFormData(prev => ({
           ...prev,
-          fullName: zbm.fullName || '',
-          phoneNumber: zbm.phone || '',
-          region: zbm.region || '',
+          fullName: zsm.fullName || '',
+          phoneNumber: zsm.phone || '',
+          region: zsm.region || '',
         }));
 
       } catch (err) {
@@ -62,11 +61,8 @@ export default function ZBMProfilePage() {
     fetchProfile();
   }, []);
 
-
-
   return (
     <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-700 to-slate-800 px-16 py-10">
-      {/* Page Title */}
       <div className="mb-8 flex justify-between items-center">
         <div className="flex-1 text-center">
           <h1 className="text-4xl font-bold text-white">Your Profile</h1>
@@ -75,34 +71,10 @@ export default function ZBMProfilePage() {
           onClick={() => clientLogout('/login/role')}
           className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-lg"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M16 17L21 12L16 7"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M21 12H9"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M16 17L21 12L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span>Logout</span>
         </button>
@@ -133,12 +105,7 @@ export default function ZBMProfilePage() {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Profile</h3>
               <p className="text-gray-600 mb-4">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Retry
-              </button>
+              <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Retry</button>
             </div>
           </div>
         </div>
@@ -147,20 +114,9 @@ export default function ZBMProfilePage() {
           <div className="rounded-2xl bg-white p-8 shadow-lg">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="12" cy="8" r="4" fill="white" />
-                  <path
-                    d="M20 21C20 17.134 16.418 14 12 14C7.582 14 4 17.134 4 21"
-                    stroke="white"
-                    strokeWidth="2"
-                    fill="none"
-                  />
+                  <path d="M20 21C20 17.134 16.418 14 12 14C7.582 14 4 17.134 4 21" stroke="white" strokeWidth="2" fill="none"/>
                 </svg>
               </div>
               <h2 className="text-xl font-semibold text-gray-900">Personal Details</h2>
@@ -168,48 +124,24 @@ export default function ZBMProfilePage() {
 
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
-                </label>
-                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">
-                  {formData.fullName || 'Not provided'}
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">{formData.fullName || 'Not provided'}</div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
-                </label>
-                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">
-                  {formData.phoneNumber || 'Not provided'}
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">{formData.phoneNumber || 'Not provided'}</div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">
-                  {formData.email || 'Not provided'}
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">{formData.email || 'Not provided'}</div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Date of Birth
-                </label>
-                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">
-                  {formData.dateOfBirth || 'Not provided'}
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">{formData.dateOfBirth || 'Not provided'}</div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Region
-                </label>
-                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">
-                  {formData.region || 'Not provided'}
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">{formData.region || 'Not provided'}</div>
               </div>
             </div>
           </div>
