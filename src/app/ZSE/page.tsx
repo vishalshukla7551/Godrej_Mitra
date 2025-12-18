@@ -43,7 +43,7 @@ export default function ZSEPage() {
   }, []);
 
   const cards = [
-    { title: 'Incentive Wallet', description: 'Track your earnings', href: '/ZSE/wallet', badge: '₹12,450 Available', color: 'green' as const, icon: <WalletIcon /> },
+    { title: 'Incentive Wallet', description: 'Track your earnings', href: '/ZSE/wallet', badge: '₹32,450 Available', color: 'green' as const, icon: <WalletIcon /> },
     { title: 'View Reports', description: 'Check your stores performance', href: '/ZSE/report', badge: 'Analytics Ready', color: 'blue' as const, icon: <ReportIcon /> },
     { title: 'Store Settings', description: 'Manage your store configuration', href: '/ZSE/profile', badge: 'Configure', color: 'orange' as const, icon: <SettingsIcon /> },
   ];

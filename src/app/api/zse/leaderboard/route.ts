@@ -4,9 +4,12 @@ import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
 /**
  * GET /api/zse/leaderboard
- * Returns top stores, devices, plans for ZSE's region (via ASE's assigned stores)
- * - period query: 'week' | 'month' | 'all' (default: 'month')
- * - limit query: number (default: 10)
+ * Returns ZSE vs ZSE leaderboard - all ZSEs competing against each other
+ * Shows ZSE name, number of stores under them (via ASEs), and total sales/incentives
+ * Data fetched from SpotIncentiveReport schema
+ * - month query: number (1-12)
+ * - year query: number (e.g., 2024)
+ * - limit query: number (default: 20)
  */
 export async function GET(req: NextRequest) {
   try {
@@ -17,238 +20,160 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get ZSE profile
-    const zseProfile = await prisma.zSE.findUnique({
+    // Get current ZSE profile
+    const currentZse = await prisma.zSE.findUnique({
       where: { userId: authUser.id },
       select: {
         id: true,
+        fullName: true,
         region: true
       }
     });
 
-    if (!zseProfile) {
+    if (!currentZse) {
       return NextResponse.json({ error: 'ZSE profile not found' }, { status: 404 });
     }
 
-    // Get all ASEs under this ZSE
-    const aseProfiles = await prisma.aSE.findMany({
-      where: { zseId: zseProfile.id },
+    const { searchParams } = new URL(req.url);
+    const month = parseInt(searchParams.get('month') || String(new Date().getMonth() + 1));
+    const year = parseInt(searchParams.get('year') || String(new Date().getFullYear()));
+    const limit = parseInt(searchParams.get('limit') || '20');
+
+    // Calculate date range for the selected month
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    // Get all ZSEs
+    const allZses = await prisma.zSE.findMany({
       select: {
+        id: true,
+        fullName: true,
+        phone: true,
+        region: true,
+        userId: true
+      }
+    });
+
+    // Get all ASEs with their ZSE assignments
+    const allAses = await prisma.aSE.findMany({
+      select: {
+        id: true,
+        zseId: true,
         storeIds: true
       }
     });
 
-    // Collect all store IDs from ASEs
-    const allStoreIds = aseProfiles.flatMap(ase => ase.storeIds);
+    // Build ZSE leaderboard data
+    const zseLeaderboard = await Promise.all(
+      allZses.map(async (zse) => {
+        // Get all ASEs under this ZSE
+        const zseAses = allAses.filter(ase => ase.zseId === zse.id);
+        
+        // Collect all store IDs from ASEs under this ZSE
+        const allStoreIds = zseAses.flatMap(ase => ase.storeIds || []);
 
-    if (allStoreIds.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          stores: [],
-          devices: [],
-          plans: [],
-          period: 'month',
-          activeCampaignsCount: 0,
-          totalSalesReports: 0
+        if (allStoreIds.length === 0) {
+          return {
+            zseId: zse.id,
+            zseName: zse.fullName || 'Unknown ZSE',
+            phone: zse.phone,
+            region: zse.region || null,
+            storeCount: 0,
+            aseCount: zseAses.length,
+            activeStoreCount: 0,
+            totalSales: 0,
+            totalIncentive: 0,
+            adldUnits: 0,
+            comboUnits: 0,
+            adldRevenue: 0,
+            comboRevenue: 0,
+            isCurrentUser: zse.id === currentZse.id
+          };
         }
-      });
-    }
 
-    const { searchParams } = new URL(req.url);
-    const period = searchParams.get('period') || 'month';
-    const limit = parseInt(searchParams.get('limit') || '10');
-
-    // Calculate date range based on period
-    const now = new Date();
-    let startDate: Date;
-
-    switch (period) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case 'all':
-      default:
-        startDate = new Date(0);
-        break;
-    }
-
-    // Get active campaigns for ZSE's stores
-    const activeCampaigns = await prisma.spotIncentiveCampaign.findMany({
-      where: {
-        active: true,
-        startDate: { lte: now },
-        endDate: { gte: now },
-        storeId: {
-          in: allStoreIds
-        }
-      },
-      select: {
-        id: true,
-        storeId: true,
-        samsungSKUId: true,
-        planId: true,
-      },
-    });
-
-    if (activeCampaigns.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          stores: [],
-          devices: [],
-          plans: [],
-          period,
-          activeCampaignsCount: 0,
-          totalSalesReports: 0
-        },
-      });
-    }
-
-    // Get sales reports for ZSE's stores within the period
-    const salesReports = await prisma.spotIncentiveReport.findMany({
-      where: {
-        isCompaignActive: true,
-        Date_of_sale: { gte: startDate },
-        storeId: {
-          in: allStoreIds
-        }
-      },
-      include: {
-        store: true,
-        samsungSKU: true,
-        plan: true,
-      },
-    });
-
-    // Aggregate by store
-    const storeMap = new Map<
-      string,
-      {
-        storeId: string;
-        storeName: string;
-        city: string | null;
-        totalSales: number;
-        totalIncentive: number;
-      }
-    >();
-
-    // Aggregate by device (Samsung SKU)
-    const deviceMap = new Map<
-      string,
-      {
-        deviceId: string;
-        deviceName: string;
-        category: string;
-        totalSales: number;
-        totalIncentive: number;
-      }
-    >();
-
-    // Aggregate by plan
-    const planMap = new Map<
-      string,
-      {
-        planId: string;
-        planType: string;
-        planPrice: number;
-        totalSales: number;
-        totalIncentive: number;
-      }
-    >();
-
-    salesReports.forEach((report) => {
-      // Store aggregation
-      const storeKey = report.storeId;
-      if (storeMap.has(storeKey)) {
-        const existing = storeMap.get(storeKey)!;
-        existing.totalSales += 1;
-        existing.totalIncentive += report.spotincentiveEarned;
-      } else {
-        storeMap.set(storeKey, {
-          storeId: report.store.id,
-          storeName: report.store.name,
-          city: report.store.city,
-          totalSales: 1,
-          totalIncentive: report.spotincentiveEarned,
+        // Get sales reports for this ZSE's stores within the month
+        const salesReports = await prisma.spotIncentiveReport.findMany({
+          where: {
+            storeId: { in: allStoreIds },
+            Date_of_sale: {
+              gte: startDate,
+              lte: endDate
+            }
+          },
+          include: {
+            plan: {
+              select: { planType: true }
+            }
+          }
         });
-      }
 
-      // Device aggregation
-      const deviceKey = report.samsungSKUId;
-      if (deviceMap.has(deviceKey)) {
-        const existing = deviceMap.get(deviceKey)!;
-        existing.totalSales += 1;
-        existing.totalIncentive += report.spotincentiveEarned;
-      } else {
-        deviceMap.set(deviceKey, {
-          deviceId: report.samsungSKU.id,
-          deviceName: report.samsungSKU.ModelName,
-          category: report.samsungSKU.Category,
-          totalSales: 1,
-          totalIncentive: report.spotincentiveEarned,
+        // Get active stores (stores with at least one sale)
+        const activeStoreIds = new Set(salesReports.map(r => r.storeId));
+
+        // Calculate totals
+        let totalIncentive = 0;
+        let adldUnits = 0;
+        let comboUnits = 0;
+        let adldRevenue = 0;
+        let comboRevenue = 0;
+
+        salesReports.forEach((report) => {
+          totalIncentive += report.spotincentiveEarned;
+          const planType = report.plan.planType.toUpperCase();
+          if (planType.includes('ADLD')) {
+            adldUnits++;
+            adldRevenue += report.spotincentiveEarned;
+          } else if (planType.includes('COMBO')) {
+            comboUnits++;
+            comboRevenue += report.spotincentiveEarned;
+          }
         });
-      }
 
-      // Plan aggregation
-      const planKey = report.planId;
-      if (planMap.has(planKey)) {
-        const existing = planMap.get(planKey)!;
-        existing.totalSales += 1;
-        existing.totalIncentive += report.spotincentiveEarned;
-      } else {
-        planMap.set(planKey, {
-          planId: report.plan.id,
-          planType: report.plan.planType,
-          planPrice: report.plan.price,
-          totalSales: 1,
-          totalIncentive: report.spotincentiveEarned,
-        });
-      }
-    });
+        return {
+          zseId: zse.id,
+          zseName: zse.fullName || 'Unknown ZSE',
+          phone: zse.phone,
+          region: zse.region || null,
+          storeCount: allStoreIds.length,
+          aseCount: zseAses.length,
+          activeStoreCount: activeStoreIds.size,
+          totalSales: salesReports.length,
+          totalIncentive,
+          adldUnits,
+          comboUnits,
+          adldRevenue,
+          comboRevenue,
+          isCurrentUser: zse.id === currentZse.id
+        };
+      })
+    );
 
-    // Convert to arrays and sort by total sales (descending)
-    const topStores = Array.from(storeMap.values())
+    // Sort by total sales (descending) and assign ranks
+    const sortedLeaderboard = zseLeaderboard
       .sort((a, b) => b.totalSales - a.totalSales)
       .slice(0, limit)
-      .map((store, index) => ({
+      .map((zse, index) => ({
         rank: index + 1,
-        ...store,
-        totalIncentive: store.totalIncentive > 0 ? `₹${store.totalIncentive.toLocaleString('en-IN')}` : '-',
+        ...zse,
+        totalIncentive: zse.totalIncentive > 0 ? `₹${zse.totalIncentive.toLocaleString('en-IN')}` : '₹0',
+        totalIncentiveRaw: zse.totalIncentive,
+        adldRevenue: zse.adldRevenue > 0 ? `₹${zse.adldRevenue.toLocaleString('en-IN')}` : '₹0',
+        comboRevenue: zse.comboRevenue > 0 ? `₹${zse.comboRevenue.toLocaleString('en-IN')}` : '₹0'
       }));
 
-    const topDevices = Array.from(deviceMap.values())
-      .sort((a, b) => b.totalSales - a.totalSales)
-      .slice(0, limit)
-      .map((device, index) => ({
-        rank: index + 1,
-        ...device,
-        totalIncentive: device.totalIncentive > 0 ? `₹${device.totalIncentive.toLocaleString('en-IN')}` : '-',
-      }));
-
-    const topPlans = Array.from(planMap.values())
-      .sort((a, b) => b.totalSales - a.totalSales)
-      .slice(0, limit)
-      .map((plan, index) => ({
-        rank: index + 1,
-        ...plan,
-        planPrice: plan.planPrice > 0 ? `₹${plan.planPrice.toLocaleString('en-IN')}` : '-',
-        totalIncentive: plan.totalIncentive > 0 ? `₹${plan.totalIncentive.toLocaleString('en-IN')}` : '-',
-      }));
+    // Find current user's rank
+    const currentUserRank = sortedLeaderboard.find(zse => zse.isCurrentUser)?.rank || 0;
 
     return NextResponse.json({
       success: true,
       data: {
-        stores: topStores,
-        devices: topDevices,
-        plans: topPlans,
-        period,
-        activeCampaignsCount: activeCampaigns.length,
-        totalSalesReports: salesReports.length,
-      },
+        zses: sortedLeaderboard,
+        period: `${month}/${year}`,
+        totalZSEs: allZses.length,
+        totalSalesReports: sortedLeaderboard.reduce((sum, zse) => sum + zse.totalSales, 0),
+        currentUserRank,
+        currentZseId: currentZse.id
+      }
     });
   } catch (error) {
     console.error('Error in GET /api/zse/leaderboard', error);

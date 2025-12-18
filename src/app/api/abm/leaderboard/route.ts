@@ -4,9 +4,12 @@ import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
 /**
  * GET /api/abm/leaderboard
- * Returns top stores, devices, plans for ABM's assigned stores only
- * - period query: 'week' | 'month' | 'all' (default: 'month')
- * - limit query: number (default: 10)
+ * Returns ABM vs ABM leaderboard - all ABMs competing against each other
+ * Shows ABM name, number of stores under them, and total sales/incentives
+ * Data fetched from SpotIncentiveReport schema
+ * - month query: number (1-12)
+ * - year query: number (e.g., 2024)
+ * - limit query: number (default: 20)
  */
 export async function GET(req: NextRequest) {
   try {
@@ -17,222 +20,158 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get ABM profile with assigned stores
-    const abmProfile = await prisma.aBM.findUnique({
+    // Get current ABM profile
+    const currentAbm = await prisma.aBM.findUnique({
       where: { userId: authUser.id },
       select: {
+        id: true,
+        fullName: true,
         storeIds: true
       }
     });
 
-    if (!abmProfile || !abmProfile.storeIds || abmProfile.storeIds.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          stores: [],
-          devices: [],
-          plans: [],
-          period: 'month',
-          activeCampaignsCount: 0,
-          totalSalesReports: 0
-        }
-      });
+    if (!currentAbm) {
+      return NextResponse.json({ error: 'ABM profile not found' }, { status: 404 });
     }
 
     const { searchParams } = new URL(req.url);
-    const period = searchParams.get('period') || 'month';
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const month = parseInt(searchParams.get('month') || String(new Date().getMonth() + 1));
+    const year = parseInt(searchParams.get('year') || String(new Date().getFullYear()));
+    const limit = parseInt(searchParams.get('limit') || '20');
 
-    // Calculate date range based on period
-    const now = new Date();
-    let startDate: Date;
+    // Calculate date range for the selected month
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-    switch (period) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case 'all':
-      default:
-        startDate = new Date(0);
-        break;
-    }
-
-    // Get active campaigns for ABM's assigned stores only
-    const activeCampaigns = await prisma.spotIncentiveCampaign.findMany({
-      where: {
-        active: true,
-        startDate: { lte: now },
-        endDate: { gte: now },
-        storeId: {
-          in: abmProfile.storeIds
-        }
-      },
+    // Get all ABMs with their store assignments
+    const allAbms = await prisma.aBM.findMany({
       select: {
         id: true,
-        storeId: true,
-        samsungSKUId: true,
-        planId: true,
-      },
+        fullName: true,
+        phone: true,
+        storeIds: true,
+        userId: true,
+        zsmId: true
+      }
     });
 
-    if (activeCampaigns.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          stores: [],
-          devices: [],
-          plans: [],
-          period,
-          activeCampaignsCount: 0,
-          totalSalesReports: 0
-        },
-      });
-    }
+    // Get all ZSMs for region info
+    const allZsms = await prisma.zSM.findMany({
+      select: {
+        id: true,
+        fullName: true,
+        region: true
+      }
+    });
+    const zsmMap = new Map(allZsms.map(z => [z.id, z]));
 
-    // Get sales reports for ABM's assigned stores within the period
-    const salesReports = await prisma.spotIncentiveReport.findMany({
-      where: {
-        isCompaignActive: true,
-        Date_of_sale: { gte: startDate },
-        storeId: {
-          in: abmProfile.storeIds
+    // Build ABM leaderboard data
+    const abmLeaderboard = await Promise.all(
+      allAbms.map(async (abm) => {
+        const zsm = abm.zsmId ? zsmMap.get(abm.zsmId) : null;
+        
+        if (!abm.storeIds || abm.storeIds.length === 0) {
+          return {
+            abmId: abm.id,
+            abmName: abm.fullName || 'Unknown ABM',
+            phone: abm.phone,
+            zsmName: zsm?.fullName || null,
+            region: zsm?.region || null,
+            storeCount: 0,
+            activeStoreCount: 0,
+            totalSales: 0,
+            totalIncentive: 0,
+            adldUnits: 0,
+            comboUnits: 0,
+            adldRevenue: 0,
+            comboRevenue: 0,
+            isCurrentUser: abm.id === currentAbm.id
+          };
         }
-      },
-      include: {
-        store: true,
-        samsungSKU: true,
-        plan: true,
-      },
-    });
 
-    // Aggregate by store
-    const storeMap = new Map<
-      string,
-      {
-        storeId: string;
-        storeName: string;
-        city: string | null;
-        totalSales: number;
-        totalIncentive: number;
-      }
-    >();
-
-    // Aggregate by device (Samsung SKU)
-    const deviceMap = new Map<
-      string,
-      {
-        deviceId: string;
-        deviceName: string;
-        category: string;
-        totalSales: number;
-        totalIncentive: number;
-      }
-    >();
-
-    // Aggregate by plan
-    const planMap = new Map<
-      string,
-      {
-        planId: string;
-        planType: string;
-        planPrice: number;
-        totalSales: number;
-        totalIncentive: number;
-      }
-    >();
-
-    salesReports.forEach((report) => {
-      // Store aggregation
-      const storeKey = report.storeId;
-      if (storeMap.has(storeKey)) {
-        const existing = storeMap.get(storeKey)!;
-        existing.totalSales += 1;
-        existing.totalIncentive += report.spotincentiveEarned;
-      } else {
-        storeMap.set(storeKey, {
-          storeId: report.store.id,
-          storeName: report.store.name,
-          city: report.store.city,
-          totalSales: 1,
-          totalIncentive: report.spotincentiveEarned,
+        // Get sales reports for this ABM's stores within the month
+        const salesReports = await prisma.spotIncentiveReport.findMany({
+          where: {
+            storeId: { in: abm.storeIds },
+            Date_of_sale: {
+              gte: startDate,
+              lte: endDate
+            }
+          },
+          include: {
+            plan: {
+              select: { planType: true }
+            }
+          }
         });
-      }
 
-      // Device aggregation
-      const deviceKey = report.samsungSKUId;
-      if (deviceMap.has(deviceKey)) {
-        const existing = deviceMap.get(deviceKey)!;
-        existing.totalSales += 1;
-        existing.totalIncentive += report.spotincentiveEarned;
-      } else {
-        deviceMap.set(deviceKey, {
-          deviceId: report.samsungSKU.id,
-          deviceName: report.samsungSKU.ModelName,
-          category: report.samsungSKU.Category,
-          totalSales: 1,
-          totalIncentive: report.spotincentiveEarned,
+        // Get active stores (stores with at least one sale)
+        const activeStoreIds = new Set(salesReports.map(r => r.storeId));
+
+        // Calculate totals
+        let totalIncentive = 0;
+        let adldUnits = 0;
+        let comboUnits = 0;
+        let adldRevenue = 0;
+        let comboRevenue = 0;
+
+        salesReports.forEach((report) => {
+          totalIncentive += report.spotincentiveEarned;
+          const planType = report.plan.planType.toUpperCase();
+          if (planType.includes('ADLD')) {
+            adldUnits++;
+            adldRevenue += report.spotincentiveEarned;
+          } else if (planType.includes('COMBO')) {
+            comboUnits++;
+            comboRevenue += report.spotincentiveEarned;
+          }
         });
-      }
 
-      // Plan aggregation
-      const planKey = report.planId;
-      if (planMap.has(planKey)) {
-        const existing = planMap.get(planKey)!;
-        existing.totalSales += 1;
-        existing.totalIncentive += report.spotincentiveEarned;
-      } else {
-        planMap.set(planKey, {
-          planId: report.plan.id,
-          planType: report.plan.planType,
-          planPrice: report.plan.price,
-          totalSales: 1,
-          totalIncentive: report.spotincentiveEarned,
-        });
-      }
-    });
+        return {
+          abmId: abm.id,
+          abmName: abm.fullName || 'Unknown ABM',
+          phone: abm.phone,
+          zsmName: zsm?.fullName || null,
+          region: zsm?.region || null,
+          storeCount: abm.storeIds.length,
+          activeStoreCount: activeStoreIds.size,
+          totalSales: salesReports.length,
+          totalIncentive,
+          adldUnits,
+          comboUnits,
+          adldRevenue,
+          comboRevenue,
+          isCurrentUser: abm.id === currentAbm.id
+        };
+      })
+    );
 
-    // Convert to arrays and sort by total sales (descending)
-    const topStores = Array.from(storeMap.values())
+    // Sort by total sales (descending) and assign ranks
+    const sortedLeaderboard = abmLeaderboard
       .sort((a, b) => b.totalSales - a.totalSales)
       .slice(0, limit)
-      .map((store, index) => ({
+      .map((abm, index) => ({
         rank: index + 1,
-        ...store,
-        totalIncentive: store.totalIncentive > 0 ? `₹${store.totalIncentive.toLocaleString('en-IN')}` : '-',
+        ...abm,
+        totalIncentive: abm.totalIncentive > 0 ? `₹${abm.totalIncentive.toLocaleString('en-IN')}` : '₹0',
+        totalIncentiveRaw: abm.totalIncentive,
+        adldRevenue: abm.adldRevenue > 0 ? `₹${abm.adldRevenue.toLocaleString('en-IN')}` : '₹0',
+        comboRevenue: abm.comboRevenue > 0 ? `₹${abm.comboRevenue.toLocaleString('en-IN')}` : '₹0'
       }));
 
-    const topDevices = Array.from(deviceMap.values())
-      .sort((a, b) => b.totalSales - a.totalSales)
-      .slice(0, limit)
-      .map((device, index) => ({
-        rank: index + 1,
-        ...device,
-        totalIncentive: device.totalIncentive > 0 ? `₹${device.totalIncentive.toLocaleString('en-IN')}` : '-',
-      }));
-
-    const topPlans = Array.from(planMap.values())
-      .sort((a, b) => b.totalSales - a.totalSales)
-      .slice(0, limit)
-      .map((plan, index) => ({
-        rank: index + 1,
-        ...plan,
-        planPrice: plan.planPrice > 0 ? `₹${plan.planPrice.toLocaleString('en-IN')}` : '-',
-        totalIncentive: plan.totalIncentive > 0 ? `₹${plan.totalIncentive.toLocaleString('en-IN')}` : '-',
-      }));
+    // Find current user's rank
+    const currentUserRank = sortedLeaderboard.find(abm => abm.isCurrentUser)?.rank || 0;
 
     return NextResponse.json({
       success: true,
       data: {
-        stores: topStores,
-        devices: topDevices,
-        plans: topPlans,
-        period,
-        activeCampaignsCount: activeCampaigns.length,
-        totalSalesReports: salesReports.length,
-      },
+        abms: sortedLeaderboard,
+        period: `${month}/${year}`,
+        totalABMs: allAbms.length,
+        totalSalesReports: sortedLeaderboard.reduce((sum, abm) => sum + abm.totalSales, 0),
+        currentUserRank,
+        currentAbmId: currentAbm.id
+      }
     });
   } catch (error) {
     console.error('Error in GET /api/abm/leaderboard', error);

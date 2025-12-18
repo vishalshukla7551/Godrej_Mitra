@@ -27,6 +27,12 @@ interface Summary {
   unpaidCount: number;
 }
 
+interface FilterOptions {
+  stores: Array<{ id: string; name: string; city: string | null }>;
+  plans: string[];
+  devices: string[];
+}
+
 type ReportTab = 'monthly' | 'spot';
 
 export default function ReportPage() {
@@ -34,9 +40,7 @@ export default function ReportPage() {
   const [planSearch, setPlanSearch] = useState("");
   const [storeSearch, setStoreSearch] = useState("");
   const [deviceSearch, setDeviceSearch] = useState("");
-  const [showPlanDropdown, setShowPlanDropdown] = useState(false);
-  const [showStoreDropdown, setShowStoreDropdown] = useState(false);
-  const [showDeviceDropdown, setShowDeviceDropdown] = useState(false);
+  const [dateFilter, setDateFilter] = useState("");
   const [reports, setReports] = useState<ReportData[]>([]);
   const [summary, setSummary] = useState<Summary>({
     activeStores: 0,
@@ -45,25 +49,25 @@ export default function ReportPage() {
     paidCount: 0,
     unpaidCount: 0
   });
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    stores: [],
+    plans: [],
+    devices: []
+  });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const planTypes = ["ADLD", "COMBO"];
-  const [stores, setStores] = useState<string[]>([]);
-  const [devices, setDevices] = useState<string[]>([]);
-
-  useEffect(() => {
-    fetchReports();
-  }, [activeTab, planSearch, storeSearch, deviceSearch]);
-
-  const fetchReports = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
       const params = new URLSearchParams();
       
       // Use different parameter names based on the API
       if (activeTab === 'monthly') {
-        if (planSearch && planTypes.includes(planSearch)) {
-          params.append('planType', planSearch + '_1_YR');
+        if (planSearch) {
+          params.append('planType', planSearch);
         }
         if (storeSearch) {
           params.append('store', storeSearch);
@@ -71,8 +75,11 @@ export default function ReportPage() {
         if (deviceSearch) {
           params.append('device', deviceSearch);
         }
+        if (dateFilter) {
+          params.append('date', dateFilter);
+        }
       } else {
-        if (planSearch && planTypes.includes(planSearch)) {
+        if (planSearch) {
           params.append('planFilter', planSearch);
         }
         if (storeSearch) {
@@ -81,13 +88,20 @@ export default function ReportPage() {
         if (deviceSearch) {
           params.append('deviceFilter', deviceSearch);
         }
+        if (dateFilter) {
+          params.append('date', dateFilter);
+        }
       }
 
       // Use different API endpoints based on active tab
       const endpoint = activeTab === 'monthly' ? '/api/abm/monthly-report' : '/api/abm/report';
-      const response = await fetch(`${endpoint}?${params.toString()}`);
+      const response = await fetch(`${endpoint}?${params}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Failed to fetch data (${response.status}): ${errorData.error || response.statusText}`);
+      }
       const result = await response.json();
-
+      
       if (result.success) {
         if (activeTab === 'monthly') {
           // Handle monthly report API response structure
@@ -103,50 +117,50 @@ export default function ReportPage() {
             deviceCategory: r.deviceCategory,
             planType: r.planType,
             imei: r.imei,
-            incentive: 0, // Monthly reports don't have incentive amounts
+            incentive: 0,
             isPaid: false
           })));
           setSummary({
             activeStores: result.data.summary.uniqueStores || 0,
-            activeSECs: 0, // Monthly API doesn't track this
+            activeSECs: 0,
             totalReports: result.data.summary.totalReports || 0,
             paidCount: 0,
             unpaidCount: 0
           });
-          
-          // Extract filter options from monthly API
-          const uniqueStores = result.data.filters?.availableStores || [];
-          const uniqueDevices = result.data.filters?.availableDevices || [];
-          setStores(uniqueStores);
-          setDevices(uniqueDevices);
+          if (result.data.filterOptions) {
+            setFilterOptions(result.data.filterOptions);
+          }
         } else {
-          // Handle spot report API response structure (existing)
+          // Handle spot report API response structure
           setReports(result.data.reports);
           setSummary(result.data.summary);
-
-          // Extract unique stores and devices for dropdowns
-          const uniqueStores = [...new Set(result.data.reports.map((r: ReportData) => r.storeName))] as string[];
-          const uniqueDevices = [...new Set(result.data.reports.map((r: ReportData) => r.deviceName))] as string[];
-          setStores(uniqueStores);
-          setDevices(uniqueDevices);
+          if (result.data.filterOptions) {
+            setFilterOptions(result.data.filterOptions);
+          }
         }
       }
-    } catch (error) {
-      console.error('Error fetching reports:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredPlans = planTypes.filter((plan) =>
-    plan.toLowerCase().includes(planSearch.toLowerCase())
-  );
-  const filteredStores = stores.filter((store) =>
-    store.toLowerCase().includes(storeSearch.toLowerCase())
-  );
-  const filteredDevices = devices.filter((device) =>
-    device.toLowerCase().includes(deviceSearch.toLowerCase())
-  );
+  useEffect(() => { 
+    fetchData(); 
+  }, [activeTab, planSearch, storeSearch, deviceSearch, dateFilter]);
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-IN');
+  };
+
+  const clearFilters = () => {
+    setPlanSearch("");
+    setStoreSearch("");
+    setDeviceSearch("");
+    setDateFilter("");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-10">
@@ -228,107 +242,76 @@ export default function ReportPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-4">
-          {/* Plan Type Filter */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Select Plan Type"
-              value={planSearch}
-              onChange={(e) => setPlanSearch(e.target.value)}
-              onFocus={() => setShowPlanDropdown(true)}
-              onBlur={() => setTimeout(() => setShowPlanDropdown(false), 200)}
-              className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-neutral-750 transition w-48"
-            />
-            <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-            {showPlanDropdown && filteredPlans.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg max-h-60 overflow-auto">
-                {filteredPlans.map((plan) => (
-                  <div
-                    key={plan}
-                    onClick={() => {
-                      setPlanSearch(plan);
-                      setShowPlanDropdown(false);
-                    }}
-                    className="px-4 py-2 text-sm text-white hover:bg-neutral-700 cursor-pointer"
-                  >
-                    {plan}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Date Filter */}
+          <input 
+            type="date" 
+            value={dateFilter} 
+            onChange={(e) => setDateFilter(e.target.value)} 
+            className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          
+          {/* Plan Filter */}
+          <select 
+            value={planSearch} 
+            onChange={(e) => setPlanSearch(e.target.value)} 
+            className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[150px]"
+          >
+            <option value="">All Plans</option>
+            {filterOptions.plans.map((plan) => (
+              <option key={plan} value={plan}>{plan.replace(/_/g, ' ')}</option>
+            ))}
+          </select>
+          
           {/* Store Filter */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Select Store"
-              value={storeSearch}
-              onChange={(e) => setStoreSearch(e.target.value)}
-              onFocus={() => setShowStoreDropdown(true)}
-              onBlur={() => setTimeout(() => setShowStoreDropdown(false), 200)}
-              className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 hover:bg-neutral-750 transition w-64"
-            />
-            <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-            {showStoreDropdown && filteredStores.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg max-h-60 overflow-auto">
-                {filteredStores.map((store) => (
-                  <div
-                    key={store}
-                    onClick={() => {
-                      setStoreSearch(store);
-                      setShowStoreDropdown(false);
-                    }}
-                    className="px-4 py-2 text-sm text-white hover:bg-neutral-700 cursor-pointer"
-                  >
-                    {store}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
+          <select 
+            value={storeSearch} 
+            onChange={(e) => setStoreSearch(e.target.value)} 
+            className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[180px]"
+          >
+            <option value="">All Stores</option>
+            {filterOptions.stores.map((store) => (
+              <option key={store.id} value={store.name}>{store.name} {store.city && `- ${store.city}`}</option>
+            ))}
+          </select>
+          
           {/* Device Filter */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Select Device"
-              value={deviceSearch}
-              onChange={(e) => setDeviceSearch(e.target.value)}
-              onFocus={() => setShowDeviceDropdown(true)}
-              onBlur={() => setTimeout(() => setShowDeviceDropdown(false), 200)}
-              className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 hover:bg-neutral-750 transition w-56"
-            />
-            <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-            {showDeviceDropdown && filteredDevices.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg max-h-60 overflow-auto">
-                {filteredDevices.map((device) => (
-                  <div
-                    key={device}
-                    onClick={() => {
-                      setDeviceSearch(device);
-                      setShowDeviceDropdown(false);
-                    }}
-                    className="px-4 py-2 text-sm text-white hover:bg-neutral-700 cursor-pointer"
-                  >
-                    {device}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <select 
+            value={deviceSearch} 
+            onChange={(e) => setDeviceSearch(e.target.value)} 
+            className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
+          >
+            <option value="">All Devices</option>
+            {filterOptions.devices.map((device) => (
+              <option key={device} value={device}>{device}</option>
+            ))}
+          </select>
+          
+          {/* Clear Filters */}
+          <button 
+            onClick={clearFilters}
+            className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white text-sm rounded-lg transition-colors"
+          >
+            Clear
+          </button>
         </div>
       </header>
 
-      {/* Monthly Report Tab Content */}
-      {activeTab === 'monthly' && (
+      {/* Content */}
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+          <span className="ml-3 text-white">Loading reports...</span>
+        </div>
+      )}
+      {error && (
+        <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 text-red-200 mb-6">
+          <p className="font-semibold">Error:</p>
+          <p className="text-sm">{error}</p>
+          <button onClick={fetchData} className="mt-2 px-3 py-1 bg-red-700 hover:bg-red-600 rounded text-sm">Retry</button>
+        </div>
+      )}
+      {!loading && !error && (
         <>
           {/* Key Metrics */}
           <div className="max-w-6xl mb-8">
@@ -359,31 +342,33 @@ export default function ReportPage() {
                     <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Device Name</th>
                     <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Plan Type</th>
                     <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">IMEI</th>
+                    <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={5} className="text-center text-neutral-500 text-sm p-8">
-                        Loading reports...
-                      </td>
-                    </tr>
-                  ) : reports.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="text-center text-neutral-500 text-sm p-8">
-                        No reports found
-                      </td>
-                    </tr>
+                  {reports.length === 0 ? (
+                    <tr><td colSpan={6} className="text-center py-8 text-neutral-500">No reports found.</td></tr>
                   ) : (
-                    reports.map((report) => (
-                      <tr key={report.id} className="hover:bg-neutral-50 transition">
-                        <td className="text-neutral-600 text-sm p-4">
-                          {new Date(report.dateOfSale).toLocaleDateString()}
+                    reports.map((row) => (
+                      <tr key={row.id} className="hover:bg-neutral-50 transition">
+                        <td className="text-neutral-600 text-sm p-4">{formatDate(row.dateOfSale)}</td>
+                        <td className="text-neutral-900 text-sm p-4">
+                          <div>{row.storeName}</div>
+                          {row.storeCity && <div className="text-xs text-neutral-500">{row.storeCity}</div>}
                         </td>
-                        <td className="text-neutral-900 text-sm p-4">{report.storeName}</td>
-                        <td className="text-neutral-600 text-sm p-4">{report.deviceName}</td>
-                        <td className="text-neutral-600 text-sm p-4">{report.planType}</td>
-                        <td className="text-neutral-500 text-xs font-mono p-4">{report.imei}</td>
+                        <td className="text-neutral-600 text-sm p-4">
+                          <div>{row.deviceName}</div>
+                          <div className="text-xs text-neutral-500">{row.deviceCategory}</div>
+                        </td>
+                        <td className="text-neutral-600 text-sm p-4">{row.planType.replace(/_/g, ' ')}</td>
+                        <td className="text-neutral-500 text-xs font-mono p-4">{row.imei}</td>
+                        <td className="p-4">
+                          {row.isPaid ? (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Paid</span>
+                          ) : (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">Pending</span>
+                          )}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -391,73 +376,6 @@ export default function ReportPage() {
               </table>
             </div>
           </div>
-        </>
-      )}
-
-      {/* Spot Report Tab Content */}
-      {activeTab === 'spot' && (
-        <>
-          {/* Key Metrics */}
-      <div className="max-w-6xl mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(99,102,241,0.3)]">
-            <h3 className="text-white text-4xl font-bold mb-2">{summary.activeStores}</h3>
-            <p className="text-indigo-100 text-sm font-medium">Active Stores</p>
-          </div>
-          <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(16,185,129,0.3)]">
-            <h3 className="text-white text-4xl font-bold mb-2">{summary.activeSECs}</h3>
-            <p className="text-emerald-100 text-sm font-medium">SECs Active</p>
-          </div>
-          <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(37,99,235,0.3)]">
-            <h3 className="text-white text-4xl font-bold mb-2">{summary.totalReports}</h3>
-            <p className="text-blue-100 text-sm font-medium">Reports Submitted</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Transactions Table */}
-      <div className="max-w-7xl">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-neutral-50 border-b border-neutral-200">
-              <tr>
-                <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Date of Sale</th>
-                <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Store Name</th>
-                <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Device Name</th>
-                <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">Plan Type</th>
-                <th className="text-left text-neutral-600 text-xs font-medium uppercase tracking-wider p-4">IMEI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="text-center text-neutral-500 text-sm p-8">
-                    Loading reports...
-                  </td>
-                </tr>
-              ) : reports.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center text-neutral-500 text-sm p-8">
-                    No reports found
-                  </td>
-                </tr>
-              ) : (
-                reports.map((report) => (
-                  <tr key={report.id} className="hover:bg-neutral-50 transition">
-                    <td className="text-neutral-600 text-sm p-4">
-                      {new Date(report.dateOfSale).toLocaleDateString()}
-                    </td>
-                    <td className="text-neutral-900 text-sm p-4">{report.storeName}</td>
-                    <td className="text-neutral-600 text-sm p-4">{report.deviceName}</td>
-                    <td className="text-neutral-600 text-sm p-4">{report.planType}</td>
-                    <td className="text-neutral-500 text-xs font-mono p-4">{report.imei}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
         </>
       )}
     </div>

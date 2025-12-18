@@ -1,4 +1,4 @@
- import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
@@ -47,6 +47,11 @@ export async function GET(req: NextRequest) {
             totalReports: 0,
             paidCount: 0,
             unpaidCount: 0
+          },
+          filterOptions: {
+            stores: [],
+            plans: [],
+            devices: []
           }
         }
       });
@@ -56,6 +61,7 @@ export async function GET(req: NextRequest) {
     const planFilter = searchParams.get('planFilter') || '';
     const storeFilter = searchParams.get('storeFilter') || '';
     const deviceFilter = searchParams.get('deviceFilter') || '';
+    const dateFilter = searchParams.get('date') || '';
 
     // Build where clause - only for ZSE's stores (via ASEs)
     const where: any = {
@@ -63,6 +69,20 @@ export async function GET(req: NextRequest) {
         in: allStoreIds
       }
     };
+
+    // Apply date filter
+    if (dateFilter) {
+      const filterDate = new Date(dateFilter);
+      const startOfDay = new Date(filterDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(filterDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      where.Date_of_sale = {
+        gte: startOfDay,
+        lte: endOfDay
+      };
+    }
 
     // Apply filters
     if (planFilter) {
@@ -132,6 +152,23 @@ export async function GET(req: NextRequest) {
     const paidCount = salesReports.filter(r => r.spotincentivepaidAt).length;
     const unpaidCount = salesReports.filter(r => !r.spotincentivepaidAt).length;
 
+    // Get filter options from ZSE's stores
+    const stores = await prisma.store.findMany({
+      where: { id: { in: allStoreIds } },
+      select: { id: true, name: true, city: true }
+    });
+
+    const plans = await prisma.plan.findMany({
+      select: { planType: true },
+      distinct: ['planType']
+    });
+
+    const devices = await prisma.samsungSKU.findMany({
+      select: { ModelName: true },
+      distinct: ['ModelName'],
+      take: 50
+    });
+
     return NextResponse.json({
       success: true,
       data: {
@@ -156,6 +193,11 @@ export async function GET(req: NextRequest) {
           totalReports: salesReports.length,
           paidCount,
           unpaidCount
+        },
+        filterOptions: {
+          stores: stores.map(s => ({ id: s.id, name: s.name, city: s.city })),
+          plans: plans.map(p => p.planType),
+          devices: devices.map(d => d.ModelName)
         }
       }
     });

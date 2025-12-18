@@ -61,8 +61,21 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    // Date range filter
-    if (startDate || endDate) {
+    // Date filter (single date)
+    const dateFilter = url.searchParams.get('date');
+    if (dateFilter) {
+      const filterDate = new Date(dateFilter);
+      const startOfDay = new Date(filterDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(filterDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      whereClause.Date_of_sale = {
+        gte: startOfDay,
+        lte: endOfDay
+      };
+    } else if (startDate || endDate) {
+      // Date range filter (fallback)
       whereClause.Date_of_sale = {};
       if (startDate) {
         whereClause.Date_of_sale.gte = new Date(startDate);
@@ -217,6 +230,25 @@ export async function GET(req: NextRequest) {
     const availableDevices = [...new Set(formattedReports.map(r => r.deviceName))].sort();
     const availableStores = [...new Set(formattedReports.map(r => r.storeName))].sort();
 
+    // Get all stores for filter dropdown
+    const allStores = await prisma.store.findMany({
+      select: { id: true, name: true, city: true },
+      take: 100
+    });
+    
+    // Get all plans
+    const allPlans = await prisma.plan.findMany({
+      select: { planType: true },
+      distinct: ['planType']
+    });
+    
+    // Get all devices
+    const allDevices = await prisma.samsungSKU.findMany({
+      select: { ModelName: true },
+      distinct: ['ModelName'],
+      take: 50
+    });
+
     return NextResponse.json({
       success: true,
       data: {
@@ -249,7 +281,14 @@ export async function GET(req: NextRequest) {
           byMonth: monthlyBreakdown,
         },
         
-        // Filter options
+        // Filter options (in format frontend expects)
+        filterOptions: {
+          stores: allStores.map(s => ({ id: s.id, name: s.name, city: s.city })),
+          plans: allPlans.map(p => p.planType),
+          devices: allDevices.map(d => d.ModelName)
+        },
+        
+        // Legacy filter options
         filters: {
           availablePlans,
           availableDevices,

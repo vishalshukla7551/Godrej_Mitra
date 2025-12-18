@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
     const planFilter = searchParams.get('planFilter') || '';
     const storeFilter = searchParams.get('storeFilter') || '';
     const deviceFilter = searchParams.get('deviceFilter') || '';
+    const dateFilter = searchParams.get('date') || '';
 
     // Build where clause - only for ABM's assigned stores
     const where: any = {
@@ -47,6 +48,20 @@ export async function GET(req: NextRequest) {
         in: abmProfile.storeIds
       }
     };
+
+    // Apply date filter (single date - filter for that specific day)
+    if (dateFilter) {
+      const filterDate = new Date(dateFilter);
+      const startOfDay = new Date(filterDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(filterDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      where.Date_of_sale = {
+        gte: startOfDay,
+        lte: endOfDay
+      };
+    }
 
     // Apply filters
     if (planFilter) {
@@ -116,6 +131,23 @@ export async function GET(req: NextRequest) {
     const paidCount = salesReports.filter(r => r.spotincentivepaidAt).length;
     const unpaidCount = salesReports.filter(r => !r.spotincentivepaidAt).length;
 
+    // Get filter options from ABM's assigned stores
+    const stores = await prisma.store.findMany({
+      where: { id: { in: abmProfile.storeIds } },
+      select: { id: true, name: true, city: true }
+    });
+
+    const plans = await prisma.plan.findMany({
+      select: { planType: true },
+      distinct: ['planType']
+    });
+
+    const devices = await prisma.samsungSKU.findMany({
+      select: { ModelName: true },
+      distinct: ['ModelName'],
+      take: 50
+    });
+
     return NextResponse.json({
       success: true,
       data: {
@@ -140,6 +172,11 @@ export async function GET(req: NextRequest) {
           totalReports: salesReports.length,
           paidCount,
           unpaidCount
+        },
+        filterOptions: {
+          stores: stores.map(s => ({ id: s.id, name: s.name, city: s.city })),
+          plans: plans.map(p => p.planType),
+          devices: devices.map(d => d.ModelName)
         }
       }
     });

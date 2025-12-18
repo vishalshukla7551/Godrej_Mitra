@@ -10,13 +10,10 @@ function formatCurrency(num: number): string {
 interface Report {
   id: string;
   imei: string;
-  isCompaignActive: boolean;
-  spotincentiveEarned: number;
-  voucherCode: string | null;
-  spotincentivepaidAt: string | null;
-  isPaid: boolean;
+  metadata: any;
   Date_of_sale: string;
   createdAt: string;
+  updatedAt: string;
   secId: string;
   secName: string;
   secPhone: string;
@@ -37,10 +34,8 @@ interface Summary {
   totalReports: number;
   activeStores: number;
   activeSECs: number;
-  totalIncentiveEarned: number;
-  totalIncentivePaid: number;
-  paidCount: number;
-  unpaidCount: number;
+  totalPlanValue: number;
+  averagePlanValue: number;
 }
 
 interface FilterOptions {
@@ -58,16 +53,14 @@ interface Pagination {
   hasPrev: boolean;
 }
 
-export default function SpotIncentiveReportPage() {
+export default function MonthlyIncentiveReportPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [summary, setSummary] = useState<Summary>({
     totalReports: 0,
     activeStores: 0,
     activeSECs: 0,
-    totalIncentiveEarned: 0,
-    totalIncentivePaid: 0,
-    paidCount: 0,
-    unpaidCount: 0
+    totalPlanValue: 0,
+    averagePlanValue: 0
   });
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     stores: [],
@@ -88,10 +81,11 @@ export default function SpotIncentiveReportPage() {
 
   // Filters
   const [filterSearch, setFilterSearch] = useState('');
-  const [filterDate, setFilterDate] = useState('');
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
   const [filterStore, setFilterStore] = useState('');
   const [filterDevice, setFilterDevice] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterPlanType, setFilterPlanType] = useState('');
 
   const fetchData = useCallback(async () => {
     try {
@@ -103,13 +97,13 @@ export default function SpotIncentiveReportPage() {
       params.append('limit', '50');
       
       if (filterSearch) params.append('search', filterSearch);
-      if (filterDate) params.append('startDate', filterDate);
-      if (filterDate) params.append('endDate', filterDate);
+      if (filterStartDate) params.append('startDate', filterStartDate);
+      if (filterEndDate) params.append('endDate', filterEndDate);
       if (filterStore) params.append('storeId', filterStore);
       if (filterDevice) params.append('deviceName', filterDevice);
-      if (filterStatus !== 'all') params.append('paymentStatus', filterStatus);
+      if (filterPlanType) params.append('planType', filterPlanType);
 
-      const response = await fetch(`/api/samsung-admin/spot-incentive-report?${params}`);
+      const response = await fetch(`/api/samsung-admin/monthly-incentive-report?${params}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch data');
@@ -131,7 +125,7 @@ export default function SpotIncentiveReportPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, filterSearch, filterDate, filterStore, filterDevice, filterStatus]);
+  }, [pagination.page, filterSearch, filterStartDate, filterEndDate, filterStore, filterDevice, filterPlanType]);
 
   useEffect(() => {
     fetchData();
@@ -143,10 +137,11 @@ export default function SpotIncentiveReportPage() {
 
   const clearFilters = () => {
     setFilterSearch('');
-    setFilterDate('');
+    setFilterStartDate('');
+    setFilterEndDate('');
     setFilterStore('');
     setFilterDevice('');
-    setFilterStatus('all');
+    setFilterPlanType('');
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
@@ -170,9 +165,13 @@ export default function SpotIncentiveReportPage() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 22V12H15V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             Home
           </Link>
-          <Link href="/Samsung-Administrator/spot-incentive-report" className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-sm text-white">
+          <Link href="/Samsung-Administrator/spot-incentive-report" className="flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-gray-800 transition-colors mb-1 text-sm text-white">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            <span className="leading-tight">Spot Incentive Report</span>
+            Spot Incentive Report
+          </Link>
+          <Link href="/Samsung-Administrator/monthly-incentive-report" className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors text-sm text-white">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 11H15M9 15H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L19.7071 9.70711C19.8946 9.89464 20 10.149 20 10.4142V19C20 20.1046 19.1046 21 18 21H17ZM17 21V11H13V7H7V19H17Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <span className="leading-tight">Monthly Incentive Report</span>
           </Link>
         </nav>
       </aside>
@@ -183,10 +182,10 @@ export default function SpotIncentiveReportPage() {
         <header className="bg-white border-b border-gray-200 px-6 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-2xl font-bold text-gray-900">Welcome, Samsung Administrator</p>
+              <p className="text-2xl font-bold text-gray-900">Monthly Incentive Report</p>
               <div className="flex items-center gap-4 text-sm text-gray-600 mt-0.5">
-                <span>No of Incentive Paid: <span className="font-semibold text-blue-600">{summary.paidCount}</span></span>
-                <span>Unpaid: <span className="font-semibold text-orange-600">{summary.unpaidCount}</span></span>
+                <span>Total Reports: <span className="font-semibold text-blue-600">{summary.totalReports}</span></span>
+                <span>Active Stores: <span className="font-semibold text-green-600">{summary.activeStores}</span></span>
                 <span className="flex items-center gap-1">
                   <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>Live
                 </span>
@@ -222,27 +221,32 @@ export default function SpotIncentiveReportPage() {
               <p className="text-blue-100 text-sm font-medium">Reports Submitted</p>
             </div>
             <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(245,158,11,0.3)]">
-              <h3 className="text-white text-4xl font-bold mb-2">₹{formatCurrency(summary.totalIncentiveEarned)}</h3>
-              <p className="text-amber-100 text-sm font-medium">Incentive Earned</p>
+              <h3 className="text-white text-4xl font-bold mb-2">₹{formatCurrency(summary.totalPlanValue)}</h3>
+              <p className="text-amber-100 text-sm font-medium">Total Plan Value</p>
             </div>
             <div className="bg-gradient-to-br from-rose-600 to-pink-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(244,63,94,0.3)]">
-              <h3 className="text-white text-4xl font-bold mb-2">₹{formatCurrency(summary.totalIncentivePaid)}</h3>
-              <p className="text-rose-100 text-sm font-medium">Incentive Paid</p>
+              <h3 className="text-white text-4xl font-bold mb-2">₹{formatCurrency(summary.averagePlanValue)}</h3>
+              <p className="text-rose-100 text-sm font-medium">Average Plan Value</p>
             </div>
           </div>
 
           {/* Filters */}
           <div className="bg-white rounded-xl p-5 shadow-md mb-5">
             <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">Filters</h3>
-            <div className="grid grid-cols-6 gap-3">
+            <div className="grid grid-cols-7 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1.5">Search SEC/Store/IMEI</label>
                 <input type="text" value={filterSearch} onChange={(e) => setFilterSearch(e.target.value)} placeholder="Search..."
                   className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">Date of Sale</label>
-                <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)}
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Start Date</label>
+                <input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)}
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">End Date</label>
+                <input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)}
                   className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
@@ -266,12 +270,13 @@ export default function SpotIncentiveReportPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">Status</label>
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Plan Type</label>
+                <select value={filterPlanType} onChange={(e) => setFilterPlanType(e.target.value)}
                   className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="all">All Status</option>
-                  <option value="paid">Paid</option>
-                  <option value="unpaid">Unpaid</option>
+                  <option value="">All Plans</option>
+                  {filterOptions.planTypes.map((plan) => (
+                    <option key={plan} value={plan}>{plan.replace(/_/g, ' ')}</option>
+                  ))}
                 </select>
               </div>
               <div className="flex items-end">
@@ -301,7 +306,7 @@ export default function SpotIncentiveReportPage() {
                     <th className="w-[12%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Device Name</th>
                     <th className="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Plan Type</th>
                     <th className="w-[12%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">IMEI</th>
-                    <th className="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Incentive</th>
+                    <th className="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Plan Price</th>
                     <th className="w-[8%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
                   </tr>
                 </thead>
@@ -326,10 +331,10 @@ export default function SpotIncentiveReportPage() {
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-900">{report.planType.replace(/_/g, ' ')}</td>
                         <td className="px-4 py-4 text-sm text-gray-900 font-mono text-xs">{report.imei}</td>
-                        <td className="px-4 py-4 text-sm font-bold text-emerald-600">₹{report.spotincentiveEarned}</td>
+                        <td className="px-4 py-4 text-sm font-bold text-blue-600">₹{report.planPrice}</td>
                         <td className="px-4 py-4 text-sm">
-                          <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded ${report.isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'}`}>
-                            {report.isPaid ? 'Paid' : 'Unpaid'}
+                          <span className="inline-flex px-3 py-1 text-xs font-semibold rounded bg-green-100 text-green-800">
+                            Submitted
                           </span>
                         </td>
                       </tr>

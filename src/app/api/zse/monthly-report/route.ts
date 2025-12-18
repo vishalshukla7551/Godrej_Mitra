@@ -5,7 +5,7 @@ import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 /**
  * GET /api/zse/monthly-report
  * Get monthly report data for ZSE user from DailyIncentiveReport schema
- * Shows data from all stores in ZSE's region
+ * Shows data from all stores under ZSE's ASEs
  */
 export async function GET(req: NextRequest) {
   try {
@@ -19,13 +19,47 @@ export async function GET(req: NextRequest) {
     // Get ZSE profile
     const zseProfile = await prisma.zSE.findUnique({
       where: { userId: authUser.id },
+      select: {
+        id: true,
+        fullName: true,
+        phone: true,
+        region: true
+      }
     });
 
     if (!zseProfile) {
-      return NextResponse.json(
-        { error: 'ZSE profile not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'ZSE profile not found' }, { status: 404 });
+    }
+
+    // Get all ASEs under this ZSE
+    const aseProfiles = await prisma.aSE.findMany({
+      where: { zseId: zseProfile.id },
+      select: { storeIds: true }
+    });
+
+    // Collect all store IDs from ASEs
+    const allStoreIds = aseProfiles.flatMap(ase => ase.storeIds);
+
+    if (allStoreIds.length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          zse: zseProfile,
+          reports: [],
+          summary: {
+            totalReports: 0,
+            uniqueStores: 0,
+            uniqueDevices: 0,
+            uniquePlans: 0,
+            totalPlanValue: 0
+          },
+          filterOptions: {
+            stores: [],
+            plans: [],
+            devices: []
+          }
+        }
+      });
     }
 
     // Get query parameters for filtering
@@ -33,41 +67,50 @@ export async function GET(req: NextRequest) {
     const planType = url.searchParams.get('planType');
     const storeFilter = url.searchParams.get('store');
     const deviceFilter = url.searchParams.get('device');
-    const startDate = url.searchParams.get('startDate');
-    const endDate = url.searchParams.get('endDate');
+    const dateFilter = url.searchParams.get('date');
 
     // Build where clause for filtering
-    const whereClause: any = {};
+    const whereClause: any = {
+      storeId: { in: allStoreIds }
+    };
+
+    // Apply date filter
+    if (dateFilter) {
+      const filterDate = new Date(dateFilter);
+      const startOfDay = new Date(filterDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(filterDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      whereClause.Date_of_sale = {
+        gte: startOfDay,
+        lte: endOfDay
+      };
+    }
 
     // Add optional filters
-    if (planType && planType !== 'all') {
+    if (planType) {
       whereClause.plan = {
         planType: planType.toUpperCase(),
       };
     }
 
-    if (storeFilter && storeFilter !== 'all') {
-      whereClause.storeId = storeFilter;
+    if (storeFilter) {
+      whereClause.store = {
+        name: {
+          contains: storeFilter,
+          mode: 'insensitive'
+        }
+      };
     }
 
-    if (deviceFilter && deviceFilter !== 'all') {
+    if (deviceFilter) {
       whereClause.samsungSKU = {
         ModelName: {
           contains: deviceFilter,
           mode: 'insensitive',
         },
       };
-    }
-
-    // Date range filter
-    if (startDate || endDate) {
-      whereClause.Date_of_sale = {};
-      if (startDate) {
-        whereClause.Date_of_sale.gte = new Date(startDate);
-      }
-      if (endDate) {
-        whereClause.Date_of_sale.lte = new Date(endDate);
-      }
     }
 
     // Get Daily Incentive Reports with all related data
@@ -89,6 +132,7 @@ export async function GET(req: NextRequest) {
         },
         store: {
           select: {
+            id: true,
             name: true,
             city: true,
           },
@@ -104,21 +148,13 @@ export async function GET(req: NextRequest) {
       orderBy: {
         Date_of_sale: 'desc',
       },
+      take: 100
     });
-
-    // Format date helper
-    const formatDate = (date: Date) => {
-      const d = new Date(date);
-      const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const yyyy = d.getFullYear();
-      return `${dd}/${mm}/${yyyy}`;
-    };
 
     // Format the reports for frontend
     const formattedReports = dailyReports.map((report) => ({
       id: report.id,
-      dateOfSale: formatDate(report.Date_of_sale),
+      dateOfSale: report.Date_of_sale,
       secName: report.secUser?.fullName || 'N/A',
       secPhone: report.secUser?.phone || 'N/A',
       secId: report.secUser?.secId || 'N/A',
@@ -130,62 +166,43 @@ export async function GET(req: NextRequest) {
       planType: report.plan.planType,
       planPrice: report.plan.price,
       imei: report.imei,
-      status: 'Submitted',
-      metadata: report.metadata,
-      createdAt: formatDate(report.createdAt),
     }));
 
     // Calculate summary statistics
     const totalReports = formattedReports.length;
     const uniqueStores = new Set(formattedReports.map(r => r.storeName)).size;
-    const uniqueDevices = new Set(formattedReports.map(r => r.deviceName)).size;
-    const uniquePlans = new Set(formattedReports.map(r => r.planType)).size;
-    const totalPlanValue = formattedReports.reduce((sum, r) => sum + r.planPrice, 0);
 
-    // Get available filter options for frontend
-    const availablePlans = [...new Set(formattedReports.map(r => r.planType))].sort();
-    const availableDevices = [...new Set(formattedReports.map(r => r.deviceName))].sort();
-    const availableStores = [...new Set(formattedReports.map(r => r.storeName))].sort();
+    // Get filter options from ZSE's stores
+    const stores = await prisma.store.findMany({
+      where: { id: { in: allStoreIds } },
+      select: { id: true, name: true, city: true }
+    });
+
+    const plans = await prisma.plan.findMany({
+      select: { planType: true },
+      distinct: ['planType']
+    });
+
+    const devices = await prisma.samsungSKU.findMany({
+      select: { ModelName: true },
+      distinct: ['ModelName'],
+      take: 50
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        // ZSE info
-        zse: {
-          id: zseProfile.id,
-          fullName: zseProfile.fullName,
-          phone: zseProfile.phone,
-          region: zseProfile.region,
-        },
-        
-        // Reports data
+        zse: zseProfile,
         reports: formattedReports,
-        
-        // Summary statistics
         summary: {
           totalReports,
           uniqueStores,
-          uniqueDevices,
-          uniquePlans,
-          totalPlanValue,
-          averagePlanValue: totalReports > 0 ? Math.round(totalPlanValue / totalReports) : 0,
         },
-        
-        // Filter options
-        filters: {
-          availablePlans,
-          availableDevices,
-          availableStores,
-        },
-        
-        // Applied filters (for frontend state)
-        appliedFilters: {
-          planType: planType || 'all',
-          store: storeFilter || 'all',
-          device: deviceFilter || 'all',
-          startDate: startDate || null,
-          endDate: endDate || null,
-        },
+        filterOptions: {
+          stores: stores.map(s => ({ id: s.id, name: s.name, city: s.city })),
+          plans: plans.map(p => p.planType),
+          devices: devices.map(d => d.ModelName)
+        }
       },
     });
   } catch (error) {
