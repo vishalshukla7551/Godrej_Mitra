@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         phone: true,
-        secId: true,
+        employeeId: true,
         storeId: true,
         store: {
           select: {
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Save test submission to database
     const testSubmission = await prisma.testSubmission.create({
       data: {
-        secId: sec.secId || sec.id,
+        secId: sec.employeeId || sec.id,
         phone: sec.phone,
         sessionToken: enhancedSessionToken,
         testName: testName || 'SEC Knowledge Assessment',

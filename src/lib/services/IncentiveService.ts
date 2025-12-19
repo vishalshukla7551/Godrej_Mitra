@@ -360,6 +360,7 @@ export class IncentiveService {
       console.warn(`SEC ${secId} not found or not assigned to a store`);
       return {
         totalIncentive: 0,
+        storeLevelIncentive: 0,
         breakdownByStore: [],
         breakdownByDate: [],
         unitsSummary: {
@@ -401,6 +402,7 @@ export class IncentiveService {
     if (salesReports.length === 0) {
       return {
         totalIncentive: 0,
+        storeLevelIncentive: 0,
         breakdownByStore: [],
         breakdownByDate: [],
         unitsSummary: {

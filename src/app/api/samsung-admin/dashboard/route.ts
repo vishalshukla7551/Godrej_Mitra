@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
       where.OR = [
         { secUser: { phone: { contains: search, mode: 'insensitive' } } },
         { secUser: { fullName: { contains: search, mode: 'insensitive' } } },
-        { secUser: { secId: { contains: search, mode: 'insensitive' } } },
+        { secUser: { employeeId: { contains: search, mode: 'insensitive' } } },
         { store: { name: { contains: search, mode: 'insensitive' } } },
         { samsungSKU: { ModelName: { contains: search, mode: 'insensitive' } } },
         { samsungSKU: { Category: { contains: search, mode: 'insensitive' } } },
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
         secUser: {
           select: {
             id: true,
-            secId: true,
+            employeeId: true,
             phone: true,
             fullName: true,
             AgencyName: true,
@@ -167,7 +167,7 @@ export async function GET(req: NextRequest) {
       // Frontend display fields
       timestamp: formatDateTime(report.createdAt),
       dateOfSale: formatDate(report.Date_of_sale),
-      secId: report.secUser?.secId || report.secUser?.id || 'N/A',
+      secId: report.secUser?.employeeId || report.secUser?.id || 'N/A',
       storeName: report.store.name,
       storeCode: report.store.city || '', // Using city as storeCode for display
       deviceName: report.samsungSKU.ModelName,

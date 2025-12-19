@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
         secUser: {
           select: {
             id: true,
-            secId: true,
+            employeeId: true,
             phone: true,
             fullName: true,
           }
@@ -170,7 +170,7 @@ export async function GET(req: NextRequest) {
       voucherCode: report.voucherCode || '',
       isCompaignActive: report.isCompaignActive,
       secUser: {
-        secId: report.secUser.secId || report.secUser.id,
+        secId: report.secUser.employeeId || report.secUser.id,
         phone: report.secUser.phone,
         name: report.secUser.fullName || 'Not Set'
       },

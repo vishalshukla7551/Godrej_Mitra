@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         id: true,
         fullName: true,
         phone: true,
-        secId: true,
+        employeeId: true,
         storeId: true,
         store: {
           select: {
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
           id: sec.id,
           fullName: sec.fullName,
           phone: sec.phone,
-          secId: sec.secId
+          secId: sec.employeeId
         },
         store: sec.store
       }

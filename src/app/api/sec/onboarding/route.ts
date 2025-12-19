@@ -30,6 +30,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Retrieve authenticated user (we need phone to validate uniqueness)
+    const cookies = await (await import('next/headers')).cookies();
+    const authUser = await getAuthenticatedUserFromCookies(cookies as any);
+
+    if (!authUser || authUser.role !== 'SEC') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const phone = authUser.username;
+
+    if (!phone) {
+      return NextResponse.json(
+        { error: 'Missing SEC identifier' },
+        { status: 400 },
+      );
+    }
+
     // Validate employeeId if provided
     if (employeeId && typeof employeeId === 'string') {
       const trimmedEmployId = employeeId.trim();
@@ -49,22 +66,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const cookies = await (await import('next/headers')).cookies();
-    const authUser = await getAuthenticatedUserFromCookies(cookies as any);
-
-    if (!authUser || authUser.role !== 'SEC') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const phone = authUser.username;
-
-    if (!phone) {
-      return NextResponse.json(
-        { error: 'Missing SEC identifier' },
-        { status: 400 },
-      );
-    }
-
+    
     const fullName = `${trimmedFirst} ${trimmedLast}`.trim();
 
     // Prepare update data

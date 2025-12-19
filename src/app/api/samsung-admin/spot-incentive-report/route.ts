@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
       where.OR = [
         { secUser: { phone: { contains: search, mode: 'insensitive' } } },
         { secUser: { fullName: { contains: search, mode: 'insensitive' } } },
-        { secUser: { secId: { contains: search, mode: 'insensitive' } } },
+        { secUser: { employeeId: { contains: search, mode: 'insensitive' } } },
         { store: { name: { contains: search, mode: 'insensitive' } } },
         { samsungSKU: { ModelName: { contains: search, mode: 'insensitive' } } },
         { samsungSKU: { Category: { contains: search, mode: 'insensitive' } } },
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
         secUser: {
           select: {
             id: true,
-            secId: true,
+            employeeId: true,
             phone: true,
             fullName: true,
             AgencyName: true,
@@ -180,7 +180,7 @@ export async function GET(req: NextRequest) {
       updatedAt: formatDateTime(report.updatedAt),
       
       // Related SEC data
-      secId: report.secUser.secId || report.secUser.id,
+      secId: report.secUser.employeeId || report.secUser.id,
       secName: report.secUser.fullName || 'Not Set',
       secPhone: report.secUser.phone,
       agencyName: report.secUser.AgencyName || null,

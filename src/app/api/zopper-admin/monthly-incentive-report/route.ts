@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
             id: true,
             phone: true,
             fullName: true,
-            secId: true
+            employeeId: true
           }
         },
         store: {
@@ -191,7 +191,7 @@ export async function GET(req: NextRequest) {
           planPrice: report.plan.price,
           devicePrice: report.samsungSKU.ModelPrice || 0,
           secUser: {
-            secId: report.secUser?.secId || report.secUser?.id || 'Not Set',
+            secId: report.secUser?.employeeId || report.secUser?.id || 'Not Set',
             phone: report.secUser?.phone || 'Not Set',
             name: report.secUser?.fullName || 'Not Set'
           },

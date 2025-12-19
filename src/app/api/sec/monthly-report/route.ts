@@ -217,7 +217,7 @@ export async function GET(req: NextRequest) {
           id: secUser.id,
           fullName: secUser.fullName,
           phone: secUser.phone,
-          secId: secUser.secId,
+          secId: secUser.employeeId,
         },
         store: {
           id: secUser.store.id,

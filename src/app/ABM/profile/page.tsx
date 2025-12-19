@@ -11,6 +11,7 @@ interface ABMProfileApiResponse {
       fullName: string;
       phone: string;
       region: string | null;
+      zsmName?: string | null;
     };
     stores: StoreInfo[];
   };
