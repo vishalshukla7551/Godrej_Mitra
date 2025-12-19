@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
 /**
- * GET /api/samsung-admin/monthly-incentive-report
- * Get all daily incentive reports for Samsung Administrator
+ * GET /api/samsung-admin/dashboard
+ * Get dashboard data for Samsung Administrator from DailyIncentiveReport schema
  * 
  * DailyIncentiveReport Schema Fields:
  * - id, secId, storeId, samsungSKUId, planId
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const endDate = searchParams.get('endDate');
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = parseInt(searchParams.get('limit') || '20');
 
     // Build where clause
     const where: any = {};
@@ -164,26 +164,25 @@ export async function GET(req: NextRequest) {
       createdAt: formatDateTime(report.createdAt),
       updatedAt: formatDateTime(report.updatedAt),
       
-      // Related SEC data
+      // Frontend display fields
+      timestamp: formatDateTime(report.createdAt),
+      dateOfSale: formatDate(report.Date_of_sale),
       secId: report.secUser?.secId || report.secUser?.id || 'N/A',
+      storeName: report.store.name,
+      storeCode: report.store.city || '', // Using city as storeCode for display
+      deviceName: report.samsungSKU.ModelName,
+      planType: report.plan.planType.replace(/_/g, ' '),
+      incentiveEarned: report.plan.price, // Using plan price as incentive for daily reports
+      status: 'Submitted', // Daily reports are always submitted
+      validator: 'Samsung', // Samsung validates daily reports
+      
+      // Additional data
       secName: report.secUser?.fullName || 'Not Set',
       secPhone: report.secUser?.phone || 'N/A',
       agencyName: report.secUser?.AgencyName || null,
-      
-      // Related Store data
-      storeId: report.store.id,
-      storeName: report.store.name,
       storeCity: report.store.city || null,
-      
-      // Related Device (SamsungSKU) data
-      deviceId: report.samsungSKU.id,
-      deviceName: report.samsungSKU.ModelName,
       deviceCategory: report.samsungSKU.Category,
       devicePrice: report.samsungSKU.ModelPrice || 0,
-      
-      // Related Plan data
-      planId: report.plan.id,
-      planType: report.plan.planType,
       planPrice: report.plan.price,
     }));
 
@@ -235,11 +234,13 @@ export async function GET(req: NextRequest) {
           hasPrev: page > 1
         },
         summary: {
-          totalReports: totalCount,
           activeStores: uniqueStores.size,
-          activeSECs: uniqueSECs.size,
-          totalPlanValue,
-          averagePlanValue: totalCount > 0 ? Math.round(totalPlanValue / totalCount) : 0
+          secsActive: uniqueSECs.size,
+          reportsSubmitted: totalCount,
+          incentiveEarned: totalPlanValue, // Total plan value as incentive earned
+          incentivePaid: totalPlanValue, // All daily reports are considered "paid"
+          incentivePaidCount: totalCount,
+          incentiveUnpaidCount: 0 // Daily reports don't have unpaid status
         },
         filters: {
           stores: stores.map(s => ({ id: s.id, name: s.name, city: s.city })),
@@ -250,7 +251,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in GET /api/samsung-admin/monthly-incentive-report', error);
+    console.error('Error in GET /api/samsung-admin/dashboard', error);
     return NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

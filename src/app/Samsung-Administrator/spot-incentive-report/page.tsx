@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
+import { clientLogout } from '@/lib/clientLogout';
 
 function formatCurrency(num: number): string {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -91,7 +92,6 @@ export default function SpotIncentiveReportPage() {
   const [filterDate, setFilterDate] = useState('');
   const [filterStore, setFilterStore] = useState('');
   const [filterDevice, setFilterDevice] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
 
   const fetchData = useCallback(async () => {
     try {
@@ -107,7 +107,6 @@ export default function SpotIncentiveReportPage() {
       if (filterDate) params.append('endDate', filterDate);
       if (filterStore) params.append('storeId', filterStore);
       if (filterDevice) params.append('deviceName', filterDevice);
-      if (filterStatus !== 'all') params.append('paymentStatus', filterStatus);
 
       const response = await fetch(`/api/samsung-admin/spot-incentive-report?${params}`);
       
@@ -131,7 +130,7 @@ export default function SpotIncentiveReportPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, filterSearch, filterDate, filterStore, filterDevice, filterStatus]);
+  }, [pagination.page, filterSearch, filterDate, filterStore, filterDevice]);
 
   useEffect(() => {
     fetchData();
@@ -146,7 +145,6 @@ export default function SpotIncentiveReportPage() {
     setFilterDate('');
     setFilterStore('');
     setFilterDevice('');
-    setFilterStatus('all');
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
@@ -197,10 +195,10 @@ export default function SpotIncentiveReportPage() {
               <button onClick={fetchData} disabled={loading} className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50">
                 {loading ? 'Loading...' : 'Refresh'}
               </button>
-              <Link href="/login/role" className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-md">
+              <button onClick={() => clientLogout('/login/role')} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-md">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16 17L21 12L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 Logout
-              </Link>
+              </button>
             </div>
           </div>
         </header>
@@ -234,11 +232,11 @@ export default function SpotIncentiveReportPage() {
           {/* Filters */}
           <div className="bg-white rounded-xl p-5 shadow-md mb-5">
             <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">Filters</h3>
-            <div className="grid grid-cols-6 gap-3">
+            <div className="grid grid-cols-5 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1.5">Search SEC/Store/IMEI</label>
                 <input type="text" value={filterSearch} onChange={(e) => setFilterSearch(e.target.value)} placeholder="Search..."
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-900" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1.5">Date of Sale</label>
@@ -248,8 +246,8 @@ export default function SpotIncentiveReportPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1.5">Store</label>
                 <select value={filterStore} onChange={(e) => setFilterStore(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">All Stores</option>
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                  <option value="" className="text-gray-900">All Stores</option>
                   {filterOptions.stores.map((store) => (
                     <option key={store.id} value={store.id}>{store.name} {store.city && `- ${store.city}`}</option>
                   ))}
@@ -258,24 +256,15 @@ export default function SpotIncentiveReportPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1.5">Device</label>
                 <select value={filterDevice} onChange={(e) => setFilterDevice(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">All Devices</option>
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900">
+                  <option value="" className="text-gray-900">All Devices</option>
                   {filterOptions.devices.map((device) => (
                     <option key={device} value={device}>{device}</option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">Status</label>
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="all">All Status</option>
-                  <option value="paid">Paid</option>
-                  <option value="unpaid">Unpaid</option>
-                </select>
-              </div>
               <div className="flex items-end">
-                <button onClick={clearFilters} className="w-full px-3 py-1.5 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">Clear</button>
+                <button onClick={clearFilters} className="w-full px-3 py-1.5 text-sm bg-black text-white hover:bg-gray-800 rounded-lg transition-colors">Clear</button>
               </div>
             </div>
           </div>
@@ -291,47 +280,38 @@ export default function SpotIncentiveReportPage() {
           {/* Data Table */}
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full table-fixed">
+              <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="w-[11%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Created At</th>
-                    <th className="w-[9%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Date of Sale</th>
-                    <th className="w-[8%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">SEC ID</th>
-                    <th className="w-[14%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Store Name</th>
-                    <th className="w-[12%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Device Name</th>
-                    <th className="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Plan Type</th>
-                    <th className="w-[12%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">IMEI</th>
-                    <th className="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Incentive</th>
-                    <th className="w-[8%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                    <th className="min-w-[140px] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Created At</th>
+                    <th className="min-w-[110px] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Date of Sale</th>
+                    <th className="min-w-[120px] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">SEC ID</th>
+                    <th className="min-w-[180px] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Store Name</th>
+                    <th className="min-w-[140px] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Device Name</th>
+                    <th className="min-w-[120px] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Plan Type</th>
+                    <th className="min-w-[140px] px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase">IMEI</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {loading ? (
-                    <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
+                    <tr><td colSpan={7} className="px-3 py-8 text-center text-gray-500">Loading...</td></tr>
                   ) : reports.length === 0 ? (
-                    <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-500">No reports found</td></tr>
+                    <tr><td colSpan={7} className="px-3 py-8 text-center text-gray-500">No reports found</td></tr>
                   ) : (
                     reports.map((report) => (
                       <tr key={report.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-4 text-sm text-gray-900">{report.createdAt}</td>
-                        <td className="px-4 py-4 text-sm text-gray-900">{report.Date_of_sale}</td>
-                        <td className="px-4 py-4 text-sm font-medium text-gray-900">{report.secId}</td>
-                        <td className="px-4 py-4 text-sm text-gray-900">
+                        <td className="px-3 py-3 text-sm text-gray-900">{report.createdAt}</td>
+                        <td className="px-3 py-3 text-sm text-gray-900">{report.Date_of_sale}</td>
+                        <td className="px-3 py-3 text-sm font-medium text-gray-900">{report.secId}</td>
+                        <td className="px-3 py-3 text-sm text-gray-900">
                           <div className="font-semibold truncate">{report.storeName}</div>
-                          {report.storeCity && <div className="text-xs text-gray-500">{report.storeCity}</div>}
                         </td>
-                        <td className="px-4 py-4 text-sm text-gray-900">
+                        <td className="px-3 py-3 text-sm text-gray-900">
                           <div className="truncate">{report.deviceName}</div>
                           <div className="text-xs text-gray-500">{report.deviceCategory}</div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-gray-900">{report.planType.replace(/_/g, ' ')}</td>
-                        <td className="px-4 py-4 text-sm text-gray-900 font-mono text-xs">{report.imei}</td>
-                        <td className="px-4 py-4 text-sm font-bold text-emerald-600">₹{report.spotincentiveEarned}</td>
-                        <td className="px-4 py-4 text-sm">
-                          <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded ${report.isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'}`}>
-                            {report.isPaid ? 'Paid' : 'Unpaid'}
-                          </span>
-                        </td>
+                        <td className="px-3 py-3 text-sm text-gray-900">{report.planType.replace(/_/g, ' ')}</td>
+                        <td className="px-3 py-3 text-sm text-gray-900 font-mono text-xs">{report.imei}</td>
                       </tr>
                     ))
                   )}
