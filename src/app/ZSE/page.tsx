@@ -15,7 +15,8 @@ export default function ASEPage() {
         const user = JSON.parse(authUser);
         const fullName = user.fullName || user.name || 'User';
         const firstName = fullName.split(' ')[0];
-        setUserName(firstName);
+        const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+        setUserName(formattedName);
       } catch (error) {
         console.error('Error parsing authUser:', error);
       }
