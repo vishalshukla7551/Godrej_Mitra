@@ -81,7 +81,7 @@ export default function ASEPage() {
       <section className="mt-10 px-10">
         <div className="max-w-xl space-y-3">
           <h1 className="font-[family-name:var(--font-inter)] text-[72px] font-black leading-[61.2px] tracking-[-2px] bg-gradient-to-r from-[#FF6348] via-[#FDCB6E] to-[#FFEAA7] bg-clip-text text-transparent">
-            SC
+            SC+
           </h1>
           <h1 className="font-[family-name:var(--font-inter)] text-[72px] font-black leading-[61.2px] tracking-[-2px] bg-gradient-to-r from-[#E74C3C] via-[#FF4757] to-[#FF6348] bg-clip-text text-transparent">
             INCENTIVE
