@@ -11,6 +11,11 @@ interface ZSEProfileApiResponse {
       fullName: string;
       phone: string;
     };
+    ases: Array<{
+      id: string;
+      fullName: string;
+      storeCount: number;
+    }>;
     stores: StoreInfo[];
   };
   error?: string;
@@ -72,6 +77,7 @@ export default function ProfilePage() {
   const [kycData, setKycData] = useState<any>(null);
 
   const [stores, setStores] = useState<StoreInfo[]>([]);
+  const [ases, setAses] = useState<Array<{ id: string; fullName: string; storeCount: number }>>([]);
   const [allStores, setAllStores] = useState<StoreInfo[]>([]);
   const [pendingRequest, setPendingRequest] = useState<StoreChangeRequest | null>(null);
   const [showStoreChangeModal, setShowStoreChangeModal] = useState(false);
@@ -112,10 +118,11 @@ export default function ProfilePage() {
           throw new Error(json.error || 'Failed to load ZSE profile');
         }
 
-        const { zse, stores: apiStores } = json.data;
+        const { zse, ases: apiAses, stores: apiStores } = json.data;
 
-        // Save all mapped stores
+        // Save all mapped stores and ASEs
         setStores(apiStores || []);
+        setAses(apiAses || []);
         const primaryStore = apiStores && apiStores.length > 0 ? apiStores[0] : null;
 
         // Build a combined string of all mapped store names, e.g. "Store A, Store B"
@@ -395,7 +402,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Store Details Card */}
+          {/* Mapped ASEs & Stores Card */}
           <div className="rounded-2xl bg-white p-8 shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
@@ -416,26 +423,39 @@ export default function ProfilePage() {
                     <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" fill="none" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Store Details</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Mapped ASEs & Stores</h2>
               </div>
-              <button
-                type="button"
-                onClick={handleEditStores}
-                disabled={pendingRequest?.status === 'PENDING'}
-                className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
-                  pendingRequest?.status === 'PENDING'
-                    ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed' 
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {pendingRequest?.status === 'PENDING' ? 'Request Pending' : 'Edit'}
-              </button>
             </div>
 
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Store Name(s)
+                  Mapped ASEs ({ases.length})
+                </label>
+                <div className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 max-h-32 overflow-y-auto">
+                  <div className="flex flex-col gap-2">
+                    {ases.length ? (
+                      ases.map((ase) => (
+                        <span
+                          key={ase.id}
+                          className="inline-flex items-center justify-between rounded-full bg-white px-3 py-1 text-sm font-medium text-gray-900 shadow-sm"
+                        >
+                          <span>{ase.fullName}</span>
+                          <span className="ml-2 text-xs text-gray-500">
+                            {ase.storeCount} {ase.storeCount === 1 ? 'store' : 'stores'}
+                          </span>
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400">No ASEs mapped</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  All Mapped Stores ({stores.length})
                 </label>
                 <div className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 max-h-32 overflow-y-auto">
                   <div className="flex flex-col gap-2">

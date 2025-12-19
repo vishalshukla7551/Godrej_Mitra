@@ -1,41 +1,73 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { clientLogout } from '@/lib/clientLogout';
+
+interface Transaction {
+  month: string;
+  monthNum: number;
+  year: number;
+  totalUnits: number;
+  incentive: number;
+  qualified: boolean;
+  incentiveRate: number;
+  status: string;
+  paymentDate: string | null;
+}
+
+interface PassbookData {
+  zse: {
+    id: string;
+    name: string;
+    phone: string;
+    aseCount: number;
+    storeCount: number;
+  };
+  transactions: Transaction[];
+}
 
 export default function ZSEWalletPage() {
   // Modal state for incentive breakdown
   const [showIncentiveModal, setShowIncentiveModal] = useState(false);
   const [selectedIncentiveData, setSelectedIncentiveData] = useState<any>(null);
-  const [loadingIncentiveDetails, setLoadingIncentiveDetails] = useState(false);
+  const [loadingIncentiveDetails, setLoadingIncentiveDetails] = useState<string | null>(null);
+  
+  // Passbook data state
+  const [passbookData, setPassbookData] = useState<PassbookData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Sample incentive data - replace with real API data later
-  const incentiveTransactions = [
-    {
-      month: "Nov 24",
-      incentive: "₹3,062.5",
-      status: "Paid",
-      paymentDate: "15-11-2024"
-    },
-    {
-      month: "Oct 24", 
-      incentive: "₹14,800",
-      status: "Paid",
-      paymentDate: "12-10-2024"
-    },
-    {
-      month: "Sep 24",
-      incentive: "₹16,100",
-      status: "Accumulated",
-      paymentDate: "--"
-    },
-    {
-      month: "Aug 24",
-      incentive: "₹13,900",
-      status: "Paid", 
-      paymentDate: "08-08-2024"
+  // Fetch passbook data on mount
+  useEffect(() => {
+    fetchPassbookData();
+  }, []);
+
+  const fetchPassbookData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/zse/passbook');
+      const result = await response.json();
+
+      if (result.success) {
+        setPassbookData(result.data);
+      } else {
+        setError(result.error || 'Failed to fetch passbook data');
+      }
+    } catch (err) {
+      console.error('Error fetching passbook data:', err);
+      setError('Failed to load passbook data');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  // Get current month data for "This Month" section
+  const currentDate = new Date();
+  const currentMonthData = passbookData?.transactions.find(
+    t => t.monthNum === currentDate.getMonth() + 1 && t.year === currentDate.getFullYear()
+  );
+
+  const incentiveTransactions = passbookData?.transactions || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-10">
@@ -81,42 +113,46 @@ export default function ZSEWalletPage() {
         </button>
       </header>
 
-      {/* Balance Card */}
-      <div className="max-w-4xl mb-8">
-        <div className="bg-gradient-to-br from-emerald-600 to-emerald-500 rounded-3xl p-8 shadow-[0_20px_60px_rgba(5,150,105,0.4)]">
-          <p className="text-emerald-100 text-sm font-medium mb-2">Total Available Balance</p>
-          <h2 className="text-white text-5xl font-bold mb-6">₹32,450</h2>
-          <div className="flex gap-4">
-            <button className="bg-white text-emerald-600 px-6 py-3 rounded-xl font-semibold hover:bg-emerald-50 transition">
-              Withdraw
-            </button>
-            <button className="bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-800 transition">
-              View History
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Quick Stats */}
       <div className="max-w-4xl mb-8">
         <h3 className="text-white text-xl font-semibold mb-4">This Month</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-            <p className="text-slate-400 text-sm mb-2">Earned</p>
-            <p className="text-white text-3xl font-bold">₹18,200</p>
-            <p className="text-emerald-400 text-sm mt-2">+12% from last month</p>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
           </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-            <p className="text-slate-400 text-sm mb-2">Withdrawn</p>
-            <p className="text-white text-3xl font-bold">₹8,500</p>
-            <p className="text-slate-400 text-sm mt-2">3 transactions</p>
+        ) : error ? (
+          <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-4 text-red-300">
+            {error}
           </div>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-            <p className="text-slate-400 text-sm mb-2">Pending</p>
-            <p className="text-white text-3xl font-bold">₹1,250</p>
-            <p className="text-amber-400 text-sm mt-2">Processing</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+              <p className="text-slate-400 text-sm mb-2">Total Units Sold</p>
+              <p className="text-white text-3xl font-bold">
+                {currentMonthData?.totalUnits || 0}
+              </p>
+              <p className={`text-sm mt-2 ${currentMonthData?.qualified ? 'text-emerald-400' : 'text-red-400'}`}>
+                {currentMonthData?.qualified ? 'Qualified' : 'Not Qualified'}
+              </p>
+            </div>
+            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+              <p className="text-slate-400 text-sm mb-2">Incentive Rate</p>
+              <p className="text-white text-3xl font-bold">
+                ₹{currentMonthData?.incentiveRate || 0}
+              </p>
+              <p className="text-slate-400 text-sm mt-2">per unit</p>
+            </div>
+            <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+              <p className="text-slate-400 text-sm mb-2">Total Earned</p>
+              <p className="text-white text-3xl font-bold">
+                ₹{currentMonthData?.incentive.toLocaleString() || 0}
+              </p>
+              <p className={`text-sm mt-2 ${currentMonthData?.status === 'Paid' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {currentMonthData?.status || 'No Data'}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Incentive Breakdown Table */}
@@ -129,7 +165,13 @@ export default function ZSEWalletPage() {
             <span className="text-center">Status</span>
             <span className="text-center">Date of Payment</span>
           </div>
-          {incentiveTransactions.length === 0 ? (
+          {loading ? (
+            <div className="px-4 py-8 text-center text-slate-400 text-sm">
+              <div className="flex justify-center items-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+              </div>
+            </div>
+          ) : incentiveTransactions.length === 0 ? (
             <div className="px-4 py-8 text-center text-slate-400 text-sm">
               No incentive transactions found
             </div>
@@ -145,26 +187,41 @@ export default function ZSEWalletPage() {
                     type="button"
                     className="px-3 py-1 rounded-lg bg-blue-600/20 text-blue-400 text-xs font-medium hover:bg-blue-600/30 transition-colors disabled:opacity-50"
                     title="View incentive calculation details"
-                    disabled={loadingIncentiveDetails}
+                    disabled={loadingIncentiveDetails === row.month}
                     onClick={async () => {
                       try {
-                        setLoadingIncentiveDetails(true);
+                        setLoadingIncentiveDetails(row.month);
                         
-                        // TODO: Replace with actual API call for ZSE incentive calculation
-                        // For now, using placeholder data
-                        setSelectedIncentiveData({
-                          month: row.month,
-                          incentive: row.incentive,
-                          status: row.status,
-                          paymentDate: row.paymentDate,
-                          // Placeholder breakdown data
-                          breakdown: {
-                            storeName: "Regional Store Network",
-                            totalUnits: 150,
-                            attachRate: "32%",
-                            totalIncentive: row.incentive
-                          }
-                        });
+                        // Fetch detailed incentive calculation from API
+                        const response = await fetch(`/api/zse/incentive/calculate?month=${row.monthNum}&year=${row.year}`);
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                          setSelectedIncentiveData({
+                            month: row.month,
+                            monthNum: row.monthNum,
+                            year: row.year,
+                            incentive: row.incentive,
+                            status: row.status,
+                            paymentDate: row.paymentDate || '--',
+                            totalUnits: row.totalUnits,
+                            qualified: row.qualified,
+                            incentiveRate: row.incentiveRate,
+                            breakdown: result.data.breakdown,
+                            summary: result.data.summary,
+                          });
+                        } else {
+                          // Fallback to basic data if API fails
+                          setSelectedIncentiveData({
+                            month: row.month,
+                            incentive: row.incentive,
+                            status: row.status,
+                            paymentDate: row.paymentDate || '--',
+                            totalUnits: row.totalUnits,
+                            qualified: row.qualified,
+                            incentiveRate: row.incentiveRate,
+                          });
+                        }
                         setShowIncentiveModal(true);
                       } catch (error) {
                         console.error('Error fetching incentive details:', error);
@@ -173,15 +230,18 @@ export default function ZSEWalletPage() {
                           month: row.month,
                           incentive: row.incentive,
                           status: row.status,
-                          paymentDate: row.paymentDate
+                          paymentDate: row.paymentDate || '--',
+                          totalUnits: row.totalUnits,
+                          qualified: row.qualified,
+                          incentiveRate: row.incentiveRate,
                         });
                         setShowIncentiveModal(true);
                       } finally {
-                        setLoadingIncentiveDetails(false);
+                        setLoadingIncentiveDetails(null);
                       }
                     }}
                   >
-                    {loadingIncentiveDetails ? (
+                    {loadingIncentiveDetails === row.month ? (
                       <div className="flex items-center gap-2">
                         <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-400"></div>
                         <span>Loading...</span>
@@ -201,7 +261,7 @@ export default function ZSEWalletPage() {
                   </span>
                 </span>
                 <span className="text-center text-sm text-slate-400">
-                  {row.paymentDate}
+                  {row.paymentDate || '--'}
                 </span>
               </div>
             ))
@@ -281,19 +341,37 @@ export default function ZSEWalletPage() {
                       <tr className="border-b border-slate-600">
                         <td className="px-4 py-3 text-slate-400">Total Units Sold</td>
                         <td className="px-4 py-3 font-medium text-right text-white">
-                          350 units
+                          {selectedIncentiveData?.totalUnits || 0} units
+                        </td>
+                      </tr>
+                      <tr className="border-b border-slate-600">
+                        <td className="px-4 py-3 text-slate-400">Qualification Status</td>
+                        <td className="px-4 py-3 font-medium text-right text-white">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            selectedIncentiveData?.qualified 
+                              ? 'bg-emerald-600/20 text-emerald-300' 
+                              : 'bg-red-600/20 text-red-300'
+                          }`}>
+                            {selectedIncentiveData?.qualified ? 'Qualified' : 'Not Qualified'}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-slate-600">
+                        <td className="px-4 py-3 text-slate-400">Incentive Rate</td>
+                        <td className="px-4 py-3 font-medium text-right text-white">
+                          ₹{selectedIncentiveData?.incentiveRate || 0} per unit
                         </td>
                       </tr>
                       <tr className="border-b border-slate-600">
                         <td className="px-4 py-3 text-slate-400">Team Performance Bonus</td>
                         <td className="px-4 py-3 font-medium text-right text-white">
-                          ₹3,062.5
+                          ₹{selectedIncentiveData?.incentive?.toLocaleString() || 0}
                         </td>
                       </tr>
                       <tr className="border-b border-slate-600 bg-blue-900/30">
                         <td className="px-4 py-3 text-blue-300 font-semibold">Total Incentive Earned</td>
                         <td className="px-4 py-3 font-bold text-right text-blue-300">
-                          {selectedIncentiveData?.incentive || '₹0'}
+                          ₹{selectedIncentiveData?.incentive?.toLocaleString() || 0}
                         </td>
                       </tr>
                       <tr className="bg-orange-900/30">

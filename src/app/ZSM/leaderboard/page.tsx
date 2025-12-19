@@ -84,14 +84,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 px-6 py-6">
-      <div className="flex justify-between items-center mb-8">
-        <a href="/ZSM" className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors text-sm">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="font-medium">Back</span>
-        </a>
-
+      <div className="flex justify-end items-center mb-8">
         <div className="flex items-center gap-2">
           <button
             onClick={() => fetchLeaderboard(selectedMonth)}

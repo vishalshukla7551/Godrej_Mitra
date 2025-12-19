@@ -65,9 +65,13 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    // Date filter (single date)
+    // Date filters
     const dateFilter = url.searchParams.get('date');
+    const monthFilter = url.searchParams.get('month');
+    const yearFilter = url.searchParams.get('year');
+    
     if (dateFilter) {
+      // Single date - filter for that specific day
       const filterDate = new Date(dateFilter);
       const startOfDay = new Date(filterDate);
       startOfDay.setHours(0, 0, 0, 0);
@@ -77,6 +81,26 @@ export async function GET(req: NextRequest) {
       whereClause.Date_of_sale = {
         gte: startOfDay,
         lte: endOfDay
+      };
+    } else if (monthFilter) {
+      // Month filter (format: YYYY-MM)
+      const [year, month] = monthFilter.split('-').map(Number);
+      const startOfMonth = new Date(year, month - 1, 1);
+      const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+      
+      whereClause.Date_of_sale = {
+        gte: startOfMonth,
+        lte: endOfMonth
+      };
+    } else if (yearFilter) {
+      // Year filter
+      const year = parseInt(yearFilter);
+      const startOfYear = new Date(year, 0, 1);
+      const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);
+      
+      whereClause.Date_of_sale = {
+        gte: startOfYear,
+        lte: endOfYear
       };
     } else if (startDate || endDate) {
       // Date range filter (fallback)
@@ -306,8 +330,9 @@ export async function GET(req: NextRequest) {
           planType: planType || 'all',
           store: storeFilter || 'all',
           device: deviceFilter || 'all',
-          startDate: startDate || null,
-          endDate: endDate || null,
+          date: dateFilter || null,
+          month: monthFilter || null,
+          year: yearFilter || null,
         },
       },
     });

@@ -31,8 +31,24 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'ZSE profile not found' }, { status: 404 });
     }
 
-    // Get stores associated with this ZSE (no state filter available in schema)
+    // Get all ASEs under this ZSE
+    const ases = await prisma.aSE.findMany({
+      where: { zseId: user.zseProfile.id },
+      select: {
+        id: true,
+        fullName: true,
+        storeIds: true
+      }
+    });
+
+    // Get union of all store IDs from all ASEs
+    const allStoreIds = [...new Set(ases.flatMap(ase => ase.storeIds))];
+
+    // Fetch store details for all unique store IDs
     const stores = await prisma.store.findMany({
+      where: {
+        id: { in: allStoreIds }
+      },
       select: {
         id: true,
         name: true,
@@ -48,6 +64,11 @@ export async function GET(req: NextRequest) {
           fullName: user.zseProfile.fullName,
           phone: user.zseProfile.phone
         },
+        ases: ases.map(ase => ({
+          id: ase.id,
+          fullName: ase.fullName,
+          storeCount: ase.storeIds.length
+        })),
         stores
       }
     });

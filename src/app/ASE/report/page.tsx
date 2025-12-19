@@ -294,20 +294,25 @@ export default function ReportPage() {
         {/* Filters */}
         <div className="flex items-center gap-2">
           {/* Filter Type Selector */}
-          <select 
-            value={filterType} 
-            onChange={(e) => {
-              setFilterType(e.target.value as 'date' | 'month' | 'year');
-              setSelectedDate("");
-              setSelectedMonth("");
-              setSelectedYear("");
-            }} 
-            className="appearance-none bg-blue-600 border border-blue-500 text-white rounded-lg px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 w-[110px]"
-          >
-            <option value="date">By Date</option>
-            <option value="month">By Month</option>
-            <option value="year">By Year</option>
-          </select>
+          <div className="relative">
+            <select 
+              value={filterType} 
+              onChange={(e) => {
+                setFilterType(e.target.value as 'date' | 'month' | 'year');
+                setSelectedDate("");
+                setSelectedMonth("");
+                setSelectedYear("");
+              }} 
+              className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 pr-8 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 w-[130px] cursor-pointer"
+            >
+              <option value="date">Date Wise</option>
+              <option value="month">Month Wise</option>
+              <option value="year">Year Wise</option>
+            </select>
+            <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
           
           {/* Date Picker - shown when filterType is 'date' */}
           {filterType === 'date' && (
@@ -315,8 +320,7 @@ export default function ReportPage() {
               type="date" 
               value={selectedDate} 
               onChange={(e) => setSelectedDate(e.target.value)} 
-              className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[140px]"
-              placeholder="Select date"
+              className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[150px]"
             />
           )}
           
@@ -326,60 +330,79 @@ export default function ReportPage() {
               type="month" 
               value={selectedMonth} 
               onChange={(e) => setSelectedMonth(e.target.value)} 
-              className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[140px]"
-              placeholder="Select month"
+              className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[150px]"
             />
           )}
           
           {/* Year Picker - shown when filterType is 'year' */}
           {filterType === 'year' && (
-            <select 
-              value={selectedYear} 
-              onChange={(e) => setSelectedYear(e.target.value)} 
-              className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[110px]"
-            >
-              <option value="">Select Year</option>
-              {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select 
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(e.target.value)} 
+                className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 pr-8 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[130px] cursor-pointer"
+              >
+                <option value="">Select Year</option>
+                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
           )}
           
           {/* Plan Filter */}
-          <select 
-            value={planSearch} 
-            onChange={(e) => setPlanSearch(e.target.value)} 
-            className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[130px]"
-          >
-            <option value="">All Plans</option>
-            {filterOptions.plans.map((plan) => (
-              <option key={plan} value={plan}>{plan.replace(/_/g, ' ')}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select 
+              value={planSearch} 
+              onChange={(e) => setPlanSearch(e.target.value)} 
+              className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 pr-8 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[130px] cursor-pointer"
+            >
+              <option value="">All Plans</option>
+              {filterOptions.plans.map((plan) => (
+                <option key={plan} value={plan}>{plan.replace(/_/g, ' ')}</option>
+              ))}
+            </select>
+            <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
           
           {/* Store Filter */}
-          <select 
-            value={storeSearch} 
-            onChange={(e) => setStoreSearch(e.target.value)} 
-            className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 w-[140px]"
-          >
-            <option value="">All Stores</option>
-            {filterOptions.stores.map((store) => (
-              <option key={store.id} value={store.name}>{store.name} {store.city && `- ${store.city}`}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select 
+              value={storeSearch} 
+              onChange={(e) => setStoreSearch(e.target.value)} 
+              className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 pr-8 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 w-[140px] cursor-pointer"
+            >
+              <option value="">All Stores</option>
+              {filterOptions.stores.map((store) => (
+                <option key={store.id} value={store.name}>{store.name} {store.city && `- ${store.city}`}</option>
+              ))}
+            </select>
+            <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
           
           {/* Device Filter */}
-          <select 
-            value={deviceSearch} 
-            onChange={(e) => setDeviceSearch(e.target.value)} 
-            className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 w-[140px]"
-          >
-            <option value="">All Devices</option>
-            {filterOptions.devices.map((device) => (
-              <option key={device} value={device}>{device}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select 
+              value={deviceSearch} 
+              onChange={(e) => setDeviceSearch(e.target.value)} 
+              className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 pr-8 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 w-[140px] cursor-pointer"
+            >
+              <option value="">All Devices</option>
+              {filterOptions.devices.map((device) => (
+                <option key={device} value={device}>{device}</option>
+              ))}
+            </select>
+            <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
           
           {/* Clear Filters */}
           <button 

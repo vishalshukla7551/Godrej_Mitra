@@ -41,6 +41,8 @@ export async function GET(req: NextRequest) {
     const storeFilter = searchParams.get('storeFilter') || '';
     const deviceFilter = searchParams.get('deviceFilter') || '';
     const dateFilter = searchParams.get('date') || '';
+    const monthFilter = searchParams.get('month') || '';
+    const yearFilter = searchParams.get('year') || '';
 
     // Build where clause - only for ASE's assigned stores
     const where: any = {
@@ -49,8 +51,9 @@ export async function GET(req: NextRequest) {
       }
     };
 
-    // Apply date filter (single date - filter for that specific day)
+    // Apply date filters
     if (dateFilter) {
+      // Single date - filter for that specific day
       const filterDate = new Date(dateFilter);
       const startOfDay = new Date(filterDate);
       startOfDay.setHours(0, 0, 0, 0);
@@ -60,6 +63,26 @@ export async function GET(req: NextRequest) {
       where.Date_of_sale = {
         gte: startOfDay,
         lte: endOfDay
+      };
+    } else if (monthFilter) {
+      // Month filter (format: YYYY-MM)
+      const [year, month] = monthFilter.split('-').map(Number);
+      const startOfMonth = new Date(year, month - 1, 1);
+      const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+      
+      where.Date_of_sale = {
+        gte: startOfMonth,
+        lte: endOfMonth
+      };
+    } else if (yearFilter) {
+      // Year filter
+      const year = parseInt(yearFilter);
+      const startOfYear = new Date(year, 0, 1);
+      const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);
+      
+      where.Date_of_sale = {
+        gte: startOfYear,
+        lte: endOfYear
       };
     }
 

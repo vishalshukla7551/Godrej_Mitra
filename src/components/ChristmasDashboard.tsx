@@ -8,7 +8,7 @@ interface DashboardCard {
   title: string;
   description: string;
   href: string;
-  badge: string;
+  badge?: string;
   color: 'green' | 'blue' | 'orange' | 'purple';
   icon: React.ReactNode;
 }
@@ -80,9 +80,11 @@ export default function ChristmasDashboard({ userName, loading, cards, logoutPat
               </div>
               <h3 className="text-zinc-900 text-xl font-bold">{card.title}</h3>
               <p className="text-stone-500 text-base">{card.description}</p>
-              <div className={`mt-4 inline-flex items-center rounded-md ${colorClasses[card.color].badge} px-3 py-1.5`}>
-                <span className="text-white text-xs font-semibold">{card.badge}</span>
-              </div>
+              {card.badge && (
+                <div className={`mt-4 inline-flex items-center rounded-md ${colorClasses[card.color].badge} px-3 py-1.5`}>
+                  <span className="text-white text-xs font-semibold">{card.badge}</span>
+                </div>
+              )}
             </Link>
           ))}
         </div>

@@ -3,6 +3,12 @@
 import { useEffect, useState } from 'react';
 import { clientLogout } from '@/lib/clientLogout';
 
+interface StoreInfo {
+  id: string;
+  name: string;
+  city: string | null;
+}
+
 interface ZSMProfileApiResponse {
   success: boolean;
   data?: {
@@ -12,6 +18,12 @@ interface ZSMProfileApiResponse {
       phone: string;
       region?: string;
     };
+    abms: Array<{
+      id: string;
+      fullName: string;
+      storeCount: number;
+    }>;
+    stores: StoreInfo[];
   };
   error?: string;
 }
@@ -20,11 +32,11 @@ export default function ZSMProfilePage() {
   const [formData, setFormData] = useState({
     fullName: '',
     phoneNumber: '',
-    email: '',
-    dateOfBirth: '',
     region: '',
   });
 
+  const [stores, setStores] = useState<StoreInfo[]>([]);
+  const [abms, setAbms] = useState<Array<{ id: string; fullName: string; storeCount: number }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +53,7 @@ export default function ZSMProfilePage() {
           throw new Error(json.error || 'Failed to load ZSM profile');
         }
 
-        const { zsm } = json.data;
+        const { zsm, abms: apiAbms, stores: apiStores } = json.data;
 
         setFormData(prev => ({
           ...prev,
@@ -49,6 +61,9 @@ export default function ZSMProfilePage() {
           phoneNumber: zsm.phone || '',
           region: zsm.region || '',
         }));
+
+        setStores(apiStores || []);
+        setAbms(apiAbms || []);
 
       } catch (err) {
         console.error(err);
@@ -110,7 +125,8 @@ export default function ZSMProfilePage() {
           </div>
         </div>
       ) : (
-        <div className="max-w-2xl mx-auto">
+        <div className="grid grid-cols-2 gap-6">
+          {/* Personal Details Card */}
           <div className="rounded-2xl bg-white p-8 shadow-lg">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center">
@@ -125,23 +141,78 @@ export default function ZSMProfilePage() {
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">{formData.fullName || 'Not provided'}</div>
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 font-medium">{formData.fullName || 'Not provided'}</div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">{formData.phoneNumber || 'Not provided'}</div>
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 font-medium">{formData.phoneNumber || 'Not provided'}</div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">{formData.email || 'Not provided'}</div>
+              {formData.region && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
+                  <div className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 font-medium">{formData.region}</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mapped ABMs & Stores Card */}
+          <div className="rounded-2xl bg-white p-8 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="white" strokeWidth="2" fill="none"/>
+                    <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" fill="none"/>
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">Mapped ABMs & Stores</h2>
               </div>
+            </div>
+
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
-                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">{formData.dateOfBirth || 'Not provided'}</div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mapped ABMs ({abms.length})
+                </label>
+                <div className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 max-h-32 overflow-y-auto">
+                  <div className="flex flex-col gap-2">
+                    {abms.length ? (
+                      abms.map((abm) => (
+                        <span key={abm.id} className="inline-flex items-center justify-between rounded-full bg-white px-3 py-1 text-sm font-medium text-gray-900 shadow-sm">
+                          <span>{abm.fullName}</span>
+                          <span className="ml-2 text-xs text-gray-500">
+                            {abm.storeCount} {abm.storeCount === 1 ? 'store' : 'stores'}
+                          </span>
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400">No ABMs mapped</span>
+                    )}
+                  </div>
+                </div>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
-                <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-900">{formData.region || 'Not provided'}</div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  All Mapped Stores ({stores.length})
+                </label>
+                <div className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 max-h-32 overflow-y-auto">
+                  <div className="flex flex-col gap-2">
+                    {stores.length ? (
+                      stores.map((store) => (
+                        <span key={store.id} className="inline-flex items-center rounded-full bg-white px-3 py-1 text-sm font-medium text-gray-900 shadow-sm">
+                          {store.name}
+                          {store.city && (
+                            <span className="ml-1 text-xs text-gray-500">- {store.city}</span>
+                          )}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400">No stores mapped</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

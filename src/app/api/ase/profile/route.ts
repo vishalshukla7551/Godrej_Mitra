@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
         fullName: true,
         phone: true,
         storeIds: true,
+        zseId: true,
       },
     });
 
@@ -28,6 +29,16 @@ export async function GET(req: NextRequest) {
         { error: 'ASE profile not found' },
         { status: 404 },
       );
+    }
+
+    // Get ZSE info
+    let zseName = null;
+    if (aseProfile.zseId) {
+      const zse = await prisma.zSE.findUnique({
+        where: { id: aseProfile.zseId },
+        select: { fullName: true }
+      });
+      zseName = zse?.fullName || null;
     }
 
     let stores: { id: string; name: string; city: string | null }[] = [];
@@ -54,6 +65,7 @@ export async function GET(req: NextRequest) {
           id: aseProfile.id,
           fullName: aseProfile.fullName,
           phone: aseProfile.phone,
+          zseName: zseName,
         },
         stores,
       },

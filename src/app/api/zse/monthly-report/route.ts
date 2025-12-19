@@ -68,14 +68,17 @@ export async function GET(req: NextRequest) {
     const storeFilter = url.searchParams.get('store');
     const deviceFilter = url.searchParams.get('device');
     const dateFilter = url.searchParams.get('date');
+    const monthFilter = url.searchParams.get('month');
+    const yearFilter = url.searchParams.get('year');
 
     // Build where clause for filtering
     const whereClause: any = {
       storeId: { in: allStoreIds }
     };
 
-    // Apply date filter
+    // Apply date filters
     if (dateFilter) {
+      // Single date - filter for that specific day
       const filterDate = new Date(dateFilter);
       const startOfDay = new Date(filterDate);
       startOfDay.setHours(0, 0, 0, 0);
@@ -85,6 +88,26 @@ export async function GET(req: NextRequest) {
       whereClause.Date_of_sale = {
         gte: startOfDay,
         lte: endOfDay
+      };
+    } else if (monthFilter) {
+      // Month filter (format: YYYY-MM)
+      const [year, month] = monthFilter.split('-').map(Number);
+      const startOfMonth = new Date(year, month - 1, 1);
+      const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
+      
+      whereClause.Date_of_sale = {
+        gte: startOfMonth,
+        lte: endOfMonth
+      };
+    } else if (yearFilter) {
+      // Year filter
+      const year = parseInt(yearFilter);
+      const startOfYear = new Date(year, 0, 1);
+      const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);
+      
+      whereClause.Date_of_sale = {
+        gte: startOfYear,
+        lte: endOfYear
       };
     }
 
@@ -121,7 +144,7 @@ export async function GET(req: NextRequest) {
           select: {
             fullName: true,
             phone: true,
-            secId: true,
+            employeeId: true,
           },
         },
         plan: {
@@ -157,7 +180,7 @@ export async function GET(req: NextRequest) {
       dateOfSale: report.Date_of_sale,
       secName: report.secUser?.fullName || 'N/A',
       secPhone: report.secUser?.phone || 'N/A',
-      secId: report.secUser?.secId || 'N/A',
+      secId: report.secUser?.employeeId || 'N/A',
       storeName: report.store.name,
       storeCity: report.store.city || 'N/A',
       deviceName: report.samsungSKU.ModelName,

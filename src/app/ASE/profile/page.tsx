@@ -72,6 +72,7 @@ export default function ProfilePage() {
   const [kycData, setKycData] = useState<any>(null);
 
   const [stores, setStores] = useState<StoreInfo[]>([]);
+  const [zseName, setZseName] = useState<string | null>(null);
   const [allStores, setAllStores] = useState<StoreInfo[]>([]);
   const [pendingRequest, setPendingRequest] = useState<StoreChangeRequest | null>(null);
   const [showStoreChangeModal, setShowStoreChangeModal] = useState(false);
@@ -114,8 +115,9 @@ export default function ProfilePage() {
 
         const { ase, stores: apiStores } = json.data;
 
-        // Save all mapped stores
+        // Save all mapped stores and ZSE name
         setStores(apiStores || []);
+        setZseName(ase.zseName || null);
         const primaryStore = apiStores && apiStores.length > 0 ? apiStores[0] : null;
 
         // Build a combined string of all mapped store names, e.g. "Store A, Store B"
@@ -416,7 +418,7 @@ export default function ProfilePage() {
                     <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" fill="none" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Store Details</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Stores and ZSE Mapping</h2>
               </div>
               <button
                 type="button"
@@ -435,7 +437,16 @@ export default function ProfilePage() {
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Store Name(s)
+                  ZSE Name
+                </label>
+                <div className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 font-medium">
+                  {zseName || 'Not assigned'}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mapped Stores
                 </label>
                 <div className="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 max-h-32 overflow-y-auto">
                   <div className="flex flex-col gap-2">

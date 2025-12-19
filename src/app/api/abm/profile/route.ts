@@ -32,14 +32,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'ABM profile not found' }, { status: 404 });
     }
 
-    // Get ZSM info for region
-    let region = null;
+    // Get ZSM info
+    let zsmName = null;
     if (user.abmProfile.zsmId) {
       const zsm = await prisma.zSM.findUnique({
         where: { id: user.abmProfile.zsmId },
-        select: { region: true }
+        select: { fullName: true }
       });
-      region = zsm?.region || null;
+      zsmName = zsm?.fullName || null;
     }
 
     // Get stores associated with this ABM
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
           id: user.abmProfile.id,
           fullName: user.abmProfile.fullName,
           phone: user.abmProfile.phone,
-          region: region
+          zsmName: zsmName
         },
         stores
       }

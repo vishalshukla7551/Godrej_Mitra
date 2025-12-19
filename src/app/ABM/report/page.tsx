@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { clientLogout } from '@/lib/clientLogout';
 
-interface ReportData {
+interface Report {
   id: string;
   dateOfSale: string;
   secId: string;
@@ -36,12 +36,17 @@ interface FilterOptions {
 type ReportTab = 'monthly' | 'spot';
 
 export default function ReportPage() {
-  const [activeTab, setActiveTab] = useState<ReportTab>('spot');
+  const [activeTab, setActiveTab] = useState<ReportTab>('monthly');
   const [planSearch, setPlanSearch] = useState("");
   const [storeSearch, setStoreSearch] = useState("");
   const [deviceSearch, setDeviceSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
-  const [reports, setReports] = useState<ReportData[]>([]);
+  const [filterType, setFilterType] = useState<'date' | 'month' | 'year'>('date');
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  
+  const [reports, setReports] = useState<Report[]>([]);
   const [summary, setSummary] = useState<Summary>({
     activeStores: 0,
     activeSECs: 0,
@@ -64,36 +69,32 @@ export default function ReportPage() {
       
       const params = new URLSearchParams();
       
-      // Use different parameter names based on the API
       if (activeTab === 'monthly') {
-        if (planSearch) {
-          params.append('planType', planSearch);
-        }
-        if (storeSearch) {
-          params.append('store', storeSearch);
-        }
-        if (deviceSearch) {
-          params.append('device', deviceSearch);
-        }
-        if (dateFilter) {
-          params.append('date', dateFilter);
+        if (planSearch) params.append('planType', planSearch);
+        if (storeSearch) params.append('store', storeSearch);
+        if (deviceSearch) params.append('device', deviceSearch);
+        // Add date filter based on filter type
+        if (filterType === 'date' && selectedDate) {
+          params.append('date', selectedDate);
+        } else if (filterType === 'month' && selectedMonth) {
+          params.append('month', selectedMonth);
+        } else if (filterType === 'year' && selectedYear) {
+          params.append('year', selectedYear);
         }
       } else {
-        if (planSearch) {
-          params.append('planFilter', planSearch);
-        }
-        if (storeSearch) {
-          params.append('storeFilter', storeSearch);
-        }
-        if (deviceSearch) {
-          params.append('deviceFilter', deviceSearch);
-        }
-        if (dateFilter) {
-          params.append('date', dateFilter);
+        if (planSearch) params.append('planFilter', planSearch);
+        if (storeSearch) params.append('storeFilter', storeSearch);
+        if (deviceSearch) params.append('deviceFilter', deviceSearch);
+        // Add date filter based on filter type
+        if (filterType === 'date' && selectedDate) {
+          params.append('date', selectedDate);
+        } else if (filterType === 'month' && selectedMonth) {
+          params.append('month', selectedMonth);
+        } else if (filterType === 'year' && selectedYear) {
+          params.append('year', selectedYear);
         }
       }
 
-      // Use different API endpoints based on active tab
       const endpoint = activeTab === 'monthly' ? '/api/abm/monthly-report' : '/api/abm/report';
       const response = await fetch(`${endpoint}?${params}`);
       if (!response.ok) {
@@ -104,7 +105,6 @@ export default function ReportPage() {
       
       if (result.success) {
         if (activeTab === 'monthly') {
-          // Handle monthly report API response structure
           setReports(result.data.reports.map((r: any) => ({
             id: r.id,
             dateOfSale: r.dateOfSale,
@@ -131,7 +131,6 @@ export default function ReportPage() {
             setFilterOptions(result.data.filterOptions);
           }
         } else {
-          // Handle spot report API response structure
           setReports(result.data.reports);
           setSummary(result.data.summary);
           if (result.data.filterOptions) {
@@ -148,7 +147,7 @@ export default function ReportPage() {
 
   useEffect(() => { 
     fetchData(); 
-  }, [activeTab, planSearch, storeSearch, deviceSearch, dateFilter]);
+  }, [activeTab, planSearch, storeSearch, deviceSearch, filterType, selectedDate, selectedMonth, selectedYear]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -160,144 +159,14 @@ export default function ReportPage() {
     setStoreSearch("");
     setDeviceSearch("");
     setDateFilter("");
+    setSelectedDate("");
+    setSelectedMonth("");
+    setSelectedYear("");
+    setFilterType('date');
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-10">
-      <header className="mb-6">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-1">Report Page</h1>
-            <p className="text-sm text-neutral-400">Incentives Summary — No of Incentive Paid: {summary.paidCount} | Unpaid: {summary.unpaidCount}</p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400">
-                <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-                Live
-              </span>
-            </div>
-          </div>
-
-          {/* Utilities */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => clientLogout('/login/role')}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-lg"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M16 17L21 12L16 7"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M21 12H9"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setActiveTab('monthly')}
-            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === 'monthly'
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
-            }`}
-          >
-            Monthly Report
-          </button>
-          <button
-            onClick={() => setActiveTab('spot')}
-            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === 'spot'
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
-            }`}
-          >
-            Spot Report
-          </button>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Date Filter */}
-          <input 
-            type="date" 
-            value={dateFilter} 
-            onChange={(e) => setDateFilter(e.target.value)} 
-            className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          
-          {/* Plan Filter */}
-          <select 
-            value={planSearch} 
-            onChange={(e) => setPlanSearch(e.target.value)} 
-            className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[150px]"
-          >
-            <option value="">All Plans</option>
-            {filterOptions.plans.map((plan) => (
-              <option key={plan} value={plan}>{plan.replace(/_/g, ' ')}</option>
-            ))}
-          </select>
-          
-          {/* Store Filter */}
-          <select 
-            value={storeSearch} 
-            onChange={(e) => setStoreSearch(e.target.value)} 
-            className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[180px]"
-          >
-            <option value="">All Stores</option>
-            {filterOptions.stores.map((store) => (
-              <option key={store.id} value={store.name}>{store.name} {store.city && `- ${store.city}`}</option>
-            ))}
-          </select>
-          
-          {/* Device Filter */}
-          <select 
-            value={deviceSearch} 
-            onChange={(e) => setDeviceSearch(e.target.value)} 
-            className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[180px]"
-          >
-            <option value="">All Devices</option>
-            {filterOptions.devices.map((device) => (
-              <option key={device} value={device}>{device}</option>
-            ))}
-          </select>
-          
-          {/* Clear Filters */}
-          <button 
-            onClick={clearFilters}
-            className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white text-sm rounded-lg transition-colors"
-          >
-            Clear
-          </button>
-        </div>
-      </header>
-
-      {/* Content */}
+  const renderContent = () => (
+    <>
       {loading && (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
@@ -313,7 +182,6 @@ export default function ReportPage() {
       )}
       {!loading && !error && (
         <>
-          {/* Key Metrics */}
           <div className="max-w-6xl mb-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-[0_10px_40px_rgba(99,102,241,0.3)]">
@@ -330,8 +198,6 @@ export default function ReportPage() {
               </div>
             </div>
           </div>
-
-          {/* Transactions Table */}
           <div className="max-w-7xl">
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               <table className="w-full">
@@ -378,6 +244,158 @@ export default function ReportPage() {
           </div>
         </>
       )}
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-6 md:p-10">
+      <header className="mb-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-1">Report Page</h1>
+            <p className="text-sm text-neutral-400">Incentives Summary — Paid: {summary.paidCount} | Unpaid: {summary.unpaidCount}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400">
+                <span className="h-2 w-2 rounded-full bg-emerald-400"></span>Live
+              </span>
+            </div>
+          </div>
+          <button onClick={() => clientLogout('/login/role')} className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-lg">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16 17L21 12L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <span>Logout</span>
+          </button>
+        </div>
+        
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          <button onClick={() => setActiveTab('monthly')} className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'monthly' ? 'bg-blue-600 text-white shadow-lg' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}>Monthly Report</button>
+          <button onClick={() => setActiveTab('spot')} className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'spot' ? 'bg-blue-600 text-white shadow-lg' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}>Spot Report</button>
+        </div>
+        
+        {/* Filters */}
+        <div className="flex items-center gap-2">
+          {/* Filter Type Selector */}
+          <div className="relative">
+            <select 
+              value={filterType} 
+              onChange={(e) => {
+                setFilterType(e.target.value as 'date' | 'month' | 'year');
+                setSelectedDate("");
+                setSelectedMonth("");
+                setSelectedYear("");
+              }} 
+              className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 pr-8 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 w-[130px] cursor-pointer"
+            >
+              <option value="date">Date Wise</option>
+              <option value="month">Month Wise</option>
+              <option value="year">Year Wise</option>
+            </select>
+            <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+          
+          {/* Date Picker - shown when filterType is 'date' */}
+          {filterType === 'date' && (
+            <input 
+              type="date" 
+              value={selectedDate} 
+              onChange={(e) => setSelectedDate(e.target.value)} 
+              className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[150px]"
+            />
+          )}
+          
+          {/* Month Picker - shown when filterType is 'month' */}
+          {filterType === 'month' && (
+            <input 
+              type="month" 
+              value={selectedMonth} 
+              onChange={(e) => setSelectedMonth(e.target.value)} 
+              className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[150px]"
+            />
+          )}
+          
+          {/* Year Picker - shown when filterType is 'year' */}
+          {filterType === 'year' && (
+            <div className="relative">
+              <select 
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(e.target.value)} 
+                className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 pr-8 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[130px] cursor-pointer"
+              >
+                <option value="">Select Year</option>
+                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          )}
+          
+          {/* Plan Filter */}
+          <div className="relative">
+            <select 
+              value={planSearch} 
+              onChange={(e) => setPlanSearch(e.target.value)} 
+              className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 pr-8 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[130px] cursor-pointer"
+            >
+              <option value="">All Plans</option>
+              {filterOptions.plans.map((plan) => (
+                <option key={plan} value={plan}>{plan.replace(/_/g, ' ')}</option>
+              ))}
+            </select>
+            <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+          
+          {/* Store Filter */}
+          <div className="relative">
+            <select 
+              value={storeSearch} 
+              onChange={(e) => setStoreSearch(e.target.value)} 
+              className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 pr-8 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 w-[140px] cursor-pointer"
+            >
+              <option value="">All Stores</option>
+              {filterOptions.stores.map((store) => (
+                <option key={store.id} value={store.name}>{store.name} {store.city && `- ${store.city}`}</option>
+              ))}
+            </select>
+            <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+          
+          {/* Device Filter */}
+          <div className="relative">
+            <select 
+              value={deviceSearch} 
+              onChange={(e) => setDeviceSearch(e.target.value)} 
+              className="appearance-none bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2 py-2 pr-8 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 w-[140px] cursor-pointer"
+            >
+              <option value="">All Devices</option>
+              {filterOptions.devices.map((device) => (
+                <option key={device} value={device}>{device}</option>
+              ))}
+            </select>
+            <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+          
+          {/* Clear Filters */}
+          <button 
+            onClick={clearFilters}
+            className="px-3 py-2 bg-neutral-700 hover:bg-neutral-600 text-white text-xs rounded-lg transition-colors whitespace-nowrap"
+          >
+            Clear
+          </button>
+        </div>
+      </header>
+      
+      {renderContent()}
     </div>
   );
 }

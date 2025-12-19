@@ -8,12 +8,14 @@ export default function ASEPage() {
   const [userName, setUserName] = useState('User');
 
   useEffect(() => {
-    // Get user's full name from localStorage
+    // Get user's first name from localStorage
     const authUser = localStorage.getItem('authUser');
     if (authUser) {
       try {
         const user = JSON.parse(authUser);
-        setUserName(user.fullName || user.name || 'User');
+        const fullName = user.fullName || user.name || 'User';
+        const firstName = fullName.split(' ')[0];
+        setUserName(firstName);
       } catch (error) {
         console.error('Error parsing authUser:', error);
       }

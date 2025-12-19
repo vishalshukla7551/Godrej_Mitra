@@ -306,6 +306,24 @@ export default function WalletPage() {
                         </td>
                       </tr>
                       <tr className="border-b border-slate-600">
+                        <td className="px-4 py-3 text-slate-400">Volume Slab</td>
+                        <td className="px-4 py-3 font-medium text-right text-white">
+                          <div className="text-right space-y-1">
+                            <div className="text-xs text-slate-300">Slab 1: 35 to 100 Units</div>
+                            <div className="text-emerald-400 font-semibold">₹18.75 per unit</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-slate-600">
+                        <td className="px-4 py-3 text-slate-400"></td>
+                        <td className="px-4 py-3 font-medium text-right text-white">
+                          <div className="text-right space-y-1">
+                            <div className="text-xs text-slate-300">Slab 2: &gt;100 Units</div>
+                            <div className="text-emerald-400 font-semibold">₹28.75 per unit</div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-slate-600">
                         <td className="px-4 py-3 text-slate-400">Total Units Sold</td>
                         <td className="px-4 py-3 font-medium text-right text-white">
                           {selectedIncentiveData?.summary?.totalUnits || 0} units

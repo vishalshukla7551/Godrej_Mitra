@@ -8,12 +8,14 @@ export default function ASEPage() {
   const [userName, setUserName] = useState('User');
 
   useEffect(() => {
-    // Get user's full name from localStorage
+    // Get user's first name from localStorage
     const authUser = localStorage.getItem('authUser');
     if (authUser) {
       try {
         const user = JSON.parse(authUser);
-        setUserName(user.fullName || user.name || 'User');
+        const fullName = user.fullName || user.name || 'User';
+        const firstName = fullName.split(' ')[0];
+        setUserName(firstName);
       } catch (error) {
         console.error('Error parsing authUser:', error);
       }
@@ -150,7 +152,7 @@ export default function ASEPage() {
           </Link>
 
           {/* View Reports card */}
-          <Link href="/ASE/report" className="relative h-60 rounded-2xl border border-zinc-100 bg-white shadow-[0_6px_24px_rgba(0,0,0,0.12)] p-6 block hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] transition-shadow cursor-pointer">
+          <Link href="/ZSE/report" className="relative h-60 rounded-2xl border border-zinc-100 bg-white shadow-[0_6px_24px_rgba(0,0,0,0.12)] p-6 block hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] transition-shadow cursor-pointer">
             {/* Arrow button - top right */}
             <div className="absolute top-6 right-6 h-10 w-10 rounded-full bg-[#4318D1] shadow-[0_2px_8px_rgba(67,24,209,0.3)] flex items-center justify-center">
               <span className="text-white text-lg font-semibold">{">"}</span>
@@ -181,8 +183,8 @@ export default function ASEPage() {
             </p>
           </Link>
 
-          {/* Store Settings card */}
-          <Link href="/ASE/profile" className="relative h-60 rounded-2xl border border-zinc-100 bg-white shadow-[0_6px_24px_rgba(0,0,0,0.12)] p-6 block hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] transition-shadow cursor-pointer">
+          {/* Profile Settings card */}
+          <Link href="/ZSE/profile" className="relative h-60 rounded-2xl border border-zinc-100 bg-white shadow-[0_6px_24px_rgba(0,0,0,0.12)] p-6 block hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] transition-shadow cursor-pointer">
             {/* Arrow button - top right */}
             <div className="absolute top-6 right-6 h-10 w-10 rounded-full bg-amber-600 shadow-[0_2px_8px_rgba(217,119,6,0.3)] flex items-center justify-center">
               <span className="text-white text-lg font-semibold">{">"}</span>

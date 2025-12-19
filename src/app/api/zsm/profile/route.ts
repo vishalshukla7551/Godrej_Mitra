@@ -32,6 +32,31 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'ZSM profile not found' }, { status: 404 });
     }
 
+    // Get all ABMs under this ZSM
+    const abms = await prisma.aBM.findMany({
+      where: { zsmId: user.zsmProfile.id },
+      select: {
+        id: true,
+        fullName: true,
+        storeIds: true
+      }
+    });
+
+    // Get union of all store IDs from all ABMs
+    const allStoreIds = [...new Set(abms.flatMap(abm => abm.storeIds))];
+
+    // Fetch store details for all unique store IDs
+    const stores = await prisma.store.findMany({
+      where: {
+        id: { in: allStoreIds }
+      },
+      select: {
+        id: true,
+        name: true,
+        city: true,
+      }
+    });
+
     return NextResponse.json({
       success: true,
       data: {
@@ -40,7 +65,13 @@ export async function GET(req: NextRequest) {
           fullName: user.zsmProfile.fullName,
           phone: user.zsmProfile.phone,
           region: user.zsmProfile.region
-        }
+        },
+        abms: abms.map(abm => ({
+          id: abm.id,
+          fullName: abm.fullName,
+          storeCount: abm.storeIds.length
+        })),
+        stores
       }
     });
   } catch (error) {
