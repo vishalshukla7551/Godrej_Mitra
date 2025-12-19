@@ -81,7 +81,7 @@ export default function ASEPage() {
       <section className="mt-10 px-10">
         <div className="max-w-xl space-y-3">
           <h1 className="font-[family-name:var(--font-inter)] text-[72px] font-black leading-[61.2px] tracking-[-2px] bg-gradient-to-r from-[#FF6348] via-[#FDCB6E] to-[#FFEAA7] bg-clip-text text-transparent">
-            SPOT
+            SC
           </h1>
           <h1 className="font-[family-name:var(--font-inter)] text-[72px] font-black leading-[61.2px] tracking-[-2px] bg-gradient-to-r from-[#E74C3C] via-[#FF4757] to-[#FF6348] bg-clip-text text-transparent">
             INCENTIVE
@@ -98,11 +98,6 @@ export default function ASEPage() {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 max-w-3xl">
           {/* View Reports card */}
           <Link href="/ABM/report" className="relative h-60 rounded-2xl border border-zinc-100 bg-white shadow-[0_6px_24px_rgba(0,0,0,0.12)] p-6 block hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] transition-shadow cursor-pointer">
-            {/* Arrow button - top right */}
-            <div className="absolute top-6 right-6 h-10 w-10 rounded-full bg-[#4318D1] shadow-[0_2px_8px_rgba(67,24,209,0.3)] flex items-center justify-center">
-              <span className="text-white text-lg font-semibold">{">"}</span>
-            </div>
-
             <div className="relative mb-6">
               <div className="h-16 w-16 rounded-2xl bg-gradient-to-r from-[#4318D1] to-indigo-500 shadow-[0_4px_12px_rgba(67,24,209,0.3)] flex items-center justify-center">
                 <svg
@@ -130,11 +125,6 @@ export default function ASEPage() {
 
           {/* Profile Settings card */}
           <Link href="/ABM/profile" className="relative h-60 rounded-2xl border border-zinc-100 bg-white shadow-[0_6px_24px_rgba(0,0,0,0.12)] p-6 block hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] transition-shadow cursor-pointer">
-            {/* Arrow button - top right */}
-            <div className="absolute top-6 right-6 h-10 w-10 rounded-full bg-amber-600 shadow-[0_2px_8px_rgba(217,119,6,0.3)] flex items-center justify-center">
-              <span className="text-white text-lg font-semibold">{">"}</span>
-            </div>
-
             <div className="relative mb-6">
               <div className="h-16 w-16 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 shadow-[0_4px_12px_rgba(217,119,6,0.3)] flex items-center justify-center">
                 <svg

@@ -10,6 +10,8 @@ interface ASEProfileApiResponse {
       id: string;
       fullName: string;
       phone: string;
+      agencyName?: string | null;
+      zseName?: string | null;
     };
     stores: StoreInfo[];
   };
@@ -83,6 +85,8 @@ export default function ProfilePage() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [submittingRequest, setSubmittingRequest] = useState(false);
+  const [agencySubmitted, setAgencySubmitted] = useState(false);
+  const [isEditingAgency, setIsEditingAgency] = useState(false);
 
   const fetchKycInfo = async () => {
     try {
@@ -128,12 +132,18 @@ export default function ProfilePage() {
           // personal details we know from ASE profile
           fullName: ase.fullName || prev.fullName,
           phoneNumber: ase.phone || prev.phoneNumber,
+          agencyName: ase.agencyName || prev.agencyName,
           // show all mapped store names in a single read-only field
           storeName: allStoreNames || primaryStore?.name || '',
           storeAddress: primaryStore
             ? [primaryStore.city].filter(Boolean).join(', ')
             : '',
         }));
+
+        // Check if agency name is already set
+        if (ase.agencyName) {
+          setAgencySubmitted(true);
+        }
 
         // Fetch pending store change request
         const requestRes = await fetch('/api/ase/store-change-request');
@@ -588,30 +598,69 @@ export default function ProfilePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Agency Name
                 </label>
-                <select
-                  value={formData.agencyName}
-                  onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                >
-                  <option value="">Select Agency</option>
-                  <option value="Agency A">Agency A</option>
-                  <option value="Agency B">Agency B</option>
-                  <option value="Agency C">Agency C</option>
-                  <option value="Agency D">Agency D</option>
-                  <option value="Other">Other</option>
-                </select>
+                {agencySubmitted && !isEditingAgency ? (
+                  <div className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 font-medium">
+                    {formData.agencyName || 'Not provided'}
+                  </div>
+                ) : (
+                  <select
+                    value={formData.agencyName}
+                    onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  >
+                    <option value="">Select Agency</option>
+                    <option value="Agency A">Agency A</option>
+                    <option value="Agency B">Agency B</option>
+                    <option value="Agency C">Agency C</option>
+                    <option value="Agency D">Agency D</option>
+                    <option value="Other">Other</option>
+                  </select>
+                )}
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  console.log('Agency submitted:', formData.agencyName);
-                  alert('Agency information saved successfully!');
-                }}
-                className="w-full px-4 py-3 rounded-lg bg-black text-white font-semibold hover:bg-gray-900 transition-colors"
-              >
-                Submit Agency Info
-              </button>
+              {agencySubmitted && !isEditingAgency ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingAgency(true)}
+                  className="w-full px-4 py-3 rounded-lg bg-gray-600 text-white font-semibold hover:bg-gray-700 transition-colors"
+                >
+                  Change Agency
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/ase/profile/update', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          agencyName: formData.agencyName
+                        }),
+                        credentials: 'include'
+                      });
+
+                      const data = await response.json();
+                      
+                      if (response.ok && data.success) {
+                        alert('Agency information saved successfully!');
+                        setAgencySubmitted(true);
+                        setIsEditingAgency(false);
+                      } else {
+                        alert(data.error || 'Failed to save agency information');
+                      }
+                    } catch (error) {
+                      console.error('Error saving agency info:', error);
+                      alert('Failed to save agency information');
+                    }
+                  }}
+                  className="w-full px-4 py-3 rounded-lg bg-black text-white font-semibold hover:bg-gray-900 transition-colors"
+                >
+                  {agencySubmitted ? 'Update Agency Info' : 'Submit Agency Info'}
+                </button>
+              )}
             </div>
           </div>
 

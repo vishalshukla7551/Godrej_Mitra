@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
             id: true,
             fullName: true,
             phone: true,
-            region: true
+            region: true,
+            AgencyName: true
           }
         }
       }
@@ -62,7 +63,9 @@ export async function GET(req: NextRequest) {
         zse: {
           id: user.zseProfile.id,
           fullName: user.zseProfile.fullName,
-          phone: user.zseProfile.phone
+          phone: user.zseProfile.phone,
+          agencyName: user.zseProfile.AgencyName,
+          region: user.zseProfile.region
         },
         ases: ases.map(ase => ({
           id: ase.id,

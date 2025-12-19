@@ -11,6 +11,7 @@ import ChristmasSuccessModal from '@/components/ChristmasSuccessModal';
 export default function SecIncentiveForm({ initialSecId = '' }) {
   const router = useRouter();
   const [secPhone, setSecPhone] = useState('');
+  const [secId, setSecId] = useState('');
   const [dateOfSale, setDateOfSale] = useState('');
   const [storeId, setStoreId] = useState('');
   const [deviceId, setDeviceId] = useState('');
@@ -49,6 +50,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
       const auth = JSON.parse(raw);
       const phoneFromAuth = auth?.phone;
+      const employeeIdFromAuth = auth?.employeeId || auth?.employId;
       const storeFromAuth = auth?.storeId || auth?.selectedStoreId;
       const storeDetails = auth?.store;
 
@@ -57,6 +59,10 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
         setShowSecAlert(false);
       } else {
         setShowSecAlert(true);
+      }
+
+      if (employeeIdFromAuth) {
+        setSecId(employeeIdFromAuth);
       }
 
       if (storeFromAuth) {
@@ -128,25 +134,30 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
       return;
     }
     
-    // Validate all fields
+    // Validate all fields with user-friendly messages
+    if (!dateOfSale) {
+      alert('⚠️ Please select the date of sale');
+      return;
+    }
     if (!storeId) {
-      alert('Please select a store');
+      alert('⚠️ Please select a store');
       return;
     }
     if (!deviceId) {
-      alert('Please select a device');
+      alert('⚠️ Please select a device');
       return;
     }
     if (!planId) {
-      alert('Please select a plan');
+      alert('⚠️ Please select a plan');
       return;
     }
     if (imeiError || duplicateError) {
-      alert('Please fix the IMEI issues before submitting');
+      alert('⚠️ Please fix the IMEI issues before submitting');
       return;
     }
     if (!imeiNumber || imeiNumber.length !== 15) {
       setImeiError('Invalid IMEI. Please enter a valid 15-digit IMEI number.');
+      alert('⚠️ Please enter a valid 15-digit IMEI number');
       return;
     }
     
@@ -165,12 +176,13 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          secPhone,
-          storeId,
           deviceId,
           planId,
           imei: imeiNumber,
           dateOfSale: dateOfSale || undefined,
+          // Send client values for security verification (server will validate)
+          clientSecPhone: secPhone,
+          clientStoreId: storeId,
         }),
       });
 
@@ -399,15 +411,15 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* SEC Phone - Disabled */}
+            {/* SEC ID - Disabled */}
             <div>
-              <label htmlFor="secPhone" className="block text-sm font-medium text-gray-700 mb-2">
-                SEC Phone
+              <label htmlFor="secId" className="block text-sm font-medium text-gray-700 mb-2">
+                SEC ID
               </label>
               <input
                 type="text"
-                id="secPhone"
-                value={secPhone}
+                id="secId"
+                value={secId}
                 disabled
                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-500 text-sm"
                 placeholder="SEC Phone Number"
@@ -470,6 +482,12 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               disabled
               className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm"
             />
+            <a 
+              href="/SEC/profile" 
+              className="inline-block mt-2 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+            >
+              Want to change store?
+            </a>
           </div>
 
             {/* Device Name */}
@@ -594,8 +612,8 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
             <div className="pt-4 pb-6">
               <button
                 type="submit"
-                disabled={!!imeiError || !!duplicateError || imeiExists || !imeiNumber || imeiNumber.length !== 15 || isCheckingDuplicate || isSubmitting || !storeId || !deviceId || !planId}
-                className="w-full text-white font-semibold py-4 rounded-2xl disabled:bg-gray-400 disabled:cursor-not-allowed transition-all text-base hover:scale-[1.02] active:scale-[0.98]"
+                disabled={isSubmitting}
+                className="w-full text-white font-semibold py-4 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base hover:scale-[1.02] active:scale-[0.98]"
                 style={{
                   background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%)',
                   boxShadow: '0 4px 15px rgba(220, 38, 38, 0.4)',
@@ -686,7 +704,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
             <div className="space-y-3 mb-6">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">SEC ID</span>
-                <span className="text-sm text-gray-900 font-medium">{secPhone}</span>
+                <span className="text-sm text-gray-900 font-medium">{secId}</span>
               </div>
 
               <div className="flex justify-between items-center">

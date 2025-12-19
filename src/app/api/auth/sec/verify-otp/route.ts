@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
 
     const needsName = !secRecord.fullName || secRecord.fullName.trim().length === 0;
     const needsStore = !secRecord.storeId;
+    const needsEmployeeId = !secRecord.employeeId || (typeof secRecord.employeeId === 'string' && secRecord.employeeId.trim().length === 0);
 
     // For simple SEC OTP login the runtime identity is still just the phone number.
     // We keep it in the JWT payload without linking to the main User table.
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       success: true,
-      needsName: needsName || needsStore,
+      needsName: needsName || needsStore || needsEmployeeId,
       user: {
         role: 'SEC',
         id: secRecord.id,
@@ -106,6 +107,7 @@ export async function POST(req: NextRequest) {
         fullName: secRecord.fullName ?? null,
         storeId: secRecord.storeId ?? null,
         store: storeDetails,
+        employeeId: secRecord.employeeId ?? null,
         AgencyName: secRecord.AgencyName ?? null,
         AgentCode: secRecord.AgentCode ?? null,
       },

@@ -1057,8 +1057,8 @@ function SpotIncentiveSection({
         <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
           <div className="grid grid-cols-4 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
             <span>Date</span>
-            <span className="text-center">ADLD (₹200)</span>
-            <span className="text-center">Combo (₹300)</span>
+            <span className="text-center">ADLD</span>
+            <span className="text-center">Combo</span>
             <span className="text-right">Units</span>
           </div>
           {filteredSalesData.length === 0 ? (
@@ -1158,13 +1158,12 @@ function SpotIncentiveSection({
         <p className="text-[11px] text-gray-500 mb-2">Your spot incentive earnings from active campaigns</p>
 
         <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
-          <div className="grid grid-cols-6 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
+          <div className="grid grid-cols-5 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
             <span>Date</span>
             <span className="text-center">Device</span>
-            <span className="text-center">Plan</span>
             <span className="text-center">Incentive</span>
-            <span className="text-center">Status</span>
             <span className="text-center">IMEI</span>
+            <span className="text-center">Voucher Code</span>
           </div>
           {filteredTransactions.length === 0 ? (
             <div className="px-3 py-4 text-center text-gray-500 text-xs">
@@ -1174,25 +1173,20 @@ function SpotIncentiveSection({
             filteredTransactions.map((row, idx) => (
               <div
                 key={row.id || row.date + idx}
-                className="grid grid-cols-6 px-3 py-2 border-t border-gray-100 text-gray-800 items-center"
+                className="grid grid-cols-5 px-3 py-2 border-t border-gray-100 text-gray-800 items-center"
               >
                 <span className="text-[10px]">{row.date}</span>
                 <span className="text-center text-[10px]">{row.deviceName}</span>
-                <span className="text-center text-[10px]">{row.planName}</span>
                 <span className="text-center text-green-600 font-semibold text-[10px]">{row.incentive}</span>
-                <span className="text-center">
-                  {row.isPaid ? (
-                    <span className="text-[9px] font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                      Paid
-                    </span>
-                  ) : (
-                    <span className="text-[9px] font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
-                      Pending
-                    </span>
-                  )}
-                </span>
                 <span className="text-center text-[9px] font-mono text-gray-500">
                   {row.imei ? `...${row.imei.slice(-4)}` : 'N/A'}
+                </span>
+                <span className="text-center text-[10px]">
+                  {row.voucherCode && row.voucherCode.trim() && row.voucherCode !== 'N/A' ? (
+                    <span className="font-mono text-blue-600">{row.voucherCode}</span>
+                  ) : (
+                    <span className="text-orange-600 font-normal">Not Released</span>
+                  )}
                 </span>
               </div>
             ))

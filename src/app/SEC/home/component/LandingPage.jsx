@@ -127,7 +127,7 @@ export default function LandingPage({ userName = '' }) {
                       {banner.title}
                     </p>
                     <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-gray-900 mb-0.5 sm:mb-1 md:mb-2">
-                      {banner.subtitle}
+                      {banner.subtitle.replace('SPOT', 'SC')}
                     </h2>
                     <p className="text-[10px] sm:text-xs md:text-sm font-semibold text-gray-800 mb-2 sm:mb-3 md:mb-4">
                       {banner.description}

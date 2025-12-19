@@ -7,11 +7,10 @@ import { getAuthenticatedUserFromCookies } from '@/lib/auth';
  * Submit a spot incentive sales report
  * 
  * RESTRICTED: Only saves to SpotIncentiveReport (not DailyIncentiveReport)
+ * SECURITY: secPhone and storeId are fetched from authenticated user's profile (server-side)
  * 
  * Body:
  * {
- *   secPhone: string,
- *   storeId: string,
  *   deviceId: string,
  *   planId: string,
  *   imei: string,
@@ -28,12 +27,59 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { secPhone, storeId, deviceId, planId, imei, dateOfSale } = body;
+    const { deviceId, planId, imei, dateOfSale, clientSecPhone, clientStoreId } = body;
+
+    // Get SEC phone from authenticated user (server-side, cannot be manipulated)
+    const secPhone = authUser.username;
+
+    // SECURITY CHECK: Detect if client is trying to submit with fake data
+    if (clientSecPhone && clientSecPhone !== secPhone) {
+      return NextResponse.json(
+        { error: 'Security violation: SEC phone mismatch detected. Please logout and login again.' },
+        { status: 403 }
+      );
+    }
+
+    // Find SEC user by authenticated phone
+    const secUser = await prisma.sEC.findUnique({
+      where: { phone: secPhone },
+      select: {
+        id: true,
+        phone: true,
+        fullName: true,
+        storeId: true,
+      },
+    });
+
+    if (!secUser) {
+      return NextResponse.json(
+        { error: 'SEC profile not found. Please complete onboarding first.' },
+        { status: 404 }
+      );
+    }
+
+    // Get storeId from SEC profile (server-side, cannot be manipulated)
+    const storeId = secUser.storeId;
+
+    if (!storeId) {
+      return NextResponse.json(
+        { error: 'No store assigned to your profile. Please complete onboarding.' },
+        { status: 400 }
+      );
+    }
+
+    // SECURITY CHECK: Detect if client is trying to submit with fake store
+    if (clientStoreId && clientStoreId !== storeId) {
+      return NextResponse.json(
+        { error: 'Security violation: Store ID mismatch detected. Please logout and login again.' },
+        { status: 403 }
+      );
+    }
 
     // Validate required fields
-    if (!secPhone || !storeId || !deviceId || !planId || !imei) {
+    if (!deviceId || !planId || !imei) {
       return NextResponse.json(
-        { error: 'All fields are required: secPhone, storeId, deviceId, planId, imei' },
+        { error: 'All fields are required: deviceId, planId, imei' },
         { status: 400 }
       );
     }
@@ -44,26 +90,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'IMEI must be exactly 15 digits' },
         { status: 400 }
-      );
-    }
-
-    // Verify SEC phone matches authenticated user
-    if (authUser.username !== secPhone) {
-      return NextResponse.json(
-        { error: 'SEC phone does not match authenticated user' },
-        { status: 403 }
-      );
-    }
-
-    // Find SEC user by phone
-    const secUser = await prisma.sEC.findUnique({
-      where: { phone: secPhone },
-    });
-
-    if (!secUser) {
-      return NextResponse.json(
-        { error: 'SEC user not found. Please login first.' },
-        { status: 404 }
       );
     }
 

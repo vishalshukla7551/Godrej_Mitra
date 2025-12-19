@@ -23,13 +23,14 @@ export default function SECLayout({
       return;
     }
 
-    // Check if fullName or store is missing
+    // Check if fullName, store, or employeeId is missing
     const fullName = (user?.fullName || '').trim();
     const storeId = user?.storeId || user?.selectedStoreId;
     const storeName = user?.store?.name;
+    const employeeId = user?.employeeId || user?.employId;
 
-    // Redirect to name page if fullName or store details are missing
-    if (!fullName || (!storeId && !storeName)) {
+    // Redirect to onboarding if fullName, store, or employeeId is missing
+    if (!fullName || (!storeId && !storeName) || !employeeId) {
       router.replace('/SEC/onboarding');
       return;
     }

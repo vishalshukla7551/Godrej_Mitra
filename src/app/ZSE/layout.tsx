@@ -99,31 +99,6 @@ export default function ZSELayout({
               </span>
             </Link>
 
-            {/* Passbook */}
-            <Link
-              href="/ZSE/passbook"
-              className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
-                isActive('/ZSE/passbook')
-                  ? 'bg-blue-600 text-white font-semibold'
-                  : 'text-white hover:bg-white/5'
-              }`}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="shrink-0"
-              >
-                <rect x="4" y="7" width="16" height="11" rx="2" stroke="white" strokeWidth="2" fill="none"/>
-                <path d="M4 9C4 7.89543 4.89543 7 6 7H18C19.1046 7 20 7.89543 20 9V10H4V9Z" fill="white" fillOpacity="0.9"/>
-                <circle cx="15" cy="13.5" r="2" fill="rgba(16,185,129,0.3)"/>
-              </svg>
-
-              <span className="text-sm leading-normal">Passbook</span>
-            </Link>
-
             {/* Report */}
             <Link
               href="/ZSE/report"
@@ -158,6 +133,31 @@ export default function ZSELayout({
               </svg>
 
               <span className="text-sm leading-normal">Report</span>
+            </Link>
+
+            {/* Passbook */}
+            <Link
+              href="/ZSE/passbook"
+              className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
+                isActive('/ZSE/passbook')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
+              }`}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="shrink-0"
+              >
+                <rect x="4" y="7" width="16" height="11" rx="2" stroke="white" strokeWidth="2" fill="none"/>
+                <path d="M4 9C4 7.89543 4.89543 7 6 7H18C19.1046 7 20 7.89543 20 9V10H4V9Z" fill="white" fillOpacity="0.9"/>
+                <circle cx="15" cy="13.5" r="2" fill="rgba(16,185,129,0.3)"/>
+              </svg>
+
+              <span className="text-sm leading-normal">Passbook</span>
             </Link>
 
             {/* View Leaderboard */}

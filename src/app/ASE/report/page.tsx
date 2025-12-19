@@ -286,9 +286,27 @@ export default function ReportPage() {
         </div>
         
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          <button onClick={() => setActiveTab('monthly')} className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'monthly' ? 'bg-blue-600 text-white shadow-lg' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}>Monthly Report</button>
-          <button onClick={() => setActiveTab('spot')} className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'spot' ? 'bg-blue-600 text-white shadow-lg' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'}`}>Spot Report</button>
+        <div className="flex gap-3 mb-6">
+          <button 
+            onClick={() => setActiveTab('monthly')} 
+            className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 relative ${
+              activeTab === 'monthly' 
+                ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-[0_8px_16px_rgba(37,99,235,0.3),0_4px_6px_rgba(0,0,0,0.2)] translate-y-[-2px] hover:shadow-[0_12px_20px_rgba(37,99,235,0.4),0_6px_8px_rgba(0,0,0,0.25)] active:translate-y-0 active:shadow-[0_4px_8px_rgba(37,99,235,0.3),0_2px_4px_rgba(0,0,0,0.2)] border-b-4 border-blue-800' 
+                : 'bg-gradient-to-br from-neutral-700 to-neutral-800 text-neutral-400 shadow-[0_4px_8px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] hover:from-neutral-600 hover:to-neutral-700 hover:text-white hover:translate-y-[-1px] hover:shadow-[0_6px_12px_rgba(0,0,0,0.4)] active:translate-y-0 active:shadow-[0_2px_4px_rgba(0,0,0,0.3)] border-b-4 border-neutral-900'
+            }`}
+          >
+            Monthly Report
+          </button>
+          <button 
+            onClick={() => setActiveTab('spot')} 
+            className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 relative ${
+              activeTab === 'spot' 
+                ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-[0_8px_16px_rgba(37,99,235,0.3),0_4px_6px_rgba(0,0,0,0.2)] translate-y-[-2px] hover:shadow-[0_12px_20px_rgba(37,99,235,0.4),0_6px_8px_rgba(0,0,0,0.25)] active:translate-y-0 active:shadow-[0_4px_8px_rgba(37,99,235,0.3),0_2px_4px_rgba(0,0,0,0.2)] border-b-4 border-blue-800' 
+                : 'bg-gradient-to-br from-neutral-700 to-neutral-800 text-neutral-400 shadow-[0_4px_8px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] hover:from-neutral-600 hover:to-neutral-700 hover:text-white hover:translate-y-[-1px] hover:shadow-[0_6px_12px_rgba(0,0,0,0.4)] active:translate-y-0 active:shadow-[0_2px_4px_rgba(0,0,0,0.3)] border-b-4 border-neutral-900'
+            }`}
+          >
+            Spot Report
+          </button>
         </div>
         
         {/* Filters */}
@@ -316,22 +334,38 @@ export default function ReportPage() {
           
           {/* Date Picker - shown when filterType is 'date' */}
           {filterType === 'date' && (
-            <input 
-              type="date" 
-              value={selectedDate} 
-              onChange={(e) => setSelectedDate(e.target.value)} 
-              className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[150px]"
-            />
+            <div 
+              onClick={(e) => {
+                const input = e.currentTarget.querySelector('input');
+                if (input) input.showPicker?.();
+              }}
+              className="cursor-pointer"
+            >
+              <input 
+                type="date" 
+                value={selectedDate} 
+                onChange={(e) => setSelectedDate(e.target.value)} 
+                className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[150px] cursor-pointer"
+              />
+            </div>
           )}
           
           {/* Month Picker - shown when filterType is 'month' */}
           {filterType === 'month' && (
-            <input 
-              type="month" 
-              value={selectedMonth} 
-              onChange={(e) => setSelectedMonth(e.target.value)} 
-              className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[150px]"
-            />
+            <div 
+              onClick={(e) => {
+                const input = e.currentTarget.querySelector('input');
+                if (input) input.showPicker?.();
+              }}
+              className="cursor-pointer"
+            >
+              <input 
+                type="month" 
+                value={selectedMonth} 
+                onChange={(e) => setSelectedMonth(e.target.value)} 
+                className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-[150px] cursor-pointer"
+              />
+            </div>
           )}
           
           {/* Year Picker - shown when filterType is 'year' */}

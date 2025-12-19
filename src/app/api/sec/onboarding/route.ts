@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
-// POST /api/sec/profile/name
-// Body: { firstName: string; lastName?: string; storeId?: string }
-// Stores the SEC's full name and storeId in the SEC collection, keyed by phone (secId).
+// POST /api/sec/onboarding
+// Body: { firstName: string; lastName?: string; storeId?: string; employeeId?: string }
+// Stores the SEC's full name, employeeId, and storeId in the SEC collection, keyed by phone.
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
     const firstName: string | undefined = body?.firstName;
     const lastName: string | undefined = body?.lastName;
     const storeId: string | undefined = body?.storeId;
-    const employId: string | undefined = body?.employId;
+    const employeeId: string | undefined = body?.employeeId;
 
     if (!firstName || typeof firstName !== 'string') {
       return NextResponse.json(
@@ -28,6 +28,25 @@ export async function POST(req: NextRequest) {
         { error: 'firstName must not be empty' },
         { status: 400 },
       );
+    }
+
+    // Validate employeeId if provided
+    if (employeeId && typeof employeeId === 'string') {
+      const trimmedEmployId = employeeId.trim();
+      if (trimmedEmployId) {
+        // Check if employeeId already exists for a different user
+        const existingSEC = await prisma.sEC.findUnique({
+          where: { employeeId: trimmedEmployId },
+          select: { phone: true },
+        });
+
+        if (existingSEC && existingSEC.phone !== phone) {
+          return NextResponse.json(
+            { error: 'SEC ID already in use' },
+            { status: 400 },
+          );
+        }
+      }
     }
 
     const cookies = await (await import('next/headers')).cookies();
@@ -54,9 +73,8 @@ export async function POST(req: NextRequest) {
       updatedAt: new Date(),
     };
 
-    if (employId && typeof employId === 'string') {
-      // Prisma schema field is `employeeId`; map the incoming `employId` to it.
-      updateData.employeeId = employId.trim();
+    if (employeeId && typeof employeeId === 'string') {
+      updateData.employeeId = employeeId.trim();
     }
 
     // Only update store connection if storeId is provided
@@ -72,9 +90,8 @@ export async function POST(req: NextRequest) {
       lastLoginAt: new Date(),
     };
 
-    if (employId && typeof employId === 'string') {
-      // Prisma schema field is `employeeId`; map the incoming `employId` to it.
-      createData.employeeId = employId.trim();
+    if (employeeId && typeof employeeId === 'string') {
+      createData.employeeId = employeeId.trim();
     }
 
     // Connect store on create if provided
@@ -109,12 +126,12 @@ export async function POST(req: NextRequest) {
       id: secRecord.id,
       phone: secRecord.phone,
       fullName: secRecord.fullName,
-      employId: secRecord.employeeId,
+      employeeId: secRecord.employeeId,
       storeId: secRecord.storeId,
       store: secRecord.store,
     });
   } catch (error) {
-    console.error('Error in POST /api/sec/profile/name', error);
+    console.error('Error in POST /api/sec/onboarding', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },

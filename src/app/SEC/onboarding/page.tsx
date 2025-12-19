@@ -17,6 +17,7 @@ export default function SECOnboardingPage() {
   const [loadingStores, setLoadingStores] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [secIdError, setSecIdError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -28,7 +29,7 @@ export default function SECOnboardingPage() {
       const auth = JSON.parse(raw) as any;
       const storedFullName = (auth?.fullName || '').trim();
       const storedStoreId = (auth?.storeId || auth?.selectedStoreId || '').trim();
-      const storedSecId = (auth?.secId || auth?.employId || '').trim();
+      const storedSecId = (auth?.secId || auth?.employId || auth?.employeeId || '').trim();
 
       if (storedFullName) setFullName(storedFullName);
       if (storedStoreId) setSelectedStoreId(storedStoreId);
@@ -85,6 +86,7 @@ export default function SECOnboardingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSecIdError(null);
 
     const trimmedFullName = fullName.trim();
     const trimmedSecId = secId.trim();
@@ -107,20 +109,28 @@ export default function SECOnboardingPage() {
     try {
       setSubmitting(true);
 
-      const res = await fetch('/api/sec/profile/name', {
+      const res = await fetch('/api/sec/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           firstName: trimmedFullName,
           lastName: '',
           storeId: selectedStoreId,
-          employId: trimmedSecId, // backend stores this as employId
+          employeeId: trimmedSecId,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error || 'Failed to save your details');
+        const errorMsg = data?.error || 'Failed to save your details';
+        
+        // Show SEC ID specific error below the field
+        if (errorMsg === 'SEC ID already in use') {
+          setSecIdError(errorMsg);
+          return;
+        }
+        
+        throw new Error(errorMsg);
       }
 
       const responseData = await res.json();
@@ -136,7 +146,7 @@ export default function SECOnboardingPage() {
               storeId: responseData.storeId,
               store: responseData.store,
               secId: responseData.id,
-              employId: responseData.employId || trimmedSecId,
+              employeeId: responseData.employeeId || trimmedSecId,
             };
             window.localStorage.setItem('authUser', JSON.stringify(updated));
             window.location.href = '/SEC/home';
@@ -174,7 +184,10 @@ export default function SECOnboardingPage() {
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-900 mb-2">SEC ID</label>
-            <input type="text" value={secId} onChange={(e) => setSecId(e.target.value)} placeholder="Enter your SEC ID" className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500" />
+            <input type="text" value={secId} onChange={(e) => { setSecId(e.target.value); setSecIdError(null); }} placeholder="Enter your SEC ID" className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500" />
+            {secIdError && (
+              <p className="text-sm text-red-600 mt-1">{secIdError}</p>
+            )}
           </div>
 
           <div className="space-y-2">

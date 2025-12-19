@@ -130,6 +130,40 @@ export default function ASELayout({ children }: { children: ReactNode }) {
                 <span className="text-sm leading-normal">Report</span>
             </Link>
 
+            {/* Passbook */}
+            <Link
+              href="/ASE/passbook"
+              className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
+                  pathname === '/ASE/passbook'
+                    ? 'bg-blue-600 text-white font-semibold'
+                    : 'text-white hover:bg-white/5'
+                }`}
+              >
+                <svg
+                  width="21"
+                  height="19"
+                  viewBox="0 0 21 19"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="shrink-0"
+                >
+                  <path
+                    d="M1.75 2.375H7C7.92826 2.375 8.8185 2.70863 9.47487 3.3025C10.1313 3.89636 10.5 4.70181 10.5 5.54167V16.625C10.5 15.9951 10.2234 15.391 9.73116 14.9456C9.23887 14.5002 8.57119 14.25 7.875 14.25H1.75V2.375Z"
+                    stroke="white"
+                    strokeWidth="1.875"
+                  />
+                  <path
+                    d="M19.25 2.375H14C13.0717 2.375 12.1815 2.70863 11.5251 3.3025C10.8687 3.89636 10.5 4.70181 10.5 5.54167V16.625C10.5 15.9951 10.7766 15.391 11.2688 14.9456C11.7611 14.5002 12.4288 14.25 13.125 14.25H19.25V2.375Z"
+                    stroke="white"
+                    strokeWidth="1.875"
+                  />
+                </svg>
+
+                <span className="text-sm leading-normal">
+                  Passbook
+                </span>
+            </Link>
+
             {/* View Leaderboard */}
             <Link
               href="/ASE/leaderboard"
@@ -184,40 +218,6 @@ export default function ASELayout({ children }: { children: ReactNode }) {
 
                 <span className="text-sm leading-normal">
                   View Leaderboard
-                </span>
-            </Link>
-
-            {/* Passbook */}
-            <Link
-              href="/ASE/passbook"
-              className={`w-full flex items-center space-x-2.5 rounded-lg py-2 px-3 select-none ${
-                  pathname === '/ASE/passbook'
-                    ? 'bg-blue-600 text-white font-semibold'
-                    : 'text-white hover:bg-white/5'
-                }`}
-              >
-                <svg
-                  width="21"
-                  height="19"
-                  viewBox="0 0 21 19"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="shrink-0"
-                >
-                  <path
-                    d="M1.75 2.375H7C7.92826 2.375 8.8185 2.70863 9.47487 3.3025C10.1313 3.89636 10.5 4.70181 10.5 5.54167V16.625C10.5 15.9951 10.2234 15.391 9.73116 14.9456C9.23887 14.5002 8.57119 14.25 7.875 14.25H1.75V2.375Z"
-                    stroke="white"
-                    strokeWidth="1.875"
-                  />
-                  <path
-                    d="M19.25 2.375H14C13.0717 2.375 12.1815 2.70863 11.5251 3.3025C10.8687 3.89636 10.5 4.70181 10.5 5.54167V16.625C10.5 15.9951 10.7766 15.391 11.2688 14.9456C11.7611 14.5002 12.4288 14.25 13.125 14.25H19.25V2.375Z"
-                    stroke="white"
-                    strokeWidth="1.875"
-                  />
-                </svg>
-
-                <span className="text-sm leading-normal">
-                  Passbook
                 </span>
             </Link>
 

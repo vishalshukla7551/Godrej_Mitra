@@ -197,14 +197,12 @@ model User {
 model ABM {
   id     String @id @default(auto()) @map("_id") @db.ObjectId
   userId String @unique @db.ObjectId
-
   fullName String
   phone    String
   storeIds String[] // Array of Store IDs
   zsmId    String   @db.ObjectId
-
   user User @relation("UserABM", fields: [userId], references: [id], onDelete: Cascade)
-
+  zsm ZSM @relation("ZSMToABM", fields: [zsmId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -215,10 +213,9 @@ model ASE {
 
   fullName String
   phone    String
-
+  AgencyName   String?
   storeIds String[] // Array of Store IDs
   zseId    String   @db.ObjectId
-
   user User @relation("UserASE", fields: [userId], references: [id], onDelete: Cascade)
   zse  ZSE  @relation("ZSEToASE", fields: [zseId], references: [id], onDelete: Cascade)
 
@@ -232,13 +229,14 @@ model ZSM {
 
   fullName String
   phone    String
-
+  
   region String?
-
   user User @relation("UserZSM", fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  // Relationships
+  abm ABM[] @relation("ZSMToABM")
 }
 
 model ZSE {
@@ -247,9 +245,8 @@ model ZSE {
 
   fullName String
   phone    String
-
   region   String?
-
+  AgencyName   String?
   user User @relation("UserZSE", fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -263,12 +260,13 @@ model SEC {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   fullName    String?
   phone       String    @unique
-  employeeId      String?  // Unique employee identifier
+  employeeId      String?  @unique // Unique employee identifier
   email       String?
   kycInfo     Json?
   lastLoginAt DateTime?
   storeId   String?
   store     Store?    @relation(fields: [storeId], references: [id])
+  city      String?
   AgencyName   String?
   SpotIncentiveReport           SpotIncentiveReport[]
   dailyIncentiveReports       DailyIncentiveReport[]
