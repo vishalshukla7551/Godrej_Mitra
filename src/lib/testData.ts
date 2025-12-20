@@ -563,7 +563,7 @@ import { config } from '@/lib/config';
 export async function getTestSubmissions(secId?: string): Promise<TestSubmission[]> {
   try {
     const queryParams = secId ? `?secId=${encodeURIComponent(secId)}` : '';
-    const apiUrl = `${config.apiUrl}/test-submissions${queryParams}`;
+    const apiUrl = `${config.apiUrl}/admin/test-submissions${queryParams}`;
     console.log('🔍 Fetching test submissions from', apiUrl);
 
     // Timeout after 10s to avoid indefinite loading if API is down
@@ -662,7 +662,7 @@ export function calculateScore(responses: TestResponse[], questions: Question[])
  */
 export async function getTestStatistics() {
   try {
-    const response = await fetch(`${config.apiUrl}/test-submissions/statistics`);
+    const response = await fetch(`${config.apiUrl}/admin/test-submissions/statistics`);
 
     const contentType = response.headers.get('content-type') || '';
     if (!response.ok || !contentType.includes('application/json')) {
@@ -699,3 +699,31 @@ export async function getTestStatistics() {
     };
   }
 }
+
+/**
+ * Get detailed information for a specific test submission
+ * Includes question-by-question breakdown with correct/wrong answers
+ */
+export async function getTestSubmissionDetails(submissionId: string) {
+  try {
+    const apiUrl = `${config.apiUrl}/admin/test-submissions/${submissionId}`;
+    console.log('🔍 Fetching test submission details from', apiUrl);
+
+    const response = await fetch(apiUrl);
+
+    if (!response.ok) {
+      console.warn('⚠️ Failed to fetch test submission details. Status:', response.status);
+      return null;
+    }
+
+    const result = await response.json();
+    if (result.success && result.data) {
+      return result.data;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching test submission details:', error);
+    return null;
+  }
+}
+

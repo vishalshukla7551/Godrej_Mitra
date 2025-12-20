@@ -144,8 +144,28 @@ export default function TrainingPage() {
     MONTH_OPTIONS[new Date().getMonth()] ?? `November ${CURRENT_YEAR_SHORT}`,
   );
 
+  // Get phone number from localStorage
+  const getPhoneNumber = (): string => {
+    try {
+      const authUser = localStorage.getItem('authUser');
+      if (authUser) {
+        const userData = JSON.parse(authUser);
+        // SEC users have phone stored as id, username, or phone field
+        return userData.phone || userData.id || userData.username || '';
+      }
+    } catch (error) {
+      console.error('Error reading authUser from localStorage:', error);
+    }
+    return '';
+  };
+
   const handleStartTest = (testId: number) => {
-    router.push(`/SEC/training/test/${testId}`);
+    const phoneNumber = getPhoneNumber();
+    if (!phoneNumber) {
+      alert('Unable to retrieve user phone number. Please log in again.');
+      return;
+    }
+    router.push(`/SEC/training/test/${phoneNumber}`);
   };
 
   return (
