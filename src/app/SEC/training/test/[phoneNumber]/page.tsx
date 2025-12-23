@@ -47,7 +47,7 @@ type TestPhase = 'permission' | 'instructions' | 'test' | 'certificate' | 'revie
 export default function ProctoredTestPage() {
   const router = useRouter();
   const params = useParams();
-  const testId = params?.testId as string;
+  const phoneNumber = params?.phoneNumber as string;
 
   const [testData, setTestData] = useState<TestData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,9 +86,9 @@ export default function ProctoredTestPage() {
     // Get SEC user name from localStorage
     const userName = getSecUserName();
     setSecUserName(userName);
-    
+
     setTimeout(() => { setTestData(MOCK_TEST); setTimeLeft(MOCK_TEST.duration * 60); setLoading(false); }, 500);
-  }, [testId]);
+  }, [phoneNumber]);
 
   useEffect(() => {
     const loadModels = async () => { try { await faceapi.nets.tinyFaceDetector.loadFromUri('/models'); setModelsLoaded(true); } catch { setModelsLoaded(false); } };
@@ -110,7 +110,7 @@ export default function ProctoredTestPage() {
 
   useEffect(() => {
     if (phase !== 'test' || !modelsLoaded || !videoRef.current) return;
-    const detectFaces = async () => { if (!videoRef.current) return; try { const detections = await faceapi.detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions()); if (detections.length === 0) { logViolation('no_face', 'No face detected'); showWarning('No face detected.'); } else if (detections.length > 1) { logViolation('multi_face', `${detections.length} faces`); showWarning('Multiple faces detected.'); } } catch {} };
+    const detectFaces = async () => { if (!videoRef.current) return; try { const detections = await faceapi.detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions()); if (detections.length === 0) { logViolation('no_face', 'No face detected'); showWarning('No face detected.'); } else if (detections.length > 1) { logViolation('multi_face', `${detections.length} faces`); showWarning('Multiple faces detected.'); } } catch { } };
     faceDetectionInterval.current = setInterval(detectFaces, 5000);
     return () => { if (faceDetectionInterval.current) clearInterval(faceDetectionInterval.current); };
   }, [phase, modelsLoaded]);
@@ -132,7 +132,7 @@ export default function ProctoredTestPage() {
 
   useEffect(() => {
     if (phase !== 'test') return;
-    const handleFs = () => { if (!document.fullscreenElement) { logViolation('fullscreen_exit', 'Exited fullscreen'); showWarning('Stay in fullscreen!'); setTimeout(() => document.documentElement.requestFullscreen?.().catch(() => {}), 1000); } };
+    const handleFs = () => { if (!document.fullscreenElement) { logViolation('fullscreen_exit', 'Exited fullscreen'); showWarning('Stay in fullscreen!'); setTimeout(() => document.documentElement.requestFullscreen?.().catch(() => { }), 1000); } };
     document.addEventListener('fullscreenchange', handleFs);
     return () => document.removeEventListener('fullscreenchange', handleFs);
   }, [phase]);
@@ -143,10 +143,10 @@ export default function ProctoredTestPage() {
     return () => clearInterval(timer);
   }, [phase, timeLeft]);
 
-  const logViolation = async (type: string, details?: string) => { try { await fetch('/api/proctoring/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionToken, eventType: type, details }) }); } catch {} };
+  const logViolation = async (type: string, details?: string) => { try { await fetch('/api/proctoring/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionToken, eventType: type, details }) }); } catch { } };
   const showWarning = (msg: string) => { setWarningMessage(msg); setTimeout(() => setWarningMessage(null), 3000); };
-  const startTest = async () => { try { await document.documentElement.requestFullscreen(); } catch {} setPhase('test'); };
-  const handleAnswerSelect = async (questionId: string, option: string) => { setAnswers(prev => ({ ...prev, [questionId]: option })); try { await fetch('/api/test/save-answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionToken, testId, questionId, selectedAnswer: option }) }); } catch {} };
+  const startTest = async () => { try { await document.documentElement.requestFullscreen(); } catch { } setPhase('test'); };
+  const handleAnswerSelect = async (questionId: string, option: string) => { setAnswers(prev => ({ ...prev, [questionId]: option })); try { await fetch('/api/test/save-answer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionToken, phoneNumber, questionId, selectedAnswer: option }) }); } catch { } };
   const handleNextQuestion = () => { if (testData && currentQuestion < testData.questions.length - 1) { setCurrentQuestion(prev => prev + 1); } };
 
   const handleSubmit = useCallback(async () => {
@@ -154,11 +154,11 @@ export default function ProctoredTestPage() {
     let correct = 0; testData.questions.forEach(q => { if (answers[q.id] === q.correctAnswer) correct++; });
     const percentage = Math.round((correct / testData.questions.length) * 100);
     setScore(percentage); setSubmittedAt(new Date().toLocaleString());
-    try { await fetch('/api/test/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionToken, testId, testName: testData.name, answers, score: percentage, totalQuestions: testData.questions.length, passed: percentage >= testData.passingPercentage }) }); } catch {}
-    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    try { await fetch('/api/test/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionToken, phoneNumber, testName: testData.name, answers, score: percentage, totalQuestions: testData.questions.length, passed: percentage >= testData.passingPercentage }) }); } catch { }
+    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => { });
     if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
     setPhase('certificate');
-  }, [testData, answers, cameraStream, sessionToken, testId]);
+  }, [testData, answers, cameraStream, sessionToken, phoneNumber]);
 
   const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 

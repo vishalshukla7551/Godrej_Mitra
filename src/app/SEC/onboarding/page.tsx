@@ -123,13 +123,13 @@ export default function SECOnboardingPage() {
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         const errorMsg = data?.error || 'Failed to save your details';
-        
+
         // Show SEC ID specific error below the field
         if (errorMsg === 'SEC ID already in use') {
           setSecIdError(errorMsg);
           return;
         }
-        
+
         throw new Error(errorMsg);
       }
 
@@ -193,11 +193,11 @@ export default function SECOnboardingPage() {
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-900 mb-2">Store name</label>
             <div className="relative">
-              <div className={`flex items-center gap-2 w-full px-4 py-4 rounded-lg bg-white cursor-text border transition-colors ${isStoreDropdownOpen ? 'border-gray-900 ring-2 ring-gray-900' : 'border-gray-300'}`} onClick={() => { if (!loadingStores && stores.length > 0) setIsStoreDropdownOpen(true); }}>
+              <div className={`flex items-center gap-2 w-full px-4 py-4 rounded-lg bg-white cursor-text border transition-colors ${isStoreDropdownOpen ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-300'}`} onClick={() => { if (!loadingStores && stores.length > 0) setIsStoreDropdownOpen(true); }}>
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-gray-100 text-gray-700 text-xs">🏬</span>
-                <input type="text" value={storeSearch} onChange={(e) => { setStoreSearch(e.target.value); setIsStoreDropdownOpen(true); }} onFocus={() => { if (!loadingStores && stores.length > 0) { setStoreSearch(''); setIsStoreDropdownOpen(true); } }} placeholder={loadingStores ? 'Loading stores...' : stores.length === 0 ? 'No stores available' : 'Type to search store name or city'} disabled={loadingStores || stores.length === 0} className="flex-1 border-none outline-none text-lg text-black placeholder:text-gray-500 bg-transparent" />
+                <input type="text" value={storeSearch} onChange={(e) => { setStoreSearch(e.target.value); setIsStoreDropdownOpen(true); }} onFocus={() => { if (!loadingStores && stores.length > 0) { setStoreSearch(''); setIsStoreDropdownOpen(true); } }} placeholder={loadingStores ? 'Loading stores...' : stores.length === 0 ? 'No stores available' : 'Type to search store name or city'} disabled={loadingStores || stores.length === 0} className="flex-1 border-none outline-none focus:outline-none focus:ring-0 text-lg text-black placeholder:text-gray-500 bg-transparent !outline-none !shadow-none" style={{ outline: 'none', boxShadow: 'none', border: 'none' }} />
                 <button type="button" onClick={(e) => { e.stopPropagation(); if (loadingStores || stores.length === 0) return; if (!isStoreDropdownOpen) setStoreSearch(''); setIsStoreDropdownOpen((open) => !open); }} className="ml-2 text-gray-500 hover:text-gray-700 focus:outline-none">
-                  <svg className={`w-4 h-4 transform transition-transform ${isStoreDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                  <svg className={`w-4 h-4 transform transition-transform ${isStoreDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                 </button>
               </div>
 
@@ -220,7 +220,7 @@ export default function SECOnboardingPage() {
 
           <div className="mt-10 flex items-center justify-between">
             <button type="button" onClick={handleBack} className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center bg-gray-50 text-gray-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
 
             <button type="submit" disabled={submitting} className="flex-1 ml-4 h-12 bg-black text-white rounded-full font-semibold text-base flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed">{submitting ? 'Saving...' : 'Next'}</button>

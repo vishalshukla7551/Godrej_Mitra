@@ -12,7 +12,8 @@
     "postinstall": "prisma generate",
     "check-attach-rates": "tsx scripts/check-store-attach-rates.ts",
     "set-attach-rates": "tsx scripts/set-store-attach-rates.ts",
-    "test-device-bonus": "tsx scripts/test-device-bonus-incentive.ts"
+    "test-device-bonus": "tsx scripts/test-device-bonus-incentive.ts",
+    "send-daily-report": "tsx scripts/send-daily-combo-adld-report.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

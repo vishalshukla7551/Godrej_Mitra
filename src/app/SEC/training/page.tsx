@@ -1,4 +1,4 @@
-'use client';
+😊`'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -152,8 +152,28 @@ export default function TrainingPage() {
   );
   const [selectedVideo, setSelectedVideo] = useState<typeof trainingVideos[0] | null>(null);
 
+  // Get phone number from localStorage
+  const getPhoneNumber = (): string => {
+    try {
+      const authUser = localStorage.getItem('authUser');
+      if (authUser) {
+        const userData = JSON.parse(authUser);
+        // SEC users have phone stored as id, username, or phone field
+        return userData.phone || userData.id || userData.username || '';
+      }
+    } catch (error) {
+      console.error('Error reading authUser from localStorage:', error);
+    }
+    return '';
+  };
+
   const handleStartTest = (testId: number) => {
-    router.push(`/SEC/training/test/${testId}`);
+    const phoneNumber = getPhoneNumber();
+    if (!phoneNumber) {
+      alert('Unable to retrieve user phone number. Please log in again.');
+      return;
+    }
+    router.push(`/SEC/training/test/${phoneNumber}`);
   };
 
   const handleVideoClick = (video: typeof trainingVideos[0]) => {
