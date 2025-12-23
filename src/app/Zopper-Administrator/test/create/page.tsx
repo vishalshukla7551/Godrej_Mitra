@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 interface TestForm {
   name: string;
   description: string;
-  type: 'QUIZ' | 'ASSESSMENT' | 'FINAL_EXAM';
+  type: 'QUIZ' | 'ASSESSMENT';
   duration: number;
   passingPercentage: number;
   maxAttempts: number;
@@ -34,14 +34,14 @@ export default function CreateTestPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!form.name.trim()) {
       alert('Please enter a test name');
       return;
     }
 
     setSaving(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       alert('Test created successfully!');
@@ -109,7 +109,6 @@ export default function CreateTestPage() {
             >
               <option value="QUIZ">Quiz (Training)</option>
               <option value="ASSESSMENT">Assessment</option>
-              <option value="FINAL_EXAM">Final Certification Exam</option>
             </select>
           </div>
 
@@ -166,14 +165,12 @@ export default function CreateTestPage() {
             <button
               type="button"
               onClick={() => updateForm('enableProctoring', !form.enableProctoring)}
-              className={`relative w-14 h-7 rounded-full transition-colors ${
-                form.enableProctoring ? 'bg-blue-600' : 'bg-gray-300'
-              }`}
+              className={`relative w-14 h-7 rounded-full transition-colors ${form.enableProctoring ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
             >
               <span
-                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                  form.enableProctoring ? 'left-8' : 'left-1'
-                }`}
+                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${form.enableProctoring ? 'left-8' : 'left-1'
+                  }`}
               />
             </button>
           </div>

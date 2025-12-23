@@ -68,7 +68,7 @@ const MOCK_STATS = {
   ),
   averageTime: Math.round(
     MOCK_SUBMISSIONS.reduce((sum, s) => sum + s.completionTime, 0) /
-      MOCK_SUBMISSIONS.length,
+    MOCK_SUBMISSIONS.length,
   ),
 };
 
@@ -94,7 +94,7 @@ export default function TestResults() {
       try {
         const apiData = await getTestSubmissions();
         const apiStats = await getTestStatistics();
-        
+
         if (apiData && apiData.length > 0) {
           data = apiData;
         }
@@ -173,13 +173,12 @@ export default function TestResults() {
         : 'N/A';
       const answerDetails = hasEnrichedData
         ? submission.responses
-            .map(
-              (r, idx) =>
-                `Q${idx + 1}: ${r.isCorrect ? 'CORRECT' : 'WRONG'} (Selected: ${
-                  r.selectedAnswer
-                }, Correct: ${r.correctAnswer})`,
-            )
-            .join(' | ')
+          .map(
+            (r, idx) =>
+              `Q${idx + 1}: ${r.isCorrect ? 'CORRECT' : 'WRONG'} (Selected: ${r.selectedAnswer
+              }, Correct: ${r.correctAnswer})`,
+          )
+          .join(' | ')
         : 'Answer details not available';
 
       return {
@@ -401,11 +400,10 @@ export default function TestResults() {
                     <td className="px-3 py-3">
                       <div className="flex flex-col gap-1">
                         <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full inline-block text-center ${
-                            submission.score >= 60
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
+                          className={`px-2 py-1 text-xs font-medium rounded-full inline-block text-center ${submission.score >= 60
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                            }`}
                         >
                           {submission.score >= 60 ? 'PASS' : 'FAIL'}
                         </span>
@@ -473,7 +471,7 @@ export default function TestResults() {
                       <button
                         onClick={() =>
                           router.push(
-                            `/Zopper-Administrator/answer-details?secId=${encodeURIComponent(
+                            `/Zopper-Administrator/answer-details?id=${submission.id}&secId=${encodeURIComponent(
                               submission.secId,
                             )}&submittedAt=${encodeURIComponent(submission.submittedAt)}`,
                           )

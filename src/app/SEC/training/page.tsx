@@ -1,6 +1,6 @@
-😊`'use client';
+'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Play, FileText, Download, CheckCircle2, Clock, Award, History } from 'lucide-react';
 import FestiveHeader from '@/components/FestiveHeader';
@@ -128,14 +128,6 @@ const tests = [
     attempts: 0,
     maxAttempts: 3,
   },
-  {
-    id: 4,
-    title: 'Final Certification Exam',
-    status: 'locked',
-    score: null,
-    attempts: 0,
-    maxAttempts: 2,
-  },
 ];
 
 export default function TrainingPage() {
@@ -144,13 +136,15 @@ export default function TrainingPage() {
     MONTH_OPTIONS[new Date().getMonth()] ?? `November ${CURRENT_YEAR_SHORT}`,
   );
 
+  const [realTests, setRealTests] = useState(tests);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+
   // Get phone number from localStorage
   const getPhoneNumber = (): string => {
     try {
       const authUser = localStorage.getItem('authUser');
       if (authUser) {
         const userData = JSON.parse(authUser);
-        // SEC users have phone stored as id, username, or phone field
         return userData.phone || userData.id || userData.username || '';
       }
     } catch (error) {
@@ -158,6 +152,46 @@ export default function TrainingPage() {
     }
     return '';
   };
+
+  useEffect(() => {
+    const fetchRealStatus = async () => {
+      const secId = getPhoneNumber();
+      if (!secId) {
+        setLoadingHistory(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/admin/test-submissions?secId=${encodeURIComponent(secId)}`);
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.length > 0) {
+          // Find the latest submission for 'Samsung Protect Max Certification'
+          const certTest = result.data.find((s: any) => s.testName?.toLowerCase().includes('certification') || s.testName?.toLowerCase().includes('protect max'));
+
+          if (certTest) {
+            setRealTests(prev => prev.map(t => {
+              if (t.id === 1) { // Mapping the first card to the certification test
+                return {
+                  ...t,
+                  status: 'completed',
+                  score: certTest.score,
+                  attempts: result.data.filter((s: any) => s.testName === certTest.testName).length
+                };
+              }
+              return t;
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching test status:', error);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+
+    fetchRealStatus();
+  }, []);
 
   const handleStartTest = (testId: number) => {
     const phoneNumber = getPhoneNumber();
@@ -254,11 +288,10 @@ export default function TrainingPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        doc.type === 'pdf'
-                          ? 'bg-red-100 text-red-600'
-                          : 'bg-blue-100 text-blue-600'
-                      }`}
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${doc.type === 'pdf'
+                        ? 'bg-red-100 text-red-600'
+                        : 'bg-blue-100 text-blue-600'
+                        }`}
                     >
                       <FileText className="w-6 h-6" />
                     </div>
@@ -311,7 +344,7 @@ export default function TrainingPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              {tests.map((test) => (
+              {realTests.map((test) => (
                 <div
                   key={test.id}
                   className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow duration-200"
@@ -363,7 +396,7 @@ export default function TrainingPage() {
 
                     <div className="flex-shrink-0">
                       {test.status === 'completed' && (
-                        <button 
+                        <button
                           onClick={() => handleStartTest(test.id)}
                           className="w-full sm:w-auto px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors text-sm"
                         >
@@ -371,7 +404,7 @@ export default function TrainingPage() {
                         </button>
                       )}
                       {test.status === 'pending' && (
-                        <button 
+                        <button
                           onClick={() => handleStartTest(test.id)}
                           className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm"
                         >

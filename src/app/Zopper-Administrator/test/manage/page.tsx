@@ -7,7 +7,7 @@ interface Test {
   id: string;
   name: string;
   description: string;
-  type: 'QUIZ' | 'ASSESSMENT' | 'FINAL_EXAM';
+  type: 'QUIZ' | 'ASSESSMENT';
   totalQuestions: number;
   duration: number;
   maxAttempts: number;
@@ -51,21 +51,6 @@ const MOCK_TESTS: Test[] = [
     endDate: '2025-12-31',
     createdAt: '2025-01-15T00:00:00Z',
   },
-  {
-    id: '3',
-    name: 'Final Certification Exam',
-    description: 'Final certification exam for SEC',
-    type: 'FINAL_EXAM',
-    totalQuestions: 30,
-    duration: 45,
-    maxAttempts: 2,
-    passingPercentage: 80,
-    status: 'LOCKED',
-    enableProctoring: true,
-    startDate: null,
-    endDate: null,
-    createdAt: '2025-02-01T00:00:00Z',
-  },
 ];
 
 export default function ManageTestsPage() {
@@ -98,12 +83,10 @@ export default function ManageTestsPage() {
     const styles = {
       QUIZ: 'bg-blue-100 text-blue-800',
       ASSESSMENT: 'bg-purple-100 text-purple-800',
-      FINAL_EXAM: 'bg-orange-100 text-orange-800',
     };
     const labels = {
       QUIZ: 'Quiz',
       ASSESSMENT: 'Assessment',
-      FINAL_EXAM: 'Final Exam',
     };
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-bold ${styles[type]}`}>
@@ -218,11 +201,10 @@ export default function ManageTestsPage() {
               </button>
               <button
                 onClick={() => toggleTestStatus(test.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                  test.status === 'LOCKED'
-                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                    : 'bg-red-100 text-red-800 hover:bg-red-200'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${test.status === 'LOCKED'
+                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                  : 'bg-red-100 text-red-800 hover:bg-red-200'
+                  }`}
               >
                 {test.status === 'LOCKED' ? '🔓 Unlock' : '🔒 Lock'}
               </button>

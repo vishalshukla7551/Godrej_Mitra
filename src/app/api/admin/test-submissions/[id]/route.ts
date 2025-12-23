@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getQuestionsForPhone } from '@/lib/testData';
+import { getQuestionsForPhone, SEC_CERT_QUESTIONS } from '@/lib/testData';
 
 /**
  * GET /api/admin/test-submissions/[id]
@@ -9,9 +9,10 @@ import { getQuestionsForPhone } from '@/lib/testData';
  */
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    props: { params: Promise<{ id: string }> }
 ) {
     try {
+        const params = await props.params;
         const { id } = params;
 
         // Fetch submission from database
@@ -48,20 +49,20 @@ export async function GET(
             }
         }
 
-        // Get questions for this phone number to enrich responses
+        // Get available questions from all sources
         const phone = submission.phone || submission.secId || '';
-        const questionsForPhone = phone ? getQuestionsForPhone(phone) : [];
+        const standardQuestions = phone ? getQuestionsForPhone(phone) : [];
+        const allPossibleQuestions = [...standardQuestions, ...SEC_CERT_QUESTIONS];
 
         // Enrich responses with question details
-        const enrichedResponses = Array.isArray(submission.responses)
-            ? (submission.responses as any[]).map((response: any, index: number) => {
-                const question = questionsForPhone.find(
-                    (q) => q.id === response.questionId
-                );
+        const rawResponses = submission.responses as any;
+        let enrichedResponses: any[] = [];
 
-                const isCorrect = question
-                    ? response.selectedAnswer === question.correctAnswer
-                    : false;
+        if (Array.isArray(rawResponses)) {
+            enrichedResponses = rawResponses.map((response: any, index: number) => {
+                const question = allPossibleQuestions.find(
+                    (q) => String(q.id) === String(response.questionId)
+                );
 
                 return {
                     questionNumber: index + 1,
@@ -70,12 +71,30 @@ export async function GET(
                     options: question?.options || [],
                     selectedAnswer: response.selectedAnswer,
                     correctAnswer: question?.correctAnswer || '',
-                    isCorrect,
+                    isCorrect: question ? response.selectedAnswer === question.correctAnswer : false,
                     answeredAt: response.answeredAt,
                     category: question?.category || 'Unknown',
                 };
-            })
-            : [];
+            });
+        } else if (rawResponses && typeof rawResponses === 'object') {
+            // Handle case where responses is a map: { "1": "A", "2": "C" }
+            enrichedResponses = Object.entries(rawResponses).map(([qId, selectedAnswer], index) => {
+                const question = allPossibleQuestions.find(
+                    (q) => String(q.id) === String(qId)
+                );
+
+                return {
+                    questionNumber: index + 1,
+                    questionId: qId,
+                    questionText: question?.question || 'Question text not available',
+                    options: question?.options || [],
+                    selectedAnswer: selectedAnswer,
+                    correctAnswer: question?.correctAnswer || '',
+                    isCorrect: question ? selectedAnswer === question.correctAnswer : false,
+                    category: question?.category || 'Unknown',
+                };
+            });
+        }
 
         // Calculate correct and wrong counts
         const correctCount = enrichedResponses.filter((r) => r.isCorrect).length;

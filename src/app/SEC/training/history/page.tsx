@@ -28,7 +28,48 @@ export default function TestHistoryPage() {
   const [history, setHistory] = useState<TestHistory[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { setTimeout(() => { setHistory(MOCK_HISTORY); setLoading(false); }, 500); }, []);
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const authUser = localStorage.getItem('authUser');
+        if (!authUser) {
+          router.push('/login');
+          return;
+        }
+
+        const userData = JSON.parse(authUser);
+        const secId = userData.phone || userData.id;
+
+        if (!secId) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(`/api/admin/test-submissions?secId=${encodeURIComponent(secId)}`);
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          const formattedHistory = result.data.map((item: any) => ({
+            id: item.id,
+            testId: item.testId || '1',
+            testName: item.testName || 'SEC Certification',
+            score: item.score,
+            totalQuestions: item.totalQuestions,
+            passed: item.score >= 60,
+            submittedAt: item.submittedAt,
+            hasCertificate: item.score >= 60
+          }));
+          setHistory(formattedHistory);
+        }
+      } catch (error) {
+        console.error('Error fetching test history:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [router]);
 
   return (
     <div className="h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col overflow-hidden">

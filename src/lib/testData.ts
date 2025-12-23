@@ -34,6 +34,80 @@ export interface TestSubmission {
   storeCity?: string;
 }
 
+// Samsung Protect Max Certification Questions (The 10 standard questions)
+export const SEC_CERT_QUESTIONS: Question[] = [
+  {
+    id: 1,
+    question: "What is the coverage period for Samsung Protect Max ADLD plan?",
+    options: ["A) 1 Year", "B) 2 Years", "C) 6 Months", "D) 3 Years"],
+    correctAnswer: "A",
+    category: "Certification"
+  },
+  {
+    id: 2,
+    question: "Which of the following is NOT covered under Samsung Protect Max?",
+    options: ["A) Accidental Damage", "B) Liquid Damage", "C) Theft", "D) Screen Crack"],
+    correctAnswer: "C",
+    category: "Certification"
+  },
+  {
+    id: 3,
+    question: "What is the maximum claim limit for Samsung Protect Max?",
+    options: ["A) ₹50,000", "B) Device Invoice Value", "C) ₹1,00,000", "D) No Limit"],
+    correctAnswer: "B",
+    category: "Certification"
+  },
+  {
+    id: 4,
+    question: "How many claims can be made under Samsung Protect Max ADLD?",
+    options: ["A) 1 Claim", "B) 2 Claims", "C) Unlimited", "D) 3 Claims"],
+    correctAnswer: "A",
+    category: "Certification"
+  },
+  {
+    id: 5,
+    question: "What is the waiting period after purchasing Samsung Protect Max?",
+    options: ["A) No waiting period", "B) 7 Days", "C) 15 Days", "D) 30 Days"],
+    correctAnswer: "A",
+    category: "Certification"
+  },
+  {
+    id: 6,
+    question: "Which document is required for filing a claim?",
+    options: ["A) Only IMEI number", "B) Invoice and IMEI", "C) Aadhar Card only", "D) No documents needed"],
+    correctAnswer: "B",
+    category: "Certification"
+  },
+  {
+    id: 7,
+    question: "What is the deductible amount for screen damage claim?",
+    options: ["A) ₹0", "B) ₹500", "C) ₹1000", "D) Varies by device"],
+    correctAnswer: "D",
+    category: "Certification"
+  },
+  {
+    id: 8,
+    question: "Within how many days of purchase must Samsung Protect Max be activated?",
+    options: ["A) 7 days", "B) 15 days", "C) 30 days", "D) Same day"],
+    correctAnswer: "C",
+    category: "Certification"
+  },
+  {
+    id: 9,
+    question: "What happens if the device is beyond repair?",
+    options: ["A) Full refund", "B) Replacement device", "C) Depreciated value", "D) No coverage"],
+    correctAnswer: "C",
+    category: "Certification"
+  },
+  {
+    id: 10,
+    question: "Which Samsung devices are eligible for Protect Max?",
+    options: ["A) Only flagship phones", "B) All Samsung smartphones", "C) Only Galaxy S series", "D) Selected models only"],
+    correctAnswer: "D",
+    category: "Certification"
+  }
+];
+
 // Samsung Care+ Question Bank - All 40+ questions
 const allSamsungQuestions: Question[] = [
   // Section A: Situation-Based (Customer Scenarios)
