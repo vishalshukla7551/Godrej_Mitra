@@ -483,7 +483,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm"
             />
             <a 
-              href="/SEC/profile" 
+              href="/SEC/profile?from=incentive-form" 
               className="inline-block mt-2 text-xs text-blue-600 hover:text-blue-800 hover:underline"
             >
               Want to change store?

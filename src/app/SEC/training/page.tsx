@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Play, FileText, Download, CheckCircle2, Clock, Award, History } from 'lucide-react';
+import { Play, FileText, Download, CheckCircle2, Clock, Award, History, X } from 'lucide-react';
 import FestiveHeader from '@/components/FestiveHeader';
 import FestiveFooter from '@/components/FestiveFooter';
+import VideoPlayer from '@/components/VideoPlayer';
 
 const MONTHS = [
   'January',
@@ -24,42 +25,48 @@ const MONTHS = [
 const CURRENT_YEAR_SHORT = new Date().getFullYear().toString().slice(-2);
 const MONTH_OPTIONS = MONTHS.map((month) => `${month} ${CURRENT_YEAR_SHORT}`);
 
-// Dummy data
+// Dummy data - Replace with actual Streamable URLs
 const trainingVideos = [
   {
     id: 1,
     title: 'Samsung Protect Max Overview',
     duration: '3:20',
+    url: 'https://streamable.com/e/example1', // Replace with actual Streamable URL
     thumbnail: 'https://via.placeholder.com/400x225/1e40af/ffffff?text=Overview',
   },
   {
     id: 2,
     title: 'Coverage & Benefits Explained',
     duration: '5:45',
+    url: 'https://streamable.com/e/example2', // Replace with actual Streamable URL
     thumbnail: 'https://via.placeholder.com/400x225/1e40af/ffffff?text=Coverage',
   },
   {
     id: 3,
     title: 'How to Sell Protect Max',
     duration: '4:15',
+    url: 'https://streamable.com/e/example3', // Replace with actual Streamable URL
     thumbnail: 'https://via.placeholder.com/400x225/1e40af/ffffff?text=Selling+Tips',
   },
   {
     id: 4,
     title: 'Customer FAQs & Objections',
     duration: '6:30',
+    url: 'https://streamable.com/e/example4', // Replace with actual Streamable URL
     thumbnail: 'https://via.placeholder.com/400x225/1e40af/ffffff?text=FAQs',
   },
   {
     id: 5,
     title: 'Claims Process Walkthrough',
     duration: '4:50',
+    url: 'https://streamable.com/e/example5', // Replace with actual Streamable URL
     thumbnail: 'https://via.placeholder.com/400x225/1e40af/ffffff?text=Claims',
   },
   {
     id: 6,
     title: 'Advanced Sales Techniques',
     duration: '7:20',
+    url: 'https://streamable.com/e/example6', // Replace with actual Streamable URL
     thumbnail: 'https://via.placeholder.com/400x225/1e40af/ffffff?text=Advanced',
   },
 ];
@@ -135,6 +142,7 @@ export default function TrainingPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>(
     MONTH_OPTIONS[new Date().getMonth()] ?? `November ${CURRENT_YEAR_SHORT}`,
   );
+  const [selectedVideo, setSelectedVideo] = useState<typeof trainingVideos[0] | null>(null);
 
   const [realTests, setRealTests] = useState(tests);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -202,6 +210,14 @@ export default function TrainingPage() {
     router.push(`/SEC/training/test/${phoneNumber}`);
   };
 
+  const handleVideoClick = (video: typeof trainingVideos[0]) => {
+    setSelectedVideo(video);
+  };
+
+  const closeVideoModal = () => {
+    setSelectedVideo(null);
+  };
+
   return (
     <div className="h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col overflow-hidden">
       <FestiveHeader hideGreeting />
@@ -251,6 +267,7 @@ export default function TrainingPage() {
               {trainingVideos.map((video) => (
                 <div
                   key={video.id}
+                  onClick={() => handleVideoClick(video)}
                   className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer"
                 >
                   <div className="relative aspect-video bg-gradient-to-br from-blue-500 to-blue-700">
@@ -429,6 +446,42 @@ export default function TrainingPage() {
       </main>
 
       <FestiveFooter />
+
+      {/* Video Modal */}
+      {selectedVideo && (
+        <>
+          {/* Modal overlay */}
+          <div className="fixed inset-0 bg-black/95 z-[9998] flex items-center justify-center p-4">
+            {/* Background overlay - click to close */}
+            <div 
+              className="absolute inset-0"
+              onClick={() => {
+                console.log('Background clicked');
+                setSelectedVideo(null);
+              }}
+            />
+
+            {/* Video container - only video player, no title or close button */}
+            <div className="w-full max-w-7xl relative z-10 px-4">
+              <div onClick={(e) => {
+                console.log('Video clicked');
+                e.stopPropagation();
+              }}>
+                <VideoPlayer
+                  url={selectedVideo.url}
+                  onProgress={(progress) => {
+                    // Track video progress if needed
+                    console.log('Video progress:', progress);
+                  }}
+                  onEnded={() => {
+                    console.log('Video ended');
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

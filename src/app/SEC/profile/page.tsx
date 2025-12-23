@@ -34,6 +34,8 @@ export default function ProfilePage() {
   const [agencyName, setAgencyName] = useState('');
   const [submittingPersonalInfo, setSubmittingPersonalInfo] = useState(false);
   const [personalInfoError, setPersonalInfoError] = useState<string | null>(null);
+  const [showStoreChangeBanner, setShowStoreChangeBanner] = useState(false);
+  const [showStoreArrow, setShowStoreArrow] = useState(false);
   
   // Store change functionality
   const [currentStore, setCurrentStore] = useState<StoreInfo | null>(null);
@@ -47,7 +49,29 @@ export default function ProfilePage() {
   
   const [panNumber, setPanNumber] = useState('');
   const [kycStatus, setKycStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
+
+  // Check if user came from incentive form to change store
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('from') === 'incentive-form') {
+        setShowStoreArrow(true);
+        // Hide arrow after 10 seconds
+        setTimeout(() => setShowStoreArrow(false), 10000);
+      }
+    }
+  }, []);
   const [verifyingPan, setVerifyingPan] = useState(false);
+
+  // Check if user came from incentive form
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('from') === 'incentive-form') {
+        setShowStoreChangeBanner(true);
+      }
+    }
+  }, []);
   const [panVerified, setPanVerified] = useState(false);
   const [panError, setPanError] = useState<string | null>(null);
   const [kycData, setKycData] = useState<any>(null);
@@ -412,18 +436,32 @@ export default function ProfilePage() {
                     </svg>
                     <span className="text-sm font-semibold text-gray-900">Store Details</span>
                   </div>
-                  <button 
-                    type="button" 
-                    onClick={handleEditStore}
-                    disabled={pendingRequest?.status === 'PENDING'}
-                    className={`text-gray-600 hover:text-gray-900 ${
-                      pendingRequest?.status === 'PENDING' ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
+                  <div className="relative">
+                    {showStoreArrow && (
+                      <div className="absolute top-1/2 -translate-y-1/2 -left-38 flex items-center gap-1 animate-bounce z-10">
+                        <span className="text-xs font-semibold text-blue-600 bg-white px-2 py-1 rounded shadow-sm whitespace-nowrap">Change store here</span>
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    )}
+                    <button 
+                      type="button" 
+                      onClick={handleEditStore}
+                      disabled={pendingRequest?.status === 'PENDING'}
+                      className={`p-1.5 rounded-lg transition-all ${
+                        showStoreArrow 
+                          ? 'bg-blue-50 ring-2 ring-blue-500 text-blue-600 animate-pulse' 
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      } ${
+                        pendingRequest?.status === 'PENDING' ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 <div className="mb-3">
                   <label className="block text-xs text-gray-600 mb-1">Store Name</label>
