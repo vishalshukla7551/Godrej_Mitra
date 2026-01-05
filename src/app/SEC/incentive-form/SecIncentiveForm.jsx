@@ -12,16 +12,13 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const router = useRouter();
   const [secPhone, setSecPhone] = useState('');
   const [secId, setSecId] = useState('');
+  const [invoicePrice, setInvoicePrice] = useState('');
   const [dateOfSale, setDateOfSale] = useState('');
   const [storeId, setStoreId] = useState('');
   const [deviceId, setDeviceId] = useState('');
   const [planId, setPlanId] = useState('');
-  const [imeiNumber, setImeiNumber] = useState('');
-  const [imeiError, setImeiError] = useState('');
-  const [duplicateError, setDuplicateError] = useState('');
-  const [isScanning, setIsScanning] = useState(false);
-  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false);
-  const [imeiExists, setImeiExists] = useState(false);
+  const [imeiExists, setImeiExists] = useState(false); // Kept for safety if referenced elsewhere, but logic removed
+  // IMEI state removed
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSecAlert, setShowSecAlert] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -32,10 +29,21 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
   // Data from APIs
   const [stores, setStores] = useState([]);
-  const [devices, setDevices] = useState([]);
-  const [plans, setPlans] = useState([]);
+  const [devices, setDevices] = useState([
+    { id: 'REF', Category: 'Home', ModelName: 'Refrigerator' },
+    { id: 'WM', Category: 'Home', ModelName: 'Washing Machine' },
+    { id: 'AC', Category: 'Home', ModelName: 'Air Conditioner' },
+    { id: 'MW', Category: 'Home', ModelName: 'Microwave Oven' },
+    { id: 'DW', Category: 'Home', ModelName: 'Dishwasher' },
+  ]);
+  const [plans, setPlans] = useState([
+    { id: 'EW1', label: 'Extended warranty 1', price: 1000 },
+    { id: 'EW2', label: 'Extended warranty 2', price: 2000 },
+    { id: 'EW3', label: 'Extended warranty 3', price: 3000 },
+    { id: 'EW4', label: 'Extended warranty 4', price: 4000 },
+  ]);
   const [loadingStores, setLoadingStores] = useState(true);
-  const [loadingDevices, setLoadingDevices] = useState(true);
+  const [loadingDevices, setLoadingDevices] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(false);
 
   // Load SEC phone and store from authUser in localStorage on mount
@@ -80,50 +88,10 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   }, []);
 
   // Fetch devices on mount
-  useEffect(() => {
-    async function fetchDevices() {
-      try {
-        const res = await fetch('/api/sec/incentive-form/devices');
-        if (res.ok) {
-          const data = await res.json();
-          setDevices(data.devices || []);
-        }
-      } catch (error) {
-        console.error('Error fetching devices:', error);
-      } finally {
-        setLoadingDevices(false);
-      }
-    }
-    fetchDevices();
-  }, []);
+  // Fetch devices effect removed - using dummy data
 
   // Fetch plans when device is selected
-  useEffect(() => {
-    if (!deviceId) {
-      setPlans([]);
-      setPlanId('');
-      return;
-    }
-
-    async function fetchPlans() {
-      try {
-        setLoadingPlans(true);
-        const res = await fetch(`/api/sec/incentive-form/plans?deviceId=${deviceId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setPlans(data.plans || []);
-        } else {
-          setPlans([]);
-        }
-      } catch (error) {
-        console.error('Error fetching plans:', error);
-        setPlans([]);
-      } finally {
-        setLoadingPlans(false);
-      }
-    }
-    fetchPlans();
-  }, [deviceId]);
+  // Fetch plans effect removed - using dummy data
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -147,19 +115,15 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
       alert('⚠️ Please select a device');
       return;
     }
+    if (!invoicePrice) {
+      alert('⚠️ Please enter the invoice price');
+      return;
+    }
     if (!planId) {
       alert('⚠️ Please select a plan');
       return;
     }
-    if (imeiError || duplicateError) {
-      alert('⚠️ Please fix the IMEI issues before submitting');
-      return;
-    }
-    if (!imeiNumber || imeiNumber.length !== 15) {
-      setImeiError('Invalid IMEI. Please enter a valid 15-digit IMEI number.');
-      alert('⚠️ Please enter a valid 15-digit IMEI number');
-      return;
-    }
+    // IMEI validation removed
 
     // Show confirmation modal instead of submitting directly
     setShowConfirmModal(true);
@@ -178,7 +142,8 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
         body: JSON.stringify({
           deviceId,
           planId,
-          imei: imeiNumber,
+          // imei removed
+          invoicePrice,
           dateOfSale: dateOfSale || undefined,
           // Send client values for security verification (server will validate)
           clientSecPhone: secPhone,
@@ -208,10 +173,9 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
       setDateOfSale('');
       setStoreId('');
       setDeviceId('');
+      setInvoicePrice('');
       setPlanId('');
-      setImeiNumber('');
-      setImeiError('');
-      setDuplicateError('');
+      // imei reset removed
 
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -234,143 +198,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
 
 
-  const luhnCheck = (imei) => {
-    let sum = 0;
-    for (let i = 0; i < imei.length; i++) {
-      let digit = parseInt(imei[imei.length - 1 - i], 10);
-      if (Number.isNaN(digit)) return false;
-      if (i % 2 === 1) {
-        digit *= 2;
-        if (digit > 9) digit -= 9;
-      }
-      sum += digit;
-    }
-    return sum % 10 === 0;
-  };
-
-  const checkImeiDuplicate = async (imei) => {
-    if (!imei || imei.length < 14) {
-      setImeiExists(false);
-      setDuplicateError('');
-      return;
-    }
-
-    try {
-      setIsCheckingDuplicate(true);
-      const res = await fetch(`/api/sec/incentive-form/check-imei?imei=${imei}`);
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.exists) {
-          setImeiExists(true);
-          setDuplicateError('This IMEI has already been submitted.');
-        } else {
-          setImeiExists(false);
-          setDuplicateError('');
-        }
-      } else {
-        // If API fails, don't block the user
-        setImeiExists(false);
-        setDuplicateError('');
-      }
-    } catch (error) {
-      console.error('Error checking IMEI:', error);
-      // If API fails, don't block the user
-      setImeiExists(false);
-      setDuplicateError('');
-    } finally {
-      setIsCheckingDuplicate(false);
-    }
-  };
-
-  // Debounce function
-  const debounce = (func, delay) => {
-    let timeoutId;
-    return (...args) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func(...args), delay);
-    };
-  };
-
-  // Create debounced version of checkImeiDuplicate
-  const debouncedCheckImei = debounce(checkImeiDuplicate, 400);
-
-  const validateAndSetImei = (rawValue) => {
-    const numeric = rawValue.replace(/\D/g, '').slice(0, 15);
-    setImeiNumber(numeric);
-
-    if (!numeric) {
-      setImeiError('');
-      setDuplicateError('');
-      setImeiExists(false);
-      return;
-    }
-
-    if (numeric.length !== 15) {
-      setImeiError('Invalid IMEI. Please enter a valid 15-digit IMEI number.');
-      setDuplicateError('');
-      setImeiExists(false);
-      return;
-    }
-
-    if (!luhnCheck(numeric)) {
-      setImeiError('Invalid IMEI. Please enter a valid 15-digit IMEI number.');
-      setDuplicateError('');
-      setImeiExists(false);
-      return;
-    }
-
-    setImeiError('');
-    // Use debounced check for duplicate IMEI
-    debouncedCheckImei(numeric);
-  };
-
-  const handleImeiChange = (e) => {
-    validateAndSetImei(e.target.value);
-  };
-
-  const handleScan = async () => {
-    setIsScanning(true);
-
-    try {
-      // Check if browser supports BarcodeDetector API
-      if ('BarcodeDetector' in window) {
-        // Use native barcode / QR / DataMatrix scanner where supported
-        const barcodeDetector = new BarcodeDetector({
-          formats: ['ean_13', 'code_128', 'upc_e', 'qr_code', 'data_matrix'],
-        });
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
-        });
-
-        // NOTE: Implementing a full live camera preview + frame capture pipeline
-        // is beyond the scope here, so we simulate by asking for IMEI after camera opens.
-        alert('Camera scanner would open here on supported devices. For now, please enter IMEI manually.');
-        stream.getTracks().forEach((track) => track.stop());
-
-        const scannedImei = prompt('Enter scanned IMEI Number:');
-        if (scannedImei) {
-          validateAndSetImei(scannedImei);
-        }
-      } else {
-        // Fallback: Use a simple prompt or third-party scanner library
-        const scannedImei = prompt('Enter or scan IMEI Number:');
-        if (scannedImei) {
-          validateAndSetImei(scannedImei);
-        }
-      }
-    } catch (error) {
-      console.error('Scanner error:', error);
-      // Fallback to manual input
-      const manualImei = prompt('Camera access denied or unavailable. Enter IMEI manually:');
-      if (manualImei) {
-        validateAndSetImei(manualImei);
-      }
-    } finally {
-      setIsScanning(false);
-    }
-  };
+  // IMEI helper functions removed
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
@@ -383,7 +211,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
           {showSecAlert && (
             <div className="mb-4 rounded-xl bg-[#FFF8C5] px-4 py-3 flex items-center justify-between gap-3 text-[13px] text-black">
               <span className="font-medium">
-                Please set up your SEC ID to continue
+                Please set up your Canvasser ID to continue
               </span>
               <button
                 type="button"
@@ -414,7 +242,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
             {/* SEC ID - Disabled */}
             <div>
               <label htmlFor="secId" className="block text-sm font-medium text-gray-700 mb-2">
-                SEC ID
+                Canvasser ID
               </label>
               <input
                 type="text"
@@ -493,14 +321,15 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
             {/* Device Name */}
             <div>
               <label htmlFor="deviceId" className="block text-sm font-medium text-gray-700 mb-2">
-                Device Name
+                Appliance Category
               </label>
               <select
                 id="deviceId"
                 value={deviceId}
                 onChange={(e) => {
                   setDeviceId(e.target.value);
-                  setPlanId(''); // Reset plan when device changes
+                  setDeviceId(e.target.value);
+                  // setPlanId(''); // Removed reset
                 }}
                 disabled={loadingDevices}
                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none disabled:opacity-50"
@@ -514,16 +343,44 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 <option value="">{loadingDevices ? 'Loading devices...' : 'Select Device'}</option>
                 {devices.map((device) => (
                   <option key={device.id} value={device.id}>
-                    {device.Category} - {device.ModelName}
+                    {device.ModelName}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            {/* Appliance Invoice Price */}
+            <div>
+              <label htmlFor="invoicePrice" className="block text-sm font-medium text-gray-700 mb-2">
+                Appliance Invoice Price
+              </label>
+              <select
+                id="invoicePrice"
+                value={invoicePrice}
+                onChange={(e) => setInvoicePrice(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 1rem center',
+                  backgroundSize: '1.25rem',
+                }}
+              >
+                <option value="">Select Invoice Price</option>
+                <option value="10000">₹10,000</option>
+                <option value="15000">₹15,000</option>
+                <option value="20000">₹20,000</option>
+                <option value="25000">₹25,000</option>
+                <option value="30000">₹30,000</option>
+                <option value="40000">₹40,000</option>
+                <option value="50000">₹50,000</option>
               </select>
             </div>
 
             {/* Plan Type */}
             <div>
               <label htmlFor="planId" className="block text-sm font-medium text-gray-700 mb-2">
-                Plan Type
+                Extended Warranty
               </label>
               <select
                 id="planId"
@@ -539,7 +396,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 }}
               >
                 <option value="">
-                  {!deviceId ? 'Select device first' : loadingPlans ? 'Loading plans...' : 'Select Plan'}
+                  {loadingPlans ? 'Loading plans...' : 'Select Plan'}
                 </option>
                 {plans.map((plan) => (
                   <option key={plan.id} value={plan.id}>
@@ -549,63 +406,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               </select>
             </div>
 
-            {/* IMEI Number */}
-            <div>
-              <label htmlFor="imeiNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                IMEI Number
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  id="imeiNumber"
-                  value={imeiNumber}
-                  onChange={handleImeiChange}
-                  placeholder="Enter IMEI Number"
-                  inputMode="numeric"
-                  maxLength="15"
-                  className={`w-full pl-4 pr-24 py-3 bg-white border rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 placeholder:text-gray-400 ${imeiError || duplicateError || imeiExists
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'border-gray-300 focus:ring-blue-500'
-                    }`}
-                />
-                <button
-                  type="button"
-                  onClick={handleScan}
-                  disabled={isScanning}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-full text-xs font-medium flex items-center gap-1.5 transition-colors"
-                >
-                  <svg
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                    />
-                  </svg>
-                  {isScanning ? 'Scanning...' : 'Scan'}
-                </button>
-              </div>
-              {isCheckingDuplicate && !imeiError && (
-                <p className="mt-2 text-xs text-blue-600 font-medium">
-                  Checking IMEI...
-                </p>
-              )}
-              {(imeiError || duplicateError) && !isCheckingDuplicate && (
-                <p className="mt-2 text-xs text-red-600 font-medium">
-                  {imeiError || duplicateError}
-                </p>
-              )}
-              {!imeiError && !duplicateError && !isCheckingDuplicate && (
-                <p className="mt-2 text-xs text-gray-500">
-                  Any incorrect sales reported will impact your future incentives.
-                </p>
-              )}
-            </div>
+
 
             {/* Submit Button - Christmas Theme */}
             <div className="pt-4 pb-6">
@@ -614,11 +415,11 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 disabled={isSubmitting}
                 className="w-full text-white font-semibold py-4 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base hover:scale-[1.02] active:scale-[0.98]"
                 style={{
-                  background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%)',
-                  boxShadow: '0 4px 15px rgba(220, 38, 38, 0.4)',
+                  background: '#5E1846',
+                  boxShadow: '0 4px 15px rgba(94, 24, 70, 0.4)',
                 }}
               >
-                {isSubmitting ? '🎄 Submitting...' : 'Submit'}
+                {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>
             </div>
             {/* OLD SUBMIT BUTTON - Uncomment after Christmas
@@ -702,7 +503,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
             <div className="space-y-3 mb-6">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">SEC ID</span>
+                <span className="text-sm text-gray-500">Canvasser ID</span>
                 <span className="text-sm text-gray-900 font-medium">{secId}</span>
               </div>
 
@@ -739,10 +540,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 </span>
               </div>
 
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">IMEI</span>
-                <span className="text-sm text-gray-900 font-medium">{imeiNumber}</span>
-              </div>
+
             </div>
 
             <div className="flex gap-3">

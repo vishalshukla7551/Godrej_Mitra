@@ -17,6 +17,10 @@ type MonthlySale = {
   adld: number;
   combo: number;
   units: number;
+  ex1?: number;
+  ex2?: number;
+  ex3?: number;
+  ex4?: number;
 };
 
 type MonthlyTxn = {
@@ -814,10 +818,12 @@ function MonthlyIncentiveSection({
         </div>
 
         <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
-          <div className="grid grid-cols-4 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
+          <div className="grid grid-cols-6 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
             <span>Date</span>
-            <span>ADLD</span>
-            <span>Combo</span>
+            <span className="text-center">EX1</span>
+            <span className="text-center">EX2</span>
+            <span className="text-center">EX3</span>
+            <span className="text-center">EX4</span>
             <span className="text-right">Units</span>
           </div>
           {rows.length === 0 ? (
@@ -828,11 +834,13 @@ function MonthlyIncentiveSection({
             rows.map((row, idx) => (
               <div
                 key={row.date + idx}
-                className="grid grid-cols-4 px-3 py-2 border-t border-gray-100 text-gray-800"
+                className="grid grid-cols-6 px-3 py-2 border-t border-gray-100 text-gray-800"
               >
                 <span>{row.date}</span>
-                <span>{row.adld}</span>
-                <span>{row.combo}</span>
+                <span className="text-center">{row.ex1 || row.adld || 0}</span>
+                <span className="text-center">{row.ex2 || row.combo || 0}</span>
+                <span className="text-center">{row.ex3 || 0}</span>
+                <span className="text-center">{row.ex4 || 0}</span>
                 <span className="text-right">{row.units}</span>
               </div>
             ))
@@ -1050,10 +1058,12 @@ function SpotIncentiveSection({
         </div>
 
         <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
-          <div className="grid grid-cols-4 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
+          <div className="grid grid-cols-6 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
             <span>Date</span>
-            <span className="text-center">ADLD</span>
-            <span className="text-center">Combo</span>
+            <span className="text-center">EX1</span>
+            <span className="text-center">EX2</span>
+            <span className="text-center">EX3</span>
+            <span className="text-center">EX4</span>
             <span className="text-right">Units</span>
           </div>
           {filteredSalesData.length === 0 ? (
@@ -1064,11 +1074,14 @@ function SpotIncentiveSection({
             filteredSalesData.map((row: any, idx: number) => (
               <div
                 key={row.date + idx}
-                className="grid grid-cols-4 px-3 py-2 border-t border-gray-100 text-gray-800"
+
+                className="grid grid-cols-6 px-3 py-2 border-t border-gray-100 text-gray-800"
               >
                 <span>{row.date}</span>
-                <span className="text-center text-blue-600 font-medium">{row.adld}</span>
-                <span className="text-center text-purple-600 font-medium">{row.combo}</span>
+                <span className="text-center text-blue-600 font-medium">{row.ex1 || row.adld || 0}</span>
+                <span className="text-center text-purple-600 font-medium">{row.ex2 || row.combo || 0}</span>
+                <span className="text-center text-gray-600">{row.ex3 || 0}</span>
+                <span className="text-center text-gray-600">{row.ex4 || 0}</span>
                 <span className="text-right">{row.units}</span>
               </div>
             ))
@@ -1153,11 +1166,10 @@ function SpotIncentiveSection({
         <p className="text-[11px] text-gray-500 mb-2">Your spot incentive earnings from active campaigns</p>
 
         <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
-          <div className="grid grid-cols-5 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
+          <div className="grid grid-cols-4 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
             <span>Date</span>
-            <span className="text-center">Device</span>
+            <span className="text-center">Appliances</span>
             <span className="text-center">Incentive</span>
-            <span className="text-center">IMEI</span>
             <span className="text-center">Voucher Code</span>
           </div>
           {filteredTransactions.length === 0 ? (
@@ -1168,14 +1180,11 @@ function SpotIncentiveSection({
             filteredTransactions.map((row, idx) => (
               <div
                 key={row.id || row.date + idx}
-                className="grid grid-cols-5 px-3 py-2 border-t border-gray-100 text-gray-800 items-center"
+                className="grid grid-cols-4 px-3 py-2 border-t border-gray-100 text-gray-800 items-center"
               >
                 <span className="text-[10px]">{row.date}</span>
                 <span className="text-center text-[10px]">{row.deviceName}</span>
                 <span className="text-center text-green-600 font-semibold text-[10px]">{row.incentive}</span>
-                <span className="text-center text-[9px] font-mono text-gray-500">
-                  {row.imei ? `...${row.imei.slice(-4)}` : 'N/A'}
-                </span>
                 <span className="text-center text-[10px]">
                   {row.voucherCode && row.voucherCode.trim() && row.voucherCode !== 'N/A' ? (
                     <span className="font-mono text-blue-600">{row.voucherCode}</span>
