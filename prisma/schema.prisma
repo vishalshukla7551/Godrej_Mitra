@@ -24,11 +24,10 @@ enum Validation {
 }
 
 enum PlanType {
-  SCREEN_PROTECT_1_YR
-  ADLD_1_YR
-  COMBO_2_YRS
   EXTENDED_WARRANTY_1_YR
-  TEST_PLAN
+  EXTENDED_WARRANTY_2_YR
+  EXTENDED_WARRANTY_3_YR
+  EXTENDED_WARRANTY_4_YR
 }
 
 model Store {
@@ -60,28 +59,27 @@ model periodicAttachRate {
   @@index([storeId, end]) // Optimize queries by storeId and end date
 }
 
-model SamsungSKU {
+model GodrejSKU {
   id                     String                  @id @default(auto()) @map("_id") @db.ObjectId
   Category               String
-  ModelName              String
-  ModelPrice             Int?
+  SubCategory            String[]
   plans                  Plan[]
   SpotIncentiveReport           SpotIncentiveReport[]
   dailyIncentiveReports       DailyIncentiveReport[]
   spotIncentiveCampaigns SpotIncentiveCampaign[]
-  @@map("SamsungSKU")
+  @@map("GodrejSKU")
 }
 
 model Plan {
   id                     String                  @id @default(auto()) @map("_id") @db.ObjectId
   planType               PlanType
-  price                  Int
-  samsungSKU             SamsungSKU?             @relation(fields: [samsungSKUId], references: [id])
-  samsungSKUId           String?                 @db.ObjectId
+  priceRange              String
+  PlanPrice              Int
+  GodrejSKU              GodrejSKU?             @relation(fields: [godrejSKUId], references: [id])
+  godrejSKUId            String?                 @db.ObjectId
   dailyIncentiveReports           DailyIncentiveReport[]
   SpotIncentiveReport           SpotIncentiveReport[]
   spotIncentiveCampaigns SpotIncentiveCampaign[]
-
   @@map("Plan")
 }
 
@@ -91,8 +89,8 @@ model SpotIncentiveReport {
   secUser                 SEC                    @relation(fields: [secId], references: [id])
   storeId                 String
   store                   Store                  @relation(fields: [storeId], references: [id])
-  samsungSKUId            String                 @db.ObjectId
-  samsungSKU              SamsungSKU             @relation(fields: [samsungSKUId], references: [id])
+  godrejSKUId             String                 @db.ObjectId
+  godrejSKU               GodrejSKU              @relation(fields: [godrejSKUId], references: [id])
   planId                  String                 @db.ObjectId
   salesSummaryid          String?                @db.ObjectId
   plan                    Plan                   @relation(fields: [planId], references: [id])
@@ -118,8 +116,8 @@ model DailyIncentiveReport {
   secUser                 SEC?                    @relation(fields: [secId], references: [id])
   storeId                 String
   store                   Store                  @relation(fields: [storeId], references: [id])
-  samsungSKUId            String                 @db.ObjectId
-  samsungSKU              SamsungSKU             @relation(fields: [samsungSKUId], references: [id])
+  godrejSKUId             String                 @db.ObjectId
+  godrejSKU               GodrejSKU              @relation(fields: [godrejSKUId], references: [id])
   planId                  String                 @db.ObjectId
   plan                    Plan                   @relation(fields: [planId], references: [id])
   imei                    String
@@ -147,8 +145,8 @@ model SpotIncentiveCampaign {
   // targeting (nullable -> if null that axis is "all")
   store        Store      @relation(fields: [storeId], references: [id])
   storeId      String // Store uses String IDs, not ObjectId
-  samsungSKU   SamsungSKU @relation(fields: [samsungSKUId], references: [id])
-  samsungSKUId String     @db.ObjectId
+  godrejSKU    GodrejSKU  @relation(fields: [godrejSKUId], references: [id])
+  godrejSKUId  String     @db.ObjectId
   plan         Plan       @relation(fields: [planId], references: [id])
   planId       String     @db.ObjectId
 
@@ -166,7 +164,7 @@ model SpotIncentiveCampaign {
 
   /// Prevent duplicate exact campaigns for same triple and overlapping time (optional unique index is tricky with ranges).
   @@index([storeId])
-  @@index([samsungSKUId])
+  @@index([godrejSKUId])
   @@index([planId])
   @@map("Campaign")
 }

@@ -16,6 +16,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const [dateOfSale, setDateOfSale] = useState('');
   const [storeId, setStoreId] = useState('');
   const [deviceId, setDeviceId] = useState('');
+  const [applianceSubCategory, setApplianceSubCategory] = useState('');
   const [planId, setPlanId] = useState('');
   const [imeiExists, setImeiExists] = useState(false); // Kept for safety if referenced elsewhere, but logic removed
   // IMEI state removed
@@ -35,13 +36,10 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
     { id: 'AC', Category: 'Home', ModelName: 'Air Conditioner' },
     { id: 'MW', Category: 'Home', ModelName: 'Microwave Oven' },
     { id: 'DW', Category: 'Home', ModelName: 'Dishwasher' },
+    { id: 'CF', Category: 'Home', ModelName: 'Chest Freezer' },
+    { id: 'QB', Category: 'Home', ModelName: 'Qube' },
   ]);
-  const [plans, setPlans] = useState([
-    { id: 'EW1', label: 'Extended warranty 1', price: 1000 },
-    { id: 'EW2', label: 'Extended warranty 2', price: 2000 },
-    { id: 'EW3', label: 'Extended warranty 3', price: 3000 },
-    { id: 'EW4', label: 'Extended warranty 4', price: 4000 },
-  ]);
+  const [plans, setPlans] = useState([]);
   const [loadingStores, setLoadingStores] = useState(true);
   const [loadingDevices, setLoadingDevices] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(false);
@@ -328,11 +326,10 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 value={deviceId}
                 onChange={(e) => {
                   setDeviceId(e.target.value);
-                  setDeviceId(e.target.value);
-                  // setPlanId(''); // Removed reset
+                  setApplianceSubCategory(''); // Reset sub-category when category changes
                 }}
                 disabled={loadingDevices}
-                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none disabled:opacity-50"
+                className="w-full pl-4 pr-10 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none disabled:opacity-50"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
@@ -349,32 +346,137 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               </select>
             </div>
 
-            {/* Appliance Invoice Price */}
+            {/* Appliance Sub Category */}
             <div>
-              <label htmlFor="invoicePrice" className="block text-sm font-medium text-gray-700 mb-2">
-                Appliance Invoice Price
+              <label htmlFor="applianceSubCategory" className="block text-sm font-medium text-gray-700 mb-2">
+                Appliance Sub Category
               </label>
               <select
-                id="invoicePrice"
-                value={invoicePrice}
-                onChange={(e) => setInvoicePrice(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                id="applianceSubCategory"
+                value={applianceSubCategory}
+                onChange={(e) => setApplianceSubCategory(e.target.value)}
+                className="w-full pl-4 pr-10 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                 style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'right 1rem center',
                   backgroundSize: '1.25rem',
                 }}
               >
-                <option value="">Select Invoice Price</option>
-                <option value="10000">₹10,000</option>
-                <option value="15000">₹15,000</option>
-                <option value="20000">₹20,000</option>
-                <option value="25000">₹25,000</option>
-                <option value="30000">₹30,000</option>
-                <option value="40000">₹40,000</option>
-                <option value="50000">₹50,000</option>
+                <option value="">Select Sub Category</option>
+                {(() => {
+                  // Find the selected device to get its ModelName
+                  const selectedDevice = devices.find(d => d.id === deviceId);
+                  const categoryName = selectedDevice?.ModelName || '';
+                  const lowerCategoryName = categoryName.toLowerCase();
+
+                  // Define sub-categories based on category name
+                  if (lowerCategoryName.includes('refrigerator')) {
+                    return (
+                      <>
+                        <option value="Direct Cool">Direct Cool</option>
+                        <option value="Frost Free">Frost Free</option>
+                      </>
+                    );
+                  } else if (lowerCategoryName.includes('washing machine')) {
+                    return (
+                      <>
+                        <option value="Semi Automatic">Semi Automatic</option>
+                        <option value="Fully Automatic">Fully Automatic</option>
+                      </>
+                    );
+                  } else if (
+                    lowerCategoryName.includes('air conditioner') ||
+                    lowerCategoryName.includes('air cooler') ||
+                    lowerCategoryName.includes('dishwasher') ||
+                    lowerCategoryName.includes('chest freezer') ||
+                    lowerCategoryName.includes('microwave') ||
+                    lowerCategoryName.includes('qube')
+                  ) {
+                    return (
+                      <option value="All">All</option>
+                    );
+                  }
+                  return null;
+                })()}
               </select>
+            </div>
+
+            {/* Appliance Invoice Price */}
+            <div>
+              <label htmlFor="invoicePrice" className="block text-sm font-medium text-gray-700 mb-2">
+                Appliance Invoice Price
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  id="invoicePrice"
+                  value={invoicePrice}
+                  onChange={(e) => setInvoicePrice(e.target.value)}
+                  placeholder="Enter Invoice Price"
+                  className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+                />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!invoicePrice || !deviceId) {
+                      alert('Please select a category and enter invoice price first');
+                      return;
+                    }
+
+                    // Find category name from ID
+                    const selectedDevice = devices.find(d => d.id === deviceId);
+                    const categoryName = selectedDevice?.ModelName;
+
+                    if (!categoryName) return;
+
+                    try {
+                      setLoadingPlans(true);
+                      const res = await fetch('/api/sec/plans/fetch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          category: categoryName,
+                          price: invoicePrice
+                        })
+                      });
+
+                      const data = await res.json();
+
+                      if (res.ok) {
+                        // Transform DB plans to frontend format
+                        // Frontend expects: { id: '...', label: '...', price: ... }
+                        // DB returns: { planType: 'EXTENDED_WARRANTY_1_YR', PlanPrice: 1015, ... }
+
+                        const formattedPlans = data.plans.map(p => ({
+                          id: p.id,
+                          label: p.planType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()), // Friendly label
+                          price: p.PlanPrice
+                        }));
+
+                        setPlans(formattedPlans);
+                        setPlanId(''); // Reset selected plan
+
+                        if (formattedPlans.length === 0) {
+                          alert('No plans found for this price range');
+                        }
+                      } else {
+                        console.error('Error fetching plans:', data.error);
+                        alert('Failed to fetch plans');
+                      }
+                    } catch (error) {
+                      console.error('Error:', error);
+                      alert('An error occurred while checking plans');
+                    } finally {
+                      setLoadingPlans(false);
+                    }
+                  }}
+                  disabled={loadingPlans}
+                  className="bg-black text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingPlans ? 'Checking...' : 'Check'}
+                </button>
+              </div>
             </div>
 
             {/* Plan Type */}
@@ -387,7 +489,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 value={planId}
                 onChange={(e) => setPlanId(e.target.value)}
                 disabled={!deviceId || loadingPlans}
-                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none disabled:opacity-50"
+                className="w-full pl-4 pr-10 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none disabled:opacity-50"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
