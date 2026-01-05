@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       const trimmedEmployId = employeeId.trim();
       if (trimmedEmployId) {
         // Check if employeeId already exists for a different user
-        const existingSEC = await prisma.sEC.findUnique({
+        const existingSEC = await prisma.sEC.findFirst({
           where: { employeeId: trimmedEmployId },
           select: { phone: true },
         });

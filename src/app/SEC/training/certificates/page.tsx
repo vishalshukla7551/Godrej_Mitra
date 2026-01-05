@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Award, Download, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import FestiveHeader from '@/components/FestiveHeader';
-import FestiveFooter from '@/components/FestiveFooter';
+import SECHeader from '@/app/SEC/SECHeader';
+import SECFooter from '@/app/SEC/SECFooter';
 
 interface Certificate {
   id: string;
@@ -49,7 +49,7 @@ const AnimatedScore = ({ finalScore, delay = 0 }: { finalScore: number; delay?: 
   }, [finalScore, delay]);
 
   return (
-    <motion.div 
+    <motion.div
       className="text-2xl font-bold text-green-600"
       animate={isAnimating ? {} : { scale: [1, 1.1, 1] }}
       transition={{ duration: 0.3, delay: delay / 1000 + 1 }}
@@ -101,7 +101,7 @@ export default function CertificatesPage() {
   // Generate certificate HTML
   const generateCertificateHTML = (cert: Certificate) => {
     const secName = secUserName;
-    
+
     return `
       <!DOCTYPE html>
       <html>
@@ -268,11 +268,11 @@ export default function CertificatesPage() {
     // Get SEC user name from localStorage
     const userName = getSecUserName();
     setSecUserName(userName);
-    
+
     // Set mock certificates for now
     setCertificates(MOCK_CERTIFICATES);
     setLoading(false);
-    
+
     // Trigger confetti after certificates load
     setTimeout(() => {
       if (MOCK_CERTIFICATES.length > 0) {
@@ -283,19 +283,19 @@ export default function CertificatesPage() {
 
   return (
     <div className="h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col overflow-hidden">
-      <FestiveHeader hideGreeting />
+      <SECHeader />
       <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32">
         <div className="max-w-2xl mx-auto px-4 py-6">
-          <motion.button 
+          <motion.button
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            onClick={() => router.push('/SEC/training')} 
+            onClick={() => router.push('/SEC/training')}
             className="flex items-center gap-2 text-blue-600 mb-4 hover:text-blue-700 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" /> Back to Training
           </motion.button>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
@@ -311,7 +311,7 @@ export default function CertificatesPage() {
           </motion.div>
 
           {loading ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex justify-center py-12"
@@ -319,7 +319,7 @@ export default function CertificatesPage() {
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
             </motion.div>
           ) : certificates.length === 0 ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
@@ -333,10 +333,10 @@ export default function CertificatesPage() {
               </motion.div>
               <h2 className="text-xl font-bold text-gray-900 mb-2">No Certificates Yet</h2>
               <p className="text-gray-600 mb-4">Complete tests to earn certificates</p>
-              <motion.button 
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.push('/SEC/training')} 
+                onClick={() => router.push('/SEC/training')}
                 className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
               >
                 Go to Training
@@ -350,16 +350,16 @@ export default function CertificatesPage() {
                     key={cert.id}
                     initial={{ opacity: 0, scale: 0.95, y: 30 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ 
-                      duration: 0.5, 
+                    transition={{
+                      duration: 0.5,
                       ease: "easeOut",
-                      delay: index * 0.1 
+                      delay: index * 0.1
                     }}
                     className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-400 hover:shadow-xl transition-shadow duration-300"
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <motion.h3 
+                        <motion.h3
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 + 0.2 }}
@@ -367,7 +367,7 @@ export default function CertificatesPage() {
                         >
                           {cert.testName}
                         </motion.h3>
-                        <motion.p 
+                        <motion.p
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 + 0.3 }}
@@ -375,7 +375,7 @@ export default function CertificatesPage() {
                         >
                           Certificate No: {cert.certificateNo}
                         </motion.p>
-                        <motion.p 
+                        <motion.p
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 + 0.4 }}
@@ -384,14 +384,14 @@ export default function CertificatesPage() {
                           Issued: {new Date(cert.issuedAt).toLocaleDateString()}
                         </motion.p>
                       </div>
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.1 + 0.5 }}
                         className="text-right"
                       >
                         <AnimatedScore finalScore={cert.score} delay={index * 100 + 600} />
-                        <motion.span 
+                        <motion.span
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.1 + 0.8 }}
@@ -401,13 +401,13 @@ export default function CertificatesPage() {
                         </motion.span>
                       </motion.div>
                     </div>
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 + 0.9 }}
                       className="flex gap-2 mt-4"
                     >
-                      <motion.button 
+                      <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleViewCertificate(cert)}
@@ -415,7 +415,7 @@ export default function CertificatesPage() {
                       >
                         <Award className="w-4 h-4" /> View Certificate
                       </motion.button>
-                      <motion.button 
+                      <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleDownloadCertificate(cert)}
@@ -431,7 +431,7 @@ export default function CertificatesPage() {
           )}
         </div>
       </main>
-      <FestiveFooter />
+      <SECFooter />
     </div>
   );
 }

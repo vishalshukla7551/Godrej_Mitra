@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 // OLD CONFETTI IMPORT - Uncomment after Christmas
 // import Confetti from 'react-confetti';
-import FestiveHeader from '@/components/FestiveHeader';
-import FestiveFooter from '@/components/FestiveFooter';
+import SECHeader from '@/app/SEC/SECHeader';
+import SECFooter from '@/app/SEC/SECFooter';
 import ChristmasSuccessModal from '@/components/ChristmasSuccessModal';
 
 export default function SecIncentiveForm({ initialSecId = '' }) {
@@ -29,7 +29,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const [earnedIncentive, setEarnedIncentive] = useState(0);
   // OLD CONFETTI STATE - Uncomment after Christmas
   // const [showConfetti, setShowConfetti] = useState(false);
-  
+
   // Data from APIs
   const [stores, setStores] = useState([]);
   const [devices, setDevices] = useState([]);
@@ -133,7 +133,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
       alert('Please login to submit the form');
       return;
     }
-    
+
     // Validate all fields with user-friendly messages
     if (!dateOfSale) {
       alert('⚠️ Please select the date of sale');
@@ -160,7 +160,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
       alert('⚠️ Please enter a valid 15-digit IMEI number');
       return;
     }
-    
+
     // Show confirmation modal instead of submitting directly
     setShowConfirmModal(true);
   };
@@ -169,7 +169,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
     try {
       setIsSubmitting(true);
       setShowConfirmModal(false);
-      
+
       const res = await fetch('/api/sec/incentive-form/submit', {
         method: 'POST',
         headers: {
@@ -196,14 +196,14 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
       // Success - Show celebration modal
       setEarnedIncentive(data.salesReport.incentiveEarned);
       setShowSuccessModal(true);
-      
+
       // OLD CONFETTI CODE - Uncomment after Christmas
       // setShowConfetti(true);
       // Stop confetti after 4 seconds
       // setTimeout(() => {
       //   setShowConfetti(false);
       // }, 4000);
-      
+
       // Reset form
       setDateOfSale('');
       setStoreId('');
@@ -212,7 +212,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
       setImeiNumber('');
       setImeiError('');
       setDuplicateError('');
-      
+
     } catch (error) {
       console.error('Error submitting form:', error);
       alert('Failed to submit sales report. Please try again.');
@@ -258,7 +258,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
     try {
       setIsCheckingDuplicate(true);
       const res = await fetch(`/api/sec/incentive-form/check-imei?imei=${imei}`);
-      
+
       if (res.ok) {
         const data = await res.json();
         if (data.exists) {
@@ -331,7 +331,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
   const handleScan = async () => {
     setIsScanning(true);
-    
+
     try {
       // Check if browser supports BarcodeDetector API
       if ('BarcodeDetector' in window) {
@@ -374,7 +374,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
-      <FestiveHeader hideGreeting />
+      <SECHeader />
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-32">
@@ -466,29 +466,29 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               </div>
             </div>
 
-          {/* Store Name - Always disabled, loaded from authUser */}
-          <div>
-            <label htmlFor="storeId" className="block text-sm font-medium text-gray-700 mb-2">
-              Store Name
-            </label>
-            <input
-              type="text"
-              id="storeId"
-              value={(() => {
-                const store = stores.find((s) => s.id === storeId);
-                if (!store) return loadingStores ? 'Loading...' : 'Store not set';
-                return `${store.name}${store.city ? ` - ${store.city}` : ''}`;
-              })()}
-              disabled
-              className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm"
-            />
-            <a 
-              href="/SEC/profile?from=incentive-form" 
-              className="inline-block mt-2 text-xs text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              Want to change store?
-            </a>
-          </div>
+            {/* Store Name - Always disabled, loaded from authUser */}
+            <div>
+              <label htmlFor="storeId" className="block text-sm font-medium text-gray-700 mb-2">
+                Store Name
+              </label>
+              <input
+                type="text"
+                id="storeId"
+                value={(() => {
+                  const store = stores.find((s) => s.id === storeId);
+                  if (!store) return loadingStores ? 'Loading...' : 'Store not set';
+                  return `${store.name}${store.city ? ` - ${store.city}` : ''}`;
+                })()}
+                disabled
+                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm"
+              />
+              <a
+                href="/SEC/profile?from=incentive-form"
+                className="inline-block mt-2 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                Want to change store?
+              </a>
+            </div>
 
             {/* Device Name */}
             <div>
@@ -563,11 +563,10 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                   placeholder="Enter IMEI Number"
                   inputMode="numeric"
                   maxLength="15"
-                  className={`w-full pl-4 pr-24 py-3 bg-white border rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 placeholder:text-gray-400 ${
-                    imeiError || duplicateError || imeiExists
-                      ? 'border-red-500 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
-                  }`}
+                  className={`w-full pl-4 pr-24 py-3 bg-white border rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 placeholder:text-gray-400 ${imeiError || duplicateError || imeiExists
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-blue-500'
+                    }`}
                 />
                 <button
                   type="button"
@@ -639,7 +638,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
 
 
-      <FestiveFooter />
+      <SECFooter />
 
       {/* Christmas Success Modal */}
       <ChristmasSuccessModal
@@ -686,11 +685,11 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={handleCancelConfirm}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
