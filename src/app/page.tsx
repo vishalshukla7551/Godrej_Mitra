@@ -1,17 +1,50 @@
-import { getAuthenticatedUserFromCookies } from '@/lib/auth';
-import { getHomePathForRole } from '@/lib/roleHomePath';
-import LandingRedirect from '@/components/LandingRedirect';
+'use client';
 
-export default async function Home() {
-  // In page components we must not mutate cookies; pass mutateCookies: false so
-  // getAuthenticatedUserFromCookies only reads tokens and does not rotate them.
-  const authUser = await getAuthenticatedUserFromCookies(undefined, { mutateCookies: false });
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
-  let redirectTo = '/login/role';
-  
-  if (authUser) {
-    redirectTo = getHomePathForRole(authUser.role);
-  }
+export default function Home() {
+  const router = useRouter();
 
-  return <LandingRedirect redirectTo={redirectTo} />;
+  useEffect(() => {
+    // Check if user is authenticated from localStorage
+    if (typeof window !== 'undefined') {
+      const authUser = localStorage.getItem('authUser');
+      
+      if (authUser) {
+        try {
+          const user = JSON.parse(authUser);
+          // Redirect based on role
+          if (user.role === 'SEC') {
+            router.push('/SEC/home');
+          } else if (user.role === 'ZOPPER_ADMINISTRATOR') {
+            router.push('/Zopper-Administrator');
+          } else if (user.role === 'SAMSUNG_ADMINISTRATOR') {
+            router.push('/Samsung-Administrator');
+          } else {
+            router.push('/login/role');
+          }
+        } catch {
+          // If parse fails, redirect to login
+          setTimeout(() => router.push('/login/role'), 2000);
+        }
+      } else {
+        // Not authenticated, redirect to login after 2 seconds
+        setTimeout(() => router.push('/login/role'), 2000);
+      }
+    }
+  }, [router]);
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-white">
+      <Image 
+        src="/Godrej_Enterprises_Group.svg" 
+        alt="Godrej Enterprises Group" 
+        width={400} 
+        height={200}
+        priority
+      />
+    </main>
+  );
 }
