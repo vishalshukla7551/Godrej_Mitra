@@ -1,7 +1,7 @@
-import AnimatedText from '@/components/AnimatedText';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 import { getHomePathForRole } from '@/lib/roleHomePath';
 import { redirect } from 'next/navigation';
+import Image from 'next/image';
 
 export default async function Home() {
   // In page components we must not mutate cookies; pass mutateCookies: false so
@@ -14,8 +14,14 @@ export default async function Home() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-black font-[family-name:var(--font-plus-jakarta-sans)]">
-      <AnimatedText />
+    <main className="flex min-h-screen items-center justify-center bg-white font-[family-name:var(--font-plus-jakarta-sans)]">
+      <Image 
+        src="/Godrej_Enterprises_Group.svg.png" 
+        alt="Godrej Enterprises Group" 
+        width={400} 
+        height={200}
+        priority
+      />
     </main>
   );
 }
