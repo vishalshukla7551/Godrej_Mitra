@@ -10,8 +10,8 @@ export function createBenepikJWT() {
     iss: "benepik-tech",
     aud: "client-system",
     jti: crypto.randomBytes(16).toString("base64"),
-    clientId: 1200,
-    adminId: 23,
+    clientId: 2364,  // Updated from Excel: Client Details - Zopper
+    adminId: 926,    // Updated from Excel: Client Details - Zopper
     event: "reward"
   };
 

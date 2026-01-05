@@ -8,14 +8,14 @@ import {
 import { RewardPayload, BenepikResponse } from "./types";
 
 export class BenepikClient {
-  private apiUrl: string;
+  private proxyUrl: string;
 
   constructor() {
-    const url = process.env.BENEPIK_API_URL;
+    const url = process.env.AWS_PROXY_URL;
     if (!url) {
-      throw new Error("BENEPIK_API_URL is not configured");
+      throw new Error("AWS_PROXY_URL is not configured");
     }
-    this.apiUrl = url;
+    this.proxyUrl = url;
   }
 
   async sendReward(rewardPayload: RewardPayload): Promise<BenepikResponse> {
@@ -34,19 +34,27 @@ export class BenepikClient {
         checksum
       });
 
-      /* Make API request */
+      /* Prepare headers for AWS proxy */
+      const requestHeaders = {
+        Authorization: `Bearer ${jwtToken}`,
+        REQUESTID: requestId,
+        "X-TIMESTAMP": timestamp.toString(),
+        "X-NONCE": nonce,
+        "X-SIGNATURE": signature,
+      };
+
+      /* Make API request through AWS proxy */
       const response = await axios.post(
-        this.apiUrl,
-        { checksum },
+        this.proxyUrl, // AWS proxy URL
+        {
+          checksum,
+          requestHeaders
+        },
         {
           headers: {
-            Authorization: `Bearer ${jwtToken}`,
-            REQUESTID: requestId,
-            "X-TIMESTAMP": timestamp.toString(),
-            "X-NONCE": nonce,
-            "X-SIGNATURE": signature,
             "Content-Type": "application/json"
-          }
+          },
+          timeout: 30000 // 30 second timeout
         }
       );
 
@@ -58,7 +66,7 @@ export class BenepikClient {
       console.error("Benepik API error:", error.response?.data || error.message);
       return {
         success: false,
-        error: error.response?.data?.message || error.message || "Reward API failed"
+        error: error.response?.data?.error || error.message || "Reward API failed"
       };
     }
   }
