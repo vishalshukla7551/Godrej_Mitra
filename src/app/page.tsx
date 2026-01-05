@@ -7,7 +7,7 @@ export default async function Home() {
   // getAuthenticatedUserFromCookies only reads tokens and does not rotate them.
   const authUser = await getAuthenticatedUserFromCookies(undefined, { mutateCookies: false });
 
-  let redirectTo = '/login/role';
+  let redirectTo = '/login/sec';
   
   if (authUser) {
     redirectTo = getHomePathForRole(authUser.role);
