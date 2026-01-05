@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import FestiveHeader from '@/components/FestiveHeader';
-import FestiveFooter from '@/components/FestiveFooter';
+import SECHeader from '@/app/SEC/SECHeader';
+import SECFooter from '@/app/SEC/SECFooter';
 import { downloadReport } from './downloadReport';
 
 // Filter options
@@ -99,7 +99,7 @@ export default function IncentivePassbookPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>('All');
   const [selectedFY, setSelectedFY] = useState<string>('FY-25');
   const [sortAsc, setSortAsc] = useState<boolean>(false);
-  
+
   // API data state
   const [passbookData, setPassbookData] = useState<PassbookData | null>(null);
   const [spotIncentiveData, setSpotIncentiveData] = useState<any>(null);
@@ -107,7 +107,7 @@ export default function IncentivePassbookPage() {
   const [secData, setSecData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Modal state
   const [showIncentiveModal, setShowIncentiveModal] = useState(false);
   const [selectedIncentiveData, setSelectedIncentiveData] = useState<any>(null);
@@ -120,13 +120,13 @@ export default function IncentivePassbookPage() {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Fetch both passbook and spot incentive data
         const [passbookRes, spotRes] = await Promise.all([
           fetch('/api/sec/passbook'),
           fetch('/api/sec/spot-incentive')
         ]);
-        
+
         if (!passbookRes.ok) {
           if (passbookRes.status === 401) {
             setError('Unauthorized. Please login again.');
@@ -174,10 +174,10 @@ export default function IncentivePassbookPage() {
   yesterday.setDate(today.getDate() - 1);
 
   // Get sales summary data based on active tab
-  const salesSummaryData = activeTab === 'monthly' 
+  const salesSummaryData = activeTab === 'monthly'
     ? (passbookData?.monthlyIncentive?.salesSummary || [])
     : (passbookData?.spotIncentive?.salesSummary || []);
-  
+
   // Get unique months from sales summary
   const allMonths = Array.from(
     new Set(salesSummaryData.filter(r => r && r.date).map((r) => formatMonthYear(r.date)))
@@ -190,8 +190,8 @@ export default function IncentivePassbookPage() {
   );
 
   // Get available FYs from API data or default
-  const allFYs = passbookData?.monthlyIncentive?.fyStats 
-    ? Object.keys(passbookData.monthlyIncentive.fyStats) 
+  const allFYs = passbookData?.monthlyIncentive?.fyStats
+    ? Object.keys(passbookData.monthlyIncentive.fyStats)
     : ['FY-25', 'FY-24', 'FY-23', 'FY-22', 'FY-21'];
 
   const filteredMonthlySales = salesSummaryData
@@ -252,14 +252,14 @@ export default function IncentivePassbookPage() {
   if (loading) {
     return (
       <div className="h-screen bg-white flex flex-col overflow-hidden">
-        <FestiveHeader hideGreeting />
+        <SECHeader />
         <main className="flex-1 overflow-y-auto pb-32 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading passbook data...</p>
           </div>
         </main>
-        <FestiveFooter />
+        <SECFooter />
       </div>
     );
   }
@@ -267,7 +267,7 @@ export default function IncentivePassbookPage() {
   if (error) {
     return (
       <div className="h-screen bg-white flex flex-col overflow-hidden">
-        <FestiveHeader hideGreeting />
+        <SECHeader />
         <main className="flex-1 overflow-y-auto pb-32 flex items-center justify-center">
           <div className="text-center px-4">
             <p className="text-red-600 mb-4">{error}</p>
@@ -279,14 +279,14 @@ export default function IncentivePassbookPage() {
             </button>
           </div>
         </main>
-        <FestiveFooter />
+        <SECFooter />
       </div>
     );
   }
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
-      <FestiveHeader hideGreeting />
+      <SECHeader />
 
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="px-4 pt-4">
@@ -295,11 +295,10 @@ export default function IncentivePassbookPage() {
             <button
               type="button"
               onClick={() => setActiveTab('monthly')}
-              className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                activeTab === 'monthly'
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-xl scale-[1.02] transform'
-                  : 'bg-white text-gray-600 shadow-md hover:shadow-lg'
-              }`}
+              className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${activeTab === 'monthly'
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-xl scale-[1.02] transform'
+                : 'bg-white text-gray-600 shadow-md hover:shadow-lg'
+                }`}
               style={activeTab !== 'monthly' ? {
                 animation: 'softPulse 2.5s ease-in-out infinite',
               } : {}}
@@ -309,11 +308,10 @@ export default function IncentivePassbookPage() {
             <button
               type="button"
               onClick={() => setActiveTab('spot')}
-              className={`flex-1 ml-2 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                activeTab === 'spot'
-                  ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl scale-[1.02] transform'
-                  : 'bg-white text-gray-600 shadow-md hover:shadow-lg'
-              }`}
+              className={`flex-1 ml-2 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${activeTab === 'spot'
+                ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl scale-[1.02] transform'
+                : 'bg-white text-gray-600 shadow-md hover:shadow-lg'
+                }`}
               style={activeTab !== 'spot' ? {
                 animation: 'softPulse 2.5s ease-in-out infinite',
               } : {}}
@@ -355,11 +353,10 @@ export default function IncentivePassbookPage() {
                 key={filter}
                 type="button"
                 onClick={() => setActiveFilter(filter)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
-                  activeFilter === filter
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-gray-700 border-gray-200'
-                }`}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border ${activeFilter === filter
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-gray-700 border-gray-200'
+                  }`}
               >
                 {filter}
               </button>
@@ -458,19 +455,19 @@ export default function IncentivePassbookPage() {
         </div>
       </main>
 
-      <FestiveFooter />
+      <SECFooter />
 
       {/* Incentive Details Modal */}
       {showIncentiveModal && selectedIncentiveData && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto"
           style={{ zIndex: 9999 }}
           onClick={() => setShowIncentiveModal(false)}
         >
-          <div 
+          <div
             className="bg-white rounded-lg max-w-md w-full max-h-[90vh] flex flex-col my-8 mx-auto relative"
             onClick={(e) => e.stopPropagation()}
-            style={{ 
+            style={{
               position: 'relative',
               zIndex: 10000
             }}
@@ -504,161 +501,159 @@ export default function IncentivePassbookPage() {
                         <th className="px-4 py-3 text-right font-medium text-gray-700 rounded-tr-xl">Value</th>
                       </tr>
                     </thead>
-                  <tbody className="bg-white">
-                    <tr className="border-b border-gray-100">
-                      <td className="px-4 py-3 text-gray-600">Store Name</td>
-                      <td className="px-4 py-3 font-medium text-right text-gray-900">
-                        {selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.storeName || 'N/A'}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="px-4 py-3 text-gray-600">Total Units Sold</td>
-                      <td className="px-4 py-3 font-medium text-right text-gray-900">
-                        {selectedIncentiveData?.breakdown?.unitsSummary?.totalUnits || 0}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="px-4 py-3 text-gray-600">Number Of SECs</td>
-                      <td className="px-4 py-3 font-medium text-right text-gray-900">
-                        {numberOfSECs}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="px-4 py-3 text-gray-600">Base Gate Status</td>
-                      <td className="px-4 py-3 text-right">
-                        {(() => {
-                          const totalUnits = selectedIncentiveData?.breakdown?.unitsSummary?.totalUnits || 0;
-                          const gate = 4 * numberOfSECs;
-                          const isQualified = totalUnits >= gate;
-                          return (
-                            <div className="flex flex-col items-end gap-1">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                isQualified 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {isQualified ? 'Qualified' : `Not Qualified`}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                (4 x {numberOfSECs} = {gate} Units)
-                              </span>
-                            </div>
-                          );
-                        })()}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="px-4 py-3 text-gray-600">Fold 7 Sold</td>
-                      <td className="px-4 py-3 font-medium text-right text-gray-900">
-                        {(() => {
-                          const foldCount = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.breakdownBySlab?.reduce((total: number, slab: any) => {
-                            // Calculate number of Fold devices from the bonus amount
-                            const foldBonus = slab.deviceBonuses?.foldBonus || 0;
-                            if (foldBonus === 0) return total;
-                            
-                            // Fold bonus is either ₹400 or ₹600 per device
-                            // Determine which rate was used based on attach percentage
-                            const attachRate = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.attachPercentage ?? 0;
-                            const bonusPerDevice = attachRate < 25 ? 400 : 600;
-                            const foldDevices = Math.round(foldBonus / bonusPerDevice);
-                            
-                            return total + foldDevices;
-                          }, 0) || 0;
-                          return foldCount;
-                        })()}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="px-4 py-3 text-gray-600">S25 Series Sold</td>
-                      <td className="px-4 py-3 font-medium text-right text-gray-900">
-                        {(() => {
-                          const s25Count = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.breakdownBySlab?.reduce((total: number, slab: any) => {
-                            // Calculate number of S25 devices from the bonus amount
-                            const s25Bonus = slab.deviceBonuses?.s25Bonus || 0;
-                            if (s25Bonus === 0) return total;
-                            
-                            // S25 bonus is either ₹300 or ₹500 per device
-                            // Determine which rate was used based on attach percentage
-                            const attachRate = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.attachPercentage ?? 0;
-                            const bonusPerDevice = attachRate < 15 ? 300 : 500;
-                            const s25Devices = Math.round(s25Bonus / bonusPerDevice);
-                            
-                            return total + s25Devices;
-                          }, 0) || 0;
-                          return s25Count;
-                        })()}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="px-4 py-3 text-gray-600">Store Attach Rate</td>
-                      <td className="px-4 py-3 font-medium text-right text-gray-900">
-                        {(() => {
-                          const latestInfo = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.latestAttachRateInfo;
-                          const attachPercentage = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.attachPercentage;
-                          
-                          if (latestInfo) {
+                    <tbody className="bg-white">
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 text-gray-600">Store Name</td>
+                        <td className="px-4 py-3 font-medium text-right text-gray-900">
+                          {selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.storeName || 'N/A'}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 text-gray-600">Total Units Sold</td>
+                        <td className="px-4 py-3 font-medium text-right text-gray-900">
+                          {selectedIncentiveData?.breakdown?.unitsSummary?.totalUnits || 0}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 text-gray-600">Number Of SECs</td>
+                        <td className="px-4 py-3 font-medium text-right text-gray-900">
+                          {numberOfSECs}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 text-gray-600">Base Gate Status</td>
+                        <td className="px-4 py-3 text-right">
+                          {(() => {
+                            const totalUnits = selectedIncentiveData?.breakdown?.unitsSummary?.totalUnits || 0;
+                            const gate = 4 * numberOfSECs;
+                            const isQualified = totalUnits >= gate;
                             return (
-                              <div className="flex flex-col items-end">
-                                <span>{latestInfo.percentage}%</span>
+                              <div className="flex flex-col items-end gap-1">
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${isQualified
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                                  }`}>
+                                  {isQualified ? 'Qualified' : `Not Qualified`}
+                                </span>
                                 <span className="text-xs text-gray-500">
-                                  Latest By: {latestInfo.endDate}
+                                  (4 x {numberOfSECs} = {gate} Units)
                                 </span>
                               </div>
                             );
-                          } else if (attachPercentage !== null && attachPercentage !== undefined) {
-                            return `${attachPercentage}%`;
-                          } else {
-                            return 'N/A';
-                          }
-                        })()}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="px-4 py-3 text-gray-600">Volume Kicker Status</td>
-                      <td className="px-4 py-3 text-right">
-                        {(() => {
-                          const totalUnits = selectedIncentiveData?.breakdown?.unitsSummary?.totalUnits || 0;
-                          const volumeKicker = 8 * numberOfSECs;
-                          const isQualified = totalUnits >= volumeKicker;
-                          return (
-                            <div className="flex flex-col items-end gap-1">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                isQualified 
-                                  ? 'bg-green-100 text-green-800' 
+                          })()}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 text-gray-600">Fold 7 Sold</td>
+                        <td className="px-4 py-3 font-medium text-right text-gray-900">
+                          {(() => {
+                            const foldCount = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.breakdownBySlab?.reduce((total: number, slab: any) => {
+                              // Calculate number of Fold devices from the bonus amount
+                              const foldBonus = slab.deviceBonuses?.foldBonus || 0;
+                              if (foldBonus === 0) return total;
+
+                              // Fold bonus is either ₹400 or ₹600 per device
+                              // Determine which rate was used based on attach percentage
+                              const attachRate = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.attachPercentage ?? 0;
+                              const bonusPerDevice = attachRate < 25 ? 400 : 600;
+                              const foldDevices = Math.round(foldBonus / bonusPerDevice);
+
+                              return total + foldDevices;
+                            }, 0) || 0;
+                            return foldCount;
+                          })()}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 text-gray-600">S25 Series Sold</td>
+                        <td className="px-4 py-3 font-medium text-right text-gray-900">
+                          {(() => {
+                            const s25Count = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.breakdownBySlab?.reduce((total: number, slab: any) => {
+                              // Calculate number of S25 devices from the bonus amount
+                              const s25Bonus = slab.deviceBonuses?.s25Bonus || 0;
+                              if (s25Bonus === 0) return total;
+
+                              // S25 bonus is either ₹300 or ₹500 per device
+                              // Determine which rate was used based on attach percentage
+                              const attachRate = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.attachPercentage ?? 0;
+                              const bonusPerDevice = attachRate < 15 ? 300 : 500;
+                              const s25Devices = Math.round(s25Bonus / bonusPerDevice);
+
+                              return total + s25Devices;
+                            }, 0) || 0;
+                            return s25Count;
+                          })()}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 text-gray-600">Store Attach Rate</td>
+                        <td className="px-4 py-3 font-medium text-right text-gray-900">
+                          {(() => {
+                            const latestInfo = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.latestAttachRateInfo;
+                            const attachPercentage = selectedIncentiveData?.breakdown?.breakdownByStore?.[0]?.attachPercentage;
+
+                            if (latestInfo) {
+                              return (
+                                <div className="flex flex-col items-end">
+                                  <span>{latestInfo.percentage}%</span>
+                                  <span className="text-xs text-gray-500">
+                                    Latest By: {latestInfo.endDate}
+                                  </span>
+                                </div>
+                              );
+                            } else if (attachPercentage !== null && attachPercentage !== undefined) {
+                              return `${attachPercentage}%`;
+                            } else {
+                              return 'N/A';
+                            }
+                          })()}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <td className="px-4 py-3 text-gray-600">Volume Kicker Status</td>
+                        <td className="px-4 py-3 text-right">
+                          {(() => {
+                            const totalUnits = selectedIncentiveData?.breakdown?.unitsSummary?.totalUnits || 0;
+                            const volumeKicker = 8 * numberOfSECs;
+                            const isQualified = totalUnits >= volumeKicker;
+                            return (
+                              <div className="flex flex-col items-end gap-1">
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${isQualified
+                                  ? 'bg-green-100 text-green-800'
                                   : 'bg-red-100 text-red-800'
-                              }`}>
-                                {isQualified ? 'Qualified' : `Not Qualified`}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                (8 x {numberOfSECs} = {volumeKicker} Units)
-                              </span>
-                            </div>
-                          );
-                        })()}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-gray-100 bg-blue-50">
-                      <td className="px-4 py-3 text-blue-700 font-semibold">Estimated Incentive Earned (Store Level)</td>
-                      <td className="px-4 py-3 font-bold text-right text-blue-700">
-                        ₹{selectedIncentiveData?.breakdown?.storeLevelIncentive?.toLocaleString() || '0'}
-                      </td>
-                    </tr>
-                    <tr className="border-b border-gray-100 bg-green-50">
-                      <td className="px-4 py-3 text-green-700 font-semibold">Your Estimated Earning</td>
-                      <td className="px-4 py-3 font-bold text-right text-green-700">
-                        ₹{selectedIncentiveData?.breakdown?.totalIncentive?.toLocaleString() || '0'}
-                      </td>
-                    </tr>
-                    <tr className="bg-orange-50">
-                      <td className="px-4 py-3 text-orange-700 font-semibold rounded-bl-xl">Payment Status</td>
-                      <td className="px-4 py-3 text-right rounded-br-xl">
-                        <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-xs font-medium">
-                          Accumulated
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                                  }`}>
+                                  {isQualified ? 'Qualified' : `Not Qualified`}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  (8 x {numberOfSECs} = {volumeKicker} Units)
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100 bg-blue-50">
+                        <td className="px-4 py-3 text-blue-700 font-semibold">Estimated Incentive Earned (Store Level)</td>
+                        <td className="px-4 py-3 font-bold text-right text-blue-700">
+                          ₹{selectedIncentiveData?.breakdown?.storeLevelIncentive?.toLocaleString() || '0'}
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100 bg-green-50">
+                        <td className="px-4 py-3 text-green-700 font-semibold">Your Estimated Earning</td>
+                        <td className="px-4 py-3 font-bold text-right text-green-700">
+                          ₹{selectedIncentiveData?.breakdown?.totalIncentive?.toLocaleString() || '0'}
+                        </td>
+                      </tr>
+                      <tr className="bg-orange-50">
+                        <td className="px-4 py-3 text-orange-700 font-semibold rounded-bl-xl">Payment Status</td>
+                        <td className="px-4 py-3 text-right rounded-br-xl">
+                          <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-xs font-medium">
+                            Accumulated
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
@@ -677,7 +672,7 @@ export default function IncentivePassbookPage() {
                       <span className="text-center">Attach Incentive</span>
                     </div>
                   </div>
-                  
+
                   <div className="max-h-48 overflow-y-auto">
                     {selectedIncentiveData?.breakdown?.breakdownByDate?.length > 0 ? (
                       selectedIncentiveData.breakdown.breakdownByDate.map((daily: any, index: number) => {
@@ -692,7 +687,7 @@ export default function IncentivePassbookPage() {
                             return dateStr;
                           }
                         };
-                        
+
                         return (
                           <div key={index} className="grid grid-cols-7 gap-2 px-3 py-2 text-xs text-gray-800 border-b border-gray-100">
                             <span className="text-xs">{formatDate(daily.date)}</span>
@@ -710,7 +705,7 @@ export default function IncentivePassbookPage() {
                         Detailed breakdown not available. The incentive calculation API may not be properly configured.
                       </div>
                     )}
-                    
+
                     {/* Total Row */}
                     {selectedIncentiveData?.breakdown?.breakdownByDate?.length > 0 && (
                       <div className="grid grid-cols-7 gap-2 px-3 py-2 text-xs bg-gray-50 font-medium text-gray-900 border-t-2 border-gray-200">
@@ -877,17 +872,17 @@ function MonthlyIncentiveSection({
                     onClick={async () => {
                       try {
                         setLoadingIncentiveDetails(row.month);
-                        
+
                         // Parse month from "Jan 24" format to month number and year
                         const monthParts = row.month.split(' ');
                         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
                         const monthNumber = monthNames.indexOf(monthParts[0]) + 1;
                         const year = 2000 + parseInt(monthParts[1]); // Convert "24" to 2024
-                        
+
                         if (!monthNumber || !year) {
                           throw new Error('Invalid month or year format');
                         }
-                        
+
                         // Call the incentive calculation API (no secId needed - uses auth)
                         const response = await fetch(`/api/sec/incentive/calculate?month=${monthNumber}&year=${year}&numberOfSECs=${numberOfSECs}`);
 
@@ -899,7 +894,7 @@ function MonthlyIncentiveSection({
                         }
 
                         const result = await response.json();
-                        
+
                         if (!result.success || !result.data) {
                           alert('Failed to get incentive calculation data');
                           return;
@@ -978,14 +973,14 @@ function SpotIncentiveSection({
     try {
       const [dd, mm, yyyy] = dateStr.split('-').map(Number);
       const date = new Date(yyyy, mm - 1, dd);
-      
+
       // Extract year from FY (e.g., "FY-25" -> 2025)
       const fyYear = 2000 + parseInt(fy.split('-')[1]);
-      
+
       // Financial year runs from April 1 to March 31
       const fyStart = new Date(fyYear - 1, 3, 1); // April 1 of previous year
       const fyEnd = new Date(fyYear, 2, 31); // March 31 of current year
-      
+
       return date >= fyStart && date <= fyEnd;
     } catch (error) {
       console.error('Error parsing date:', dateStr, error);
@@ -1001,7 +996,7 @@ function SpotIncentiveSection({
   let filteredSalesData = allSalesData.filter((row: any) => {
     return isDateInFY(row.date, selectedFY);
   });
-  
+
   let filteredTransactions = allTransactions.filter((txn: any) => {
     return isDateInFY(txn.date, selectedFY);
   });
@@ -1011,7 +1006,7 @@ function SpotIncentiveSection({
     console.log('No sales data for', selectedFY, 'showing all data');
     filteredSalesData = allSalesData;
   }
-  
+
   if (filteredTransactions.length === 0 && allTransactions.length > 0) {
     console.log('No transactions for', selectedFY, 'showing all transactions');
     filteredTransactions = allTransactions;
@@ -1118,7 +1113,7 @@ function SpotIncentiveSection({
               {spotIncentiveData?.fyStats?.[selectedFY]?.totalEarned || '₹0'}
             </p>
           </div>
-          
+
           {/* Total Units */}
           <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-3 text-white">
             <p className="text-[10px] opacity-90 mb-1">Total Units</p>
@@ -1126,7 +1121,7 @@ function SpotIncentiveSection({
               {spotIncentiveData?.fyStats?.[selectedFY]?.units || '0'}
             </p>
           </div>
-          
+
           {/* Paid Incentive */}
           <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl p-3 text-white">
             <p className="text-[10px] opacity-90 mb-1">Paid Incentive</p>
@@ -1134,7 +1129,7 @@ function SpotIncentiveSection({
               {spotIncentiveData?.fyStats?.[selectedFY]?.paid || '₹0'}
             </p>
           </div>
-          
+
           {/* Net Balance */}
           <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-xl p-3 text-white">
             <p className="text-[10px] opacity-90 mb-1">Net Balance</p>

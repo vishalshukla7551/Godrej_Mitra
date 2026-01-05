@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import FestiveHeader from '@/components/FestiveHeader';
-import FestiveFooter from '@/components/FestiveFooter';
+import SECHeader from '@/app/SEC/SECHeader';
+import SECFooter from '@/app/SEC/SECFooter';
 
 const MONTHS = [
   'January',
@@ -70,26 +70,26 @@ export default function SalesChampionLeaderboardPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch leaderboard and active campaigns data
       const [leaderboardRes, activeCampaignsRes] = await Promise.all([
         fetch('/api/sec/leaderboard?period=month&limit=20'),
         fetch('/api/sec/active-campaigns')
       ]);
-      
+
       const [leaderboardResult, activeCampaignsResult] = await Promise.all([
         leaderboardRes.json(),
         activeCampaignsRes.json()
       ]);
-      
+
       if (leaderboardResult.success) {
         setLeaderboardData(leaderboardResult.data);
       } else {
         setError('Failed to load leaderboard data');
       }
-      
 
-      
+
+
       if (activeCampaignsResult.success) {
         setActiveCampaignsData(activeCampaignsResult.data);
       }
@@ -116,13 +116,13 @@ export default function SalesChampionLeaderboardPage() {
   })) || [];
 
   // Reorder podium to show 2nd, 1st, 3rd
-  const reorderedPodium = podiumData.length >= 3 
+  const reorderedPodium = podiumData.length >= 3
     ? [podiumData[1], podiumData[0], podiumData[2]]
     : podiumData;
 
   return (
     <div className="h-screen bg-[#020617] flex flex-col overflow-hidden">
-      <FestiveHeader hideGreeting />
+      <SECHeader />
 
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="px-4 pt-4 pb-6">
@@ -199,7 +199,7 @@ export default function SalesChampionLeaderboardPage() {
           {error && (
             <div className="text-center text-red-400 py-12">
               <p>{error}</p>
-              <button 
+              <button
                 onClick={fetchLeaderboard}
                 className="mt-4 px-4 py-2 bg-red-500/20 rounded-lg hover:bg-red-500/30"
               >
@@ -221,7 +221,7 @@ export default function SalesChampionLeaderboardPage() {
                           <span className="text-2xl sm:text-4xl">👑</span>
                         </div>
                       )}
-                      
+
                       {/* The card - responsive sizing, champion taller */}
                       <div
                         className={`w-[105px] sm:w-[180px] lg:w-[220px] ${card.highlight ? 'h-[140px] sm:h-[200px] lg:h-[220px]' : 'h-[130px] sm:h-[180px] lg:h-[200px]'} rounded-2xl sm:rounded-3xl bg-gradient-to-b ${card.bg} text-white p-2 sm:p-4 lg:p-5 shadow-lg flex flex-col items-center justify-between overflow-hidden`}
@@ -230,7 +230,7 @@ export default function SalesChampionLeaderboardPage() {
                         <div className="flex justify-center shrink-0">
                           <span className="text-xl sm:text-3xl lg:text-4xl">{card.rank === 1 ? '🏆' : card.rank === 2 ? '🥈' : '🥉'}</span>
                         </div>
-                        
+
                         {/* Store name - show for all ranks */}
                         <div className="text-center px-1 w-full flex-shrink min-h-0">
                           <p className="text-[9px] sm:text-xs lg:text-sm font-semibold leading-tight line-clamp-2 break-words">
@@ -238,10 +238,10 @@ export default function SalesChampionLeaderboardPage() {
                           </p>
                           <p className="text-[7px] sm:text-[10px] lg:text-xs text-white/90 mt-0.5 truncate">{card.city}</p>
                         </div>
-                        
+
                         {/* Amount */}
                         <p className="text-sm sm:text-2xl lg:text-3xl font-bold shrink-0">{card.incentives}</p>
-                        
+
                         {/* Bottom badge */}
                         {card.highlight ? (
                           <div className="w-full py-0.5 sm:py-1 lg:py-1.5 rounded-full bg-black/20 text-[7px] sm:text-[10px] lg:text-xs font-bold text-center shrink-0">
@@ -283,7 +283,7 @@ export default function SalesChampionLeaderboardPage() {
                         {leaderboardData.stores.map((store) => {
                           const medal = store.rank === 1 ? '👑' : store.rank === 2 ? '🥈' : store.rank === 3 ? '🥉' : null;
                           const rankColor = store.rank === 1 ? 'text-yellow-600' : store.rank === 2 ? 'text-gray-500' : store.rank === 3 ? 'text-orange-600' : 'text-gray-700';
-                          
+
                           return (
                             <tr key={store.storeId} className="border-b border-gray-100 last:border-none">
                               {/* Rank */}
@@ -340,7 +340,7 @@ export default function SalesChampionLeaderboardPage() {
         </div>
       </main>
 
-      <FestiveFooter />
+      <SECFooter />
     </div>
   );
 }

@@ -260,7 +260,7 @@ model SEC {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   fullName    String?
   phone       String    @unique
-  employeeId      String?  @unique // Unique employee identifier
+  employeeId      String? // Employee identifier (uniqueness enforced at app level)
   email       String?
   kycInfo     Json?
   lastLoginAt DateTime?
@@ -268,10 +268,13 @@ model SEC {
   store     Store?    @relation(fields: [storeId], references: [id])
   city      String?
   AgencyName   String?
+  AgentCode    String?
   SpotIncentiveReport           SpotIncentiveReport[]
   dailyIncentiveReports       DailyIncentiveReport[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  @@index([employeeId])
 }
 
 model Otp {

@@ -53,7 +53,7 @@ export default function SECHeader() {
   }, []);
 
   return (
-    <header className="bg-black text-white px-4 sm:px-6 md:px-8 lg:px-12 py-3 sm:py-3.5 md:py-4 flex justify-end items-center sticky top-0 z-50 shadow-lg">
+    <header className="text-white px-4 sm:px-6 md:px-8 lg:px-12 py-3 sm:py-3.5 md:py-4 flex justify-end items-center sticky top-0 z-50 shadow-lg" style={{ backgroundColor: '#5E1846' }}>
       <div className="flex items-center gap-3 sm:gap-4">
         {/* Notification Button */}
         <button className="relative hover:opacity-80 transition-opacity">
@@ -75,7 +75,7 @@ export default function SECHeader() {
 
         {/* User Profile Button */}
         <div className="relative" ref={menuRef}>
-          <button 
+          <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="relative hover:opacity-80 transition-opacity"
           >
@@ -85,7 +85,7 @@ export default function SECHeader() {
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
               </svg>
             </div>
           </button>

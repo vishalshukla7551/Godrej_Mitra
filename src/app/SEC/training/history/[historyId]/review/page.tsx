@@ -3,8 +3,8 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
-import FestiveHeader from '@/components/FestiveHeader';
-import FestiveFooter from '@/components/FestiveFooter';
+import SECHeader from '@/app/SEC/SECHeader';
+import SECFooter from '@/app/SEC/SECFooter';
 
 /**
  * SEC Answer Review Page
@@ -74,7 +74,7 @@ function ReviewContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans mb-32">
-      <FestiveHeader hideGreeting />
+      <SECHeader />
 
       <main className="flex-1 pb-24">
         <div className="max-w-3xl mx-auto px-4 py-8">
@@ -216,7 +216,7 @@ function ReviewContent() {
           </button>
         </div>
       </main>
-      <FestiveFooter />
+      <SECFooter />
     </div>
   );
 }

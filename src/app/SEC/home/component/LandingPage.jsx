@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import FestiveHeader from '@/components/FestiveHeader';
-import FestiveFooter from '@/components/FestiveFooter';
+import SECHeader from '@/app/SEC/SECHeader';
+import SECFooter from '@/app/SEC/SECFooter';
 
 export default function LandingPage({ userName = '' }) {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -13,13 +13,13 @@ export default function LandingPage({ userName = '' }) {
     {
       id: 1,
       title: 'GOOD NEWS TEAM! 🎉',
-      subtitle: 'SPOT INCENTIVE LIVE',
+      subtitle: 'CANVASSER INCENTIVE LIVE',
       description: 'GET YOUR INCENTIVE INSTANT',
       highlights: [
-        '💰 ₹100 VOUCHER on every ADLD sold',
-        '🎁 ₹300 VOUCHER on every Combo sold',
+        'Scheme Brief',
+        'Scheme Brief',
       ],
-      validity: 'Valid for 18 Oct to 26 Oct',
+      validity: 'Valid for 10 Jan to 17 Jan',
       gradient: 'from-red-400 via-orange-300 to-yellow-300',
     },
     {
@@ -61,7 +61,7 @@ export default function LandingPage({ userName = '' }) {
   const features = [
     {
       id: 'sec-incentive',
-      title: 'SEC Incentive Form',
+      title: 'Canvasser Incentive Form',
       description: 'Submit your sales IMEI wise',
       icon: '⭐',
       bgGradient: 'from-[#5B6FD8] to-[#8B7FE8]',
@@ -79,7 +79,7 @@ export default function LandingPage({ userName = '' }) {
     },
     {
       id: 'claim-raise',
-      title: 'SC+ Claim Raise Procedure',
+      title: 'Godrej Claim Raise Procedure',
       description: 'Learn More',
       icon: '🛒',
       bgGradient: 'from-[#C96E6E] via-[#D8926E] to-[#E8B86E]',
@@ -88,7 +88,7 @@ export default function LandingPage({ userName = '' }) {
     },
     {
       id: 'training',
-      title: 'ProtectMax Training',
+      title: 'Training',
       description: 'Learn More',
       icon: '⭐',
       bgGradient: 'from-[#A86638] to-[#D89038]',
@@ -103,7 +103,7 @@ export default function LandingPage({ userName = '' }) {
 
   return (
     <div className="min-h-screen md:h-auto h-screen bg-gray-50 flex flex-col md:overflow-visible overflow-hidden">
-      <FestiveHeader userName={userName || 'Guest'} />
+      <SECHeader />
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32">
@@ -127,7 +127,7 @@ export default function LandingPage({ userName = '' }) {
                       {banner.title}
                     </p>
                     <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-gray-900 mb-0.5 sm:mb-1 md:mb-2">
-                      {banner.subtitle.replace('SPOT', 'SC')}
+                      {banner.subtitle}
                     </h2>
                     <p className="text-[10px] sm:text-xs md:text-sm font-semibold text-gray-800 mb-2 sm:mb-3 md:mb-4">
                       {banner.description}
@@ -157,11 +157,10 @@ export default function LandingPage({ userName = '' }) {
               <button
                 key={index}
                 onClick={() => handleSlideChange(index)}
-                className={`h-1.5 sm:h-2 md:h-2.5 rounded-full transition-all duration-300 ${
-                  activeSlide === index
-                    ? 'w-6 sm:w-8 md:w-10 bg-gray-900'
-                    : 'w-1.5 sm:w-2 md:w-2.5 bg-gray-300'
-                }`}
+                className={`h-1.5 sm:h-2 md:h-2.5 rounded-full transition-all duration-300 ${activeSlide === index
+                  ? 'w-6 sm:w-8 md:w-10 bg-gray-900'
+                  : 'w-1.5 sm:w-2 md:w-2.5 bg-gray-300'
+                  }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
@@ -199,7 +198,7 @@ export default function LandingPage({ userName = '' }) {
         </div>
       </main>
 
-      <FestiveFooter />
+      <SECFooter />
     </div>
   );
 }

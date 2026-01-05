@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Play, FileText, Download, CheckCircle2, Clock, Award, History, X } from 'lucide-react';
-import FestiveHeader from '@/components/FestiveHeader';
-import FestiveFooter from '@/components/FestiveFooter';
+import SECHeader from '@/app/SEC/SECHeader';
+import SECFooter from '@/app/SEC/SECFooter';
 import VideoPlayer from '@/components/VideoPlayer';
 
 const MONTHS = [
@@ -220,7 +220,7 @@ export default function TrainingPage() {
 
   return (
     <div className="h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col overflow-hidden">
-      <FestiveHeader hideGreeting />
+      <SECHeader />
 
       <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
@@ -445,7 +445,7 @@ export default function TrainingPage() {
         </div>
       </main>
 
-      <FestiveFooter />
+      <SECFooter />
 
       {/* Video Modal */}
       {selectedVideo && (
@@ -453,7 +453,7 @@ export default function TrainingPage() {
           {/* Modal overlay */}
           <div className="fixed inset-0 bg-black/95 z-[9998] flex items-center justify-center p-4">
             {/* Background overlay - click to close */}
-            <div 
+            <div
               className="absolute inset-0"
               onClick={() => {
                 console.log('Background clicked');

@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { History, ArrowLeft, Eye, Award } from 'lucide-react';
-import FestiveHeader from '@/components/FestiveHeader';
-import FestiveFooter from '@/components/FestiveFooter';
+import SECHeader from '@/app/SEC/SECHeader';
+import SECFooter from '@/app/SEC/SECFooter';
 
 interface TestHistory {
   id: string;
@@ -73,7 +73,7 @@ export default function TestHistoryPage() {
 
   return (
     <div className="h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col overflow-hidden">
-      <FestiveHeader hideGreeting />
+      <SECHeader />
       <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32">
         <div className="max-w-2xl mx-auto px-4 py-6">
           <button onClick={() => router.push('/SEC/training')} className="flex items-center gap-2 text-blue-600 mb-4">
@@ -123,7 +123,7 @@ export default function TestHistoryPage() {
           )}
         </div>
       </main>
-      <FestiveFooter />
+      <SECFooter />
     </div>
   );
 }
