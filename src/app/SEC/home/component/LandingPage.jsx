@@ -109,7 +109,7 @@ export default function LandingPage({ userName = '' }) {
       <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32">
 
         {/* Banner Carousel */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 mb-4 sm:mb-5 md:mb-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 mb-4 sm:mb-5 md:mb-6 mt-4 sm:mt-5 md:mt-6">
           <div className="relative overflow-hidden rounded-xl md:rounded-2xl">
             <div
               className="flex transition-transform duration-500 ease-in-out"

@@ -439,7 +439,7 @@ export default function SECLogin() {
           )}
         </form>
 
-        <div className="mt-6 text-center space-y-3">
+        {/* <div className="mt-6 text-center space-y-3">
           <p className="text-sm text-gray-600">
             Different Role?{' '}
             <Link
@@ -458,7 +458,7 @@ export default function SECLogin() {
               Sign up for different roles
             </Link>
           </p>
-        </div>
+        </div> */}
 
         <div className="mt-8 text-center">
           <div className="flex items-center justify-center text-gray-500 gap-1">
