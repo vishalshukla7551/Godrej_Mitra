@@ -24,21 +24,21 @@ interface TestData {
 
 const MOCK_TEST: TestData = {
   id: '1',
-  name: 'Samsung Protect Max Certification',
+  name: 'Godrej Appliances Certification',
   duration: 15,
   totalQuestions: 10,
   passingPercentage: 60,
   questions: [
-    { id: '1', questionText: 'What is the coverage period for Samsung Protect Max ADLD plan?', options: [{ option: 'A', text: '1 Year' }, { option: 'B', text: '2 Years' }, { option: 'C', text: '6 Months' }, { option: 'D', text: '3 Years' }], correctAnswer: 'A' },
-    { id: '2', questionText: 'Which of the following is NOT covered under Samsung Protect Max?', options: [{ option: 'A', text: 'Accidental Damage' }, { option: 'B', text: 'Liquid Damage' }, { option: 'C', text: 'Theft' }, { option: 'D', text: 'Screen Crack' }], correctAnswer: 'C' },
-    { id: '3', questionText: 'What is the maximum claim limit for Samsung Protect Max?', options: [{ option: 'A', text: '₹50,000' }, { option: 'B', text: 'Device Invoice Value' }, { option: 'C', text: '₹1,00,000' }, { option: 'D', text: 'No Limit' }], correctAnswer: 'B' },
-    { id: '4', questionText: 'How many claims can be made under Samsung Protect Max ADLD?', options: [{ option: 'A', text: '1 Claim' }, { option: 'B', text: '2 Claims' }, { option: 'C', text: 'Unlimited' }, { option: 'D', text: '3 Claims' }], correctAnswer: 'A' },
-    { id: '5', questionText: 'What is the waiting period after purchasing Samsung Protect Max?', options: [{ option: 'A', text: 'No waiting period' }, { option: 'B', text: '7 Days' }, { option: 'C', text: '15 Days' }, { option: 'D', text: '30 Days' }], correctAnswer: 'A' },
-    { id: '6', questionText: 'Which document is required for filing a claim?', options: [{ option: 'A', text: 'Only IMEI number' }, { option: 'B', text: 'Invoice and IMEI' }, { option: 'C', text: 'Aadhar Card only' }, { option: 'D', text: 'No documents needed' }], correctAnswer: 'B' },
-    { id: '7', questionText: 'What is the deductible amount for screen damage claim?', options: [{ option: 'A', text: '₹0' }, { option: 'B', text: '₹500' }, { option: 'C', text: '₹1000' }, { option: 'D', text: 'Varies by device' }], correctAnswer: 'D' },
-    { id: '8', questionText: 'Within how many days of purchase must Samsung Protect Max be activated?', options: [{ option: 'A', text: '7 days' }, { option: 'B', text: '15 days' }, { option: 'C', text: '30 days' }, { option: 'D', text: 'Same day' }], correctAnswer: 'C' },
-    { id: '9', questionText: 'What happens if the device is beyond repair?', options: [{ option: 'A', text: 'Full refund' }, { option: 'B', text: 'Replacement device' }, { option: 'C', text: 'Depreciated value' }, { option: 'D', text: 'No coverage' }], correctAnswer: 'C' },
-    { id: '10', questionText: 'Which Samsung devices are eligible for Protect Max?', options: [{ option: 'A', text: 'Only flagship phones' }, { option: 'B', text: 'All Samsung smartphones' }, { option: 'C', text: 'Only Galaxy S series' }, { option: 'D', text: 'Selected models only' }], correctAnswer: 'D' },
+    { id: '1', questionText: 'What is the warranty period for Godrej Edge Neo refrigerator compressor?', options: [{ option: 'A', text: '1 Year' }, { option: 'B', text: '5 Years' }, { option: 'C', text: '10 Years' }, { option: 'D', text: '20 Years' }], correctAnswer: 'C' },
+    { id: '2', questionText: 'Which technology is used in Godrej Eon washing machines for better cleaning?', options: [{ option: 'A', text: 'Germ Shield' }, { option: 'B', text: 'Allergy Protect' }, { option: 'C', text: 'Crystal Clean' }, { option: 'D', text: 'Turbo Wash' }], correctAnswer: 'A' },
+    { id: '3', questionText: 'What is the key benefit of Godrej "Green Inverter" technology in ACs?', options: [{ option: 'A', text: 'Faster cooling' }, { option: 'B', text: 'Energy saving' }, { option: 'C', text: 'Silent operation' }, { option: 'D', text: 'All of the above' }], correctAnswer: 'D' },
+    { id: '4', questionText: 'Godrej Microwave Ovens primarily focus on which cooking feature?', options: [{ option: 'A', text: 'Oil-free cooking' }, { option: 'B', text: 'Charcoal roasting' }, { option: 'C', text: 'Healthy frying' }, { option: 'D', text: 'Steam cooking' }], correctAnswer: 'C' },
+    { id: '5', questionText: 'What is the capacity range of Godrej Deep Freezers?', options: [{ option: 'A', text: '50L - 100L' }, { option: 'B', text: '100L - 500L' }, { option: 'C', text: '200L - 800L' }, { option: 'D', text: '500L - 1000L' }], correctAnswer: 'B' },
+    { id: '6', questionText: 'Godrej "Nano Shield Disinfection" technology is used in?', options: [{ option: 'A', text: 'Washing Machines' }, { option: 'B', text: 'Refrigerators' }, { option: 'C', text: 'ACs' }, { option: 'D', text: 'Microwave Ovens' }], correctAnswer: 'B' },
+    { id: '7', questionText: 'which of the following is a Godrej Washing Machine series?', options: [{ option: 'A', text: 'Eon' }, { option: 'B', text: 'Edge' }, { option: 'C', text: '5 Star' }, { option: 'D', text: 'All of the above' }], correctAnswer: 'A' },
+    { id: '8', questionText: 'Godrej Air Conditioners are known for using which eco-friendly refrigerant?', options: [{ option: 'A', text: 'R22' }, { option: 'B', text: 'R410A' }, { option: 'C', text: 'R290' }, { option: 'D', text: 'R32' }], correctAnswer: 'C' },
+    { id: '9', questionText: 'Godrej Edge Rio is a model of?', options: [{ option: 'A', text: 'AC' }, { option: 'B', text: 'Washing Machine' }, { option: 'C', text: 'Refrigerator' }, { option: 'D', text: 'Microwave' }], correctAnswer: 'C' },
+    { id: '10', questionText: 'Which document is required for filing a Godrej extended warranty claim?', options: [{ option: 'A', text: 'Invoice Copy' }, { option: 'B', text: 'Aadhar Card' }, { option: 'C', text: 'PAN Card' }, { option: 'D', text: 'Voter ID' }], correctAnswer: 'A' },
   ],
 };
 

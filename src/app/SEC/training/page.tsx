@@ -29,21 +29,21 @@ const MONTH_OPTIONS = MONTHS.map((month) => `${month} ${CURRENT_YEAR_SHORT}`);
 const trainingVideos = [
   {
     id: 1,
-    title: 'Samsung Protect Max Overview',
+    title: 'Godrej Overview',
     duration: '3:20',
     url: 'https://streamable.com/e/example1', // Replace with actual Streamable URL
     thumbnail: 'https://via.placeholder.com/400x225/1e40af/ffffff?text=Overview',
   },
   {
     id: 2,
-    title: 'Coverage & Benefits Explained',
+    title: 'Godrej Benefits Explained',
     duration: '5:45',
     url: 'https://streamable.com/e/example2', // Replace with actual Streamable URL
     thumbnail: 'https://via.placeholder.com/400x225/1e40af/ffffff?text=Coverage',
   },
   {
     id: 3,
-    title: 'How to Sell Protect Max',
+    title: 'How to Sell Godrej Products',
     duration: '4:15',
     url: 'https://streamable.com/e/example3', // Replace with actual Streamable URL
     thumbnail: 'https://via.placeholder.com/400x225/1e40af/ffffff?text=Selling+Tips',
@@ -74,13 +74,13 @@ const trainingVideos = [
 const documents = [
   {
     id: 1,
-    title: 'Samsung Protect Max Brochure.pdf',
+    title: 'Godrej Brochure.pdf',
     type: 'pdf',
     size: '2.4 MB',
   },
   {
     id: 2,
-    title: 'Coverage Plan Details.pdf',
+    title: 'Godrej Plan Details.pdf',
     type: 'pdf',
     size: '1.8 MB',
   },
@@ -113,7 +113,7 @@ const documents = [
 const tests = [
   {
     id: 1,
-    title: 'Protect Max Basic Test',
+    title: 'Godrej Basic Test',
     status: 'completed',
     score: 92,
     attempts: 1,
@@ -121,7 +121,7 @@ const tests = [
   },
   {
     id: 2,
-    title: 'Coverage & Benefits Quiz',
+    title: 'Godrej Benefits Quiz',
     status: 'completed',
     score: 85,
     attempts: 2,
@@ -228,7 +228,7 @@ export default function TrainingPage() {
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Training Dashboard</h1>
-              <p className="text-gray-600 mt-1">Samsung Protect Max Learning Module</p>
+              <p className="text-gray-600 mt-1">Godrej Learning Module</p>
             </div>
 
             {/* Month filter at right-most corner */}
@@ -259,7 +259,7 @@ export default function TrainingPage() {
             <div className="flex items-center gap-3 mb-5">
               <div className="w-1 h-8 bg-blue-600 rounded-full"></div>
               <h2 className="text-2xl font-bold text-gray-900">
-                Training Videos – Samsung Protect Max
+                Training Videos – Godrej Appliances
               </h2>
             </div>
 

@@ -450,8 +450,8 @@ export default function ProfilePage() {
                       onClick={handleEditStore}
                       disabled={pendingRequest?.status === 'PENDING'}
                       className={`p-1.5 rounded-lg transition-all ${showStoreArrow
-                          ? 'bg-blue-50 ring-2 ring-blue-500 text-blue-600 animate-pulse'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        ? 'bg-blue-50 ring-2 ring-blue-500 text-blue-600 animate-pulse'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                         } ${pendingRequest?.status === 'PENDING' ? 'opacity-50 cursor-not-allowed' : ''
                         }`}
                     >
@@ -471,18 +471,18 @@ export default function ProfilePage() {
                 {/* Store Change Request Status */}
                 {pendingRequest && (
                   <div className={`mb-3 p-3 rounded-xl border ${pendingRequest.status === 'PENDING' ? 'bg-yellow-50 border-yellow-200' :
-                      pendingRequest.status === 'APPROVED' ? 'bg-green-50 border-green-200' :
-                        'bg-red-50 border-red-200'
+                    pendingRequest.status === 'APPROVED' ? 'bg-green-50 border-green-200' :
+                      'bg-red-50 border-red-200'
                     }`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${pendingRequest.status === 'PENDING' ? 'bg-yellow-400' :
-                            pendingRequest.status === 'APPROVED' ? 'bg-green-400' :
-                              'bg-red-400'
+                          pendingRequest.status === 'APPROVED' ? 'bg-green-400' :
+                            'bg-red-400'
                           }`}></div>
                         <span className={`text-xs font-medium ${pendingRequest.status === 'PENDING' ? 'text-yellow-800' :
-                            pendingRequest.status === 'APPROVED' ? 'text-green-800' :
-                              'text-red-800'
+                          pendingRequest.status === 'APPROVED' ? 'text-green-800' :
+                            'text-red-800'
                           }`}>
                           Store Change Request {pendingRequest.status}
                         </span>
@@ -513,23 +513,23 @@ export default function ProfilePage() {
                       </p>
                     )}
                     <p className={`text-xs ${pendingRequest.status === 'PENDING' ? 'text-yellow-600' :
-                        pendingRequest.status === 'APPROVED' ? 'text-green-600' :
-                          'text-red-600'
+                      pendingRequest.status === 'APPROVED' ? 'text-green-600' :
+                        'text-red-600'
                       }`}>
                       Submitted: {new Date(pendingRequest.createdAt).toLocaleDateString()}
                     </p>
                     {pendingRequest.reason && (
                       <p className={`text-xs mt-1 ${pendingRequest.status === 'PENDING' ? 'text-yellow-600' :
-                          pendingRequest.status === 'APPROVED' ? 'text-green-600' :
-                            'text-red-600'
+                        pendingRequest.status === 'APPROVED' ? 'text-green-600' :
+                          'text-red-600'
                         }`}>
                         Reason: {pendingRequest.reason}
                       </p>
                     )}
                     {pendingRequest.reviewNotes && (
                       <p className={`text-xs mt-1 ${pendingRequest.status === 'PENDING' ? 'text-yellow-600' :
-                          pendingRequest.status === 'APPROVED' ? 'text-green-600' :
-                            'text-red-600'
+                        pendingRequest.status === 'APPROVED' ? 'text-green-600' :
+                          'text-red-600'
                         }`}>
                         Admin Notes: {pendingRequest.reviewNotes}
                       </p>
@@ -586,7 +586,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={submittingPersonalInfo}
-                className="w-full bg-black text-white font-semibold py-3.5 rounded-xl hover:bg-gray-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#5E1846] text-white font-semibold py-3.5 rounded-xl hover:bg-[#4B1338] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -676,8 +676,8 @@ export default function ProfilePage() {
               {/* KYC Status Badge */}
               <div className="mb-4">
                 <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${panVerified
-                    ? 'bg-green-100 border border-green-300'
-                    : 'bg-yellow-100 border border-yellow-300'
+                  ? 'bg-green-100 border border-green-300'
+                  : 'bg-yellow-100 border border-yellow-300'
                   }`}>
                   <span className={`text-xs font-medium ${panVerified ? 'text-green-800' : 'text-yellow-800'
                     }`}>
@@ -699,7 +699,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={verifyingPan}
-                  className="w-full bg-black text-white font-semibold py-3.5 rounded-xl hover:bg-gray-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-[#5E1846] text-white font-semibold py-3.5 rounded-xl hover:bg-[#4B1338] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {verifyingPan ? (
                     <>
@@ -842,7 +842,7 @@ export default function ProfilePage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full bg-black text-white font-semibold py-3.5 rounded-xl hover:bg-gray-900 transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-[#5E1846] text-white font-semibold py-3.5 rounded-xl hover:bg-[#4B1338] transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -923,10 +923,10 @@ export default function ProfilePage() {
                         <label
                           key={store.id}
                           className={`flex items-center p-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors ${isSelected
-                              ? 'bg-blue-50 hover:bg-blue-100'
-                              : isCurrent
-                                ? 'bg-gray-50'
-                                : 'hover:bg-gray-50'
+                            ? 'bg-blue-50 hover:bg-blue-100'
+                            : isCurrent
+                              ? 'bg-gray-50'
+                              : 'hover:bg-gray-50'
                             }`}
                         >
                           <input
@@ -939,7 +939,7 @@ export default function ProfilePage() {
                           />
                           <div className="flex-1">
                             <div className={`text-sm font-medium ${isSelected ? 'text-blue-900' :
-                                isCurrent ? 'text-gray-500' : 'text-gray-900'
+                              isCurrent ? 'text-gray-500' : 'text-gray-900'
                               }`}>
                               {store.name}
                               {isCurrent && (
@@ -955,7 +955,7 @@ export default function ProfilePage() {
                             </div>
                             {(store.city) && (
                               <div className={`text-xs ${isSelected ? 'text-blue-700' :
-                                  isCurrent ? 'text-gray-400' : 'text-gray-500'
+                                isCurrent ? 'text-gray-400' : 'text-gray-500'
                                 }`}>
                                 {[store.city].filter(Boolean).join(', ')}
                               </div>

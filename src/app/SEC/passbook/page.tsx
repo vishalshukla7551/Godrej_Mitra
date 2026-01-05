@@ -396,7 +396,7 @@ export default function IncentivePassbookPage() {
             <button
               type="button"
               onClick={() => setSortAsc((prev) => !prev)}
-              className="w-full bg-black text-white text-sm font-semibold py-2.5 rounded-xl"
+              className="w-full bg-[#5E1846] text-white text-sm font-semibold py-2.5 rounded-xl"
             >
               Sort by Date {sortAsc ? '(Oldest first)' : '(Newest first)'}
             </button>
