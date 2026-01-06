@@ -16,7 +16,7 @@ export default function FestiveHeader({ userName = 'Guest', hideGreeting = false
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
-    clientLogout('/login/sec');
+    clientLogout('/login/canvasser');
   };
 
   // Close menu when clicking outside
@@ -39,7 +39,7 @@ export default function FestiveHeader({ userName = 'Guest', hideGreeting = false
 
     const pathname = window.location.pathname || '';
 
-    if (!pathname.startsWith('/SEC') || pathname === '/SEC/onboarding') {
+    if (!pathname.startsWith('/canvasser') || pathname === '/canvasser/onboarding') {
       return;
     }
 
@@ -51,7 +51,7 @@ export default function FestiveHeader({ userName = 'Guest', hideGreeting = false
       const fullName = (auth?.fullName || '').trim();
 
       if (!fullName) {
-        window.location.href = '/SEC/onboarding';
+        window.location.href = '/canvasser/onboarding';
       }
     } catch {
       // ignore JSON parse errors
@@ -105,14 +105,14 @@ export default function FestiveHeader({ userName = 'Guest', hideGreeting = false
 
           {/* Profile Dropdown Menu */}
           {showProfileMenu && (
-            <div 
+            <div
               className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2"
               style={{ zIndex: 99999 }}
             >
               <button
                 onClick={() => {
                   setShowProfileMenu(false);
-                  window.location.href = '/SEC/profile';
+                  window.location.href = '/canvasser/profile';
                 }}
                 className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center gap-3 transition-colors"
               >

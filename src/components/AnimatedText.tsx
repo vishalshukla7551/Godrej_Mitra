@@ -15,22 +15,22 @@ export default function AnimatedText() {
 
   useEffect(() => {
     setScreenWidth(window.innerWidth);
-    
+
     const handleResize = () => {
       setScreenWidth(window.innerWidth);
     };
-    
+
     window.addEventListener('resize', handleResize);
-    
+
     // Wait briefly after page load before starting the animation
     // Navigate as soon as S starts moving off screen (very early to avoid blank screen)
     const sCharDelay = initialDelay + triggerDuration; // S starts last
     const sCharCompleteTime = sCharDelay + moveDuration - 2.5; // Navigate earlier for quick transition
-    
+
     const navigationTimer = setTimeout(() => {
-      router.push('/login/sec');
+      router.push('/login/canvasser');
     }, sCharCompleteTime * 1000);
-    
+
     return () => {
       window.removeEventListener('resize', handleResize);
       clearTimeout(navigationTimer);
@@ -44,7 +44,7 @@ export default function AnimatedText() {
           // Last character starts first (index 8), first character starts last (index 0)
           const reverseIndex = totalChars - 1 - index;
           const delay = initialDelay + (reverseIndex * triggerDuration / totalChars);
-          
+
           return (
             <motion.span
               key={`${char}-${index}`}

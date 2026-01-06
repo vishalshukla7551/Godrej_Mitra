@@ -8,7 +8,7 @@ import { useRequireAuth } from "@/lib/clientAuth";
 const PUBLIC_PATHS = [
   "/", // landing page redirects by server-side auth
   "/login/role",
-  "/login/sec",
+  "/login/canvasser",
   "/signup",
   "/terms",
   "/privacy",
