@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     // Fetch all Plan documents with related data
     const plans = await prisma.plan.findMany({
       include: {
-        samsungSKU: {
+        GodrejSKU: {
           select: {
             id: true,
             ModelName: true,
@@ -77,11 +77,11 @@ export async function GET(req: NextRequest) {
       planData.push([
         plan.id,
         plan.planType,
-        plan.price,
-        plan.samsungSKUId || '',
-        plan.samsungSKU?.ModelName || '',
-        plan.samsungSKU?.Category || '',
-        plan.samsungSKU?.ModelPrice || '',
+        plan.PlanPrice,
+        plan.godrejSKUId || '',
+        plan.GodrejSKU?.ModelName || '',
+        plan.GodrejSKU?.Category || '',
+        plan.GodrejSKU?.ModelPrice || '',
         '',
         ''
       ]);
