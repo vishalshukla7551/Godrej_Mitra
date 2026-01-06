@@ -61,16 +61,15 @@ export async function GET(req: NextRequest) {
             city: true,
           },
         },
-        samsungSKU: {
+        godrejSKU: {
           select: {
-            ModelName: true,
             Category: true,
           },
         },
         plan: {
           select: {
             planType: true,
-            price: true,
+            PlanPrice: true,
           },
         },
       },
@@ -84,9 +83,9 @@ export async function GET(req: NextRequest) {
       id: campaign.id,
       name: campaign.name || 'Unnamed Campaign',
       description: campaign.description || '',
-      deviceName: campaign.samsungSKU.ModelName || campaign.samsungSKU.Category,
+      deviceName: campaign.godrejSKU.Category,
       planType: campaign.plan.planType.replace(/_/g, ' '),
-      planPrice: campaign.plan.price,
+      planPrice: campaign.plan.PlanPrice,
       incentiveType: campaign.incentiveType,
       incentiveValue: campaign.incentiveValue,
       startDate: campaign.startDate ? campaign.startDate.toISOString().split('T')[0] : null,

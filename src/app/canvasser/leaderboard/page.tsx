@@ -35,8 +35,22 @@ interface LeaderboardStore {
   ew4: number;
 }
 
+interface LeaderboardCanvasser {
+  rank: number;
+  secId: string;
+  canvasserName: string;
+  identifier: string;
+  totalSales: number;
+  totalIncentive: string;
+  ew1: number;
+  ew2: number;
+  ew3: number;
+  ew4: number;
+}
+
 interface LeaderboardData {
   stores: LeaderboardStore[];
+  canvassers: LeaderboardCanvasser[];
   devices: any[];
   plans: any[];
   period: string;
@@ -59,6 +73,7 @@ export default function SalesChampionLeaderboardPage() {
     MONTH_OPTIONS[new Date().getMonth()] ?? `November ${CURRENT_YEAR_SHORT}`,
   );
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardData | null>(null);
+  const [leaderboardType, setLeaderboardType] = useState<'store' | 'canvasser'>('store');
 
   const [activeCampaignsData, setActiveCampaignsData] = useState<ActiveCampaignsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,20 +116,40 @@ export default function SalesChampionLeaderboardPage() {
     fetchLeaderboard();
   }, []);
 
-  const podiumData = leaderboardData?.stores.slice(0, 3).map((store, idx) => ({
-    rank: store.rank,
-    store: store.storeName,
-    city: store.city || 'N/A',
-    incentives: store.totalIncentive,
-    sales: `${store.totalSales} sales`,
-    bg: idx === 0 ? 'from-[#FACC15] to-[#F97316]' : idx === 1 ? 'from-[#4B5563] to-[#1F2933]' : 'from-[#F97316] to-[#FB923C]',
-    highlight: idx === 0,
-  })) || [];
+  const getPodiumData = () => {
+    if (!leaderboardData) return [];
+
+    if (leaderboardType === 'store') {
+      return leaderboardData.stores.slice(0, 3).map((store, idx) => ({
+        rank: store.rank,
+        name: store.storeName,
+        subtext: store.city || 'N/A',
+        incentives: store.totalIncentive,
+        sales: `${store.totalSales} sales`,
+        bg: idx === 0 ? 'from-[#FACC15] to-[#F97316]' : idx === 1 ? 'from-[#4B5563] to-[#1F2933]' : 'from-[#F97316] to-[#FB923C]',
+        highlight: idx === 0,
+      }));
+    } else {
+      return leaderboardData.canvassers.slice(0, 3).map((canvasser, idx) => ({
+        rank: canvasser.rank,
+        name: canvasser.canvasserName,
+        subtext: canvasser.identifier,
+        incentives: canvasser.totalIncentive,
+        sales: `${canvasser.totalSales} sales`,
+        bg: idx === 0 ? 'from-[#FACC15] to-[#F97316]' : idx === 1 ? 'from-[#4B5563] to-[#1F2933]' : 'from-[#F97316] to-[#FB923C]',
+        highlight: idx === 0,
+      }));
+    }
+  };
+
+  const podiumData = getPodiumData();
 
   // Reorder podium to show 2nd, 1st, 3rd
   const reorderedPodium = podiumData.length >= 3
     ? [podiumData[1], podiumData[0], podiumData[2]]
     : podiumData;
+
+  const tableData = leaderboardData ? (leaderboardType === 'store' ? leaderboardData.stores : leaderboardData.canvassers) : [];
 
   return (
     <div className="h-screen bg-[#020617] flex flex-col overflow-hidden">
@@ -123,7 +158,25 @@ export default function SalesChampionLeaderboardPage() {
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="px-4 pt-4 pb-6">
           {/* Top bar */}
-          <div className="flex items-center justify-end mb-4">
+          <div className="flex items-center justify-between mb-4">
+            {/* Toggle Switch */}
+            <div className="bg-white/10 p-1 rounded-lg flex items-center gap-1 border border-white/20">
+              <button
+                onClick={() => setLeaderboardType('store')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${leaderboardType === 'store' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+                  }`}
+              >
+                Store Wise
+              </button>
+              <button
+                onClick={() => setLeaderboardType('canvasser')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${leaderboardType === 'canvasser' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+                  }`}
+              >
+                Canvasser Wise
+              </button>
+            </div>
+
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -154,7 +207,7 @@ export default function SalesChampionLeaderboardPage() {
               Sales Champion Leaderboard
             </h1>
             <p className="text-sm text-gray-200 mb-4">
-              Top stores by total incentives
+              Top {leaderboardType === 'store' ? 'stores' : 'canvassers'} by total incentives
             </p>
 
             {/* Month selector - responsive, shows all months */}
@@ -221,12 +274,12 @@ export default function SalesChampionLeaderboardPage() {
                           <span className="text-xl sm:text-3xl lg:text-4xl">{card.rank === 1 ? '🏆' : card.rank === 2 ? '🥈' : '🥉'}</span>
                         </div>
 
-                        {/* Store name - show for all ranks */}
+                        {/* Store/Canvasser name - show for all ranks */}
                         <div className="text-center px-1 w-full flex-shrink min-h-0">
                           <p className="text-[9px] sm:text-xs lg:text-sm font-semibold leading-tight line-clamp-2 break-words">
-                            {card.store}
+                            {card.name}
                           </p>
-                          <p className="text-[7px] sm:text-[10px] lg:text-xs text-white/90 mt-0.5 truncate">{card.city}</p>
+                          <p className="text-[7px] sm:text-[10px] lg:text-xs text-white/90 mt-0.5 truncate">{card.subtext}</p>
                         </div>
 
                         {/* Amount */}
@@ -246,15 +299,15 @@ export default function SalesChampionLeaderboardPage() {
                 </section>
               )}
 
-              {/* All Stores Ranking - Compact Mobile-First Table */}
+              {/* All Rankings - Compact Mobile-First Table */}
               <section className="mb-4">
                 <div className="rounded-t-2xl bg-gradient-to-r from-[#4F46E5] to-[#EC4899] px-3 py-2.5 text-white">
                   <p className="text-xs font-semibold flex items-center gap-1">
-                    <span>🔥</span> All Stores Ranking
+                    <span>🔥</span> All {leaderboardType === 'store' ? 'Stores' : 'Canvassers'} Ranking
                   </p>
                 </div>
                 <div className="bg-white rounded-b-2xl overflow-hidden">
-                  {leaderboardData.stores.length === 0 ? (
+                  {tableData.length === 0 ? (
                     <div className="text-center py-12 text-gray-500">
                       <p className="text-sm">No active campaigns or sales data available</p>
                     </div>
@@ -264,7 +317,7 @@ export default function SalesChampionLeaderboardPage() {
                         <thead>
                           <tr className="bg-gray-100 text-gray-600 text-[9px] uppercase font-semibold">
                             <th className="text-left px-2 py-2 w-[40px]">#</th>
-                            <th className="text-left px-2 py-2">Store</th>
+                            <th className="text-left px-2 py-2">{leaderboardType === 'store' ? 'Store' : 'Canvasser'}</th>
                             <th className="text-center px-1 py-2 w-[35px]">EW1</th>
                             <th className="text-center px-1 py-2 w-[35px]">EW2</th>
                             <th className="text-center px-1 py-2 w-[35px]">EW3</th>
@@ -273,51 +326,55 @@ export default function SalesChampionLeaderboardPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {leaderboardData.stores.map((store) => {
-                            const medal = store.rank === 1 ? '👑' : store.rank === 2 ? '🥈' : store.rank === 3 ? '🥉' : null;
-                            const rankColor = store.rank === 1 ? 'text-yellow-600' : store.rank === 2 ? 'text-gray-500' : store.rank === 3 ? 'text-orange-600' : 'text-gray-700';
+                          {tableData.map((item: any) => {
+                            const medal = item.rank === 1 ? '👑' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : null;
+                            const rankColor = item.rank === 1 ? 'text-yellow-600' : item.rank === 2 ? 'text-gray-500' : item.rank === 3 ? 'text-orange-600' : 'text-gray-700';
+
+                            const name = leaderboardType === 'store' ? item.storeName : item.canvasserName;
+                            const subtext = leaderboardType === 'store' ? item.city : item.identifier;
+                            const id = leaderboardType === 'store' ? item.storeId : item.secId;
 
                             return (
-                              <tr key={store.storeId} className="border-b border-gray-100 last:border-none">
+                              <tr key={id} className="border-b border-gray-100 last:border-none">
                                 {/* Rank */}
                                 <td className="px-2 py-2">
                                   <div className="flex items-center gap-1">
                                     {medal && <span className="text-sm">{medal}</span>}
-                                    {!medal && <span className={`text-xs font-bold ${rankColor}`}>{store.rank}</span>}
+                                    {!medal && <span className={`text-xs font-bold ${rankColor}`}>{item.rank}</span>}
                                   </div>
                                 </td>
 
-                                {/* Store name + city */}
+                                {/* Name + subtext */}
                                 <td className="px-2 py-2">
                                   <div className="font-medium text-gray-900 text-[10px] leading-tight line-clamp-1">
-                                    {store.storeName}
+                                    {name}
                                   </div>
                                   <div className="text-[8px] text-gray-500 leading-tight mt-0.5">
-                                    {store.city || 'N/A'}
+                                    {subtext || 'N/A'}
                                   </div>
                                 </td>
 
                                 {/* EW columns */}
                                 <td className="px-1 py-2 text-center">
-                                  <span className="text-[10px] font-medium text-gray-700">{store.ew1 || '-'}</span>
+                                  <span className="text-[10px] font-medium text-gray-700">{item.ew1 || '-'}</span>
                                 </td>
                                 <td className="px-1 py-2 text-center">
-                                  <span className="text-[10px] font-medium text-gray-700">{store.ew2 || '-'}</span>
+                                  <span className="text-[10px] font-medium text-gray-700">{item.ew2 || '-'}</span>
                                 </td>
                                 <td className="px-1 py-2 text-center">
-                                  <span className="text-[10px] font-medium text-gray-700">{store.ew3 || '-'}</span>
+                                  <span className="text-[10px] font-medium text-gray-700">{item.ew3 || '-'}</span>
                                 </td>
                                 <td className="px-1 py-2 text-center">
-                                  <span className="text-[10px] font-medium text-gray-700">{store.ew4 || '-'}</span>
+                                  <span className="text-[10px] font-medium text-gray-700">{item.ew4 || '-'}</span>
                                 </td>
 
                                 {/* Total incentive + Sales count */}
                                 <td className="px-2 py-2 text-right">
                                   <div className="font-semibold text-green-600 text-[11px] leading-tight">
-                                    {store.totalIncentive}
+                                    {item.totalIncentive}
                                   </div>
                                   <div className="text-[8px] text-gray-500 leading-tight mt-0.5">
-                                    {store.totalSales} sales
+                                    {item.totalSales} sales
                                   </div>
                                 </td>
                               </tr>

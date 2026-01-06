@@ -36,35 +36,14 @@ export async function GET(req: NextRequest) {
         break;
     }
 
-    // Get all active campaigns
-    const activeCampaigns = await prisma.spotIncentiveCampaign.findMany({
+    // Get count of currently active campaigns for metadata only
+    const activeCampaignsCount = await prisma.spotIncentiveCampaign.count({
       where: {
         active: true,
         startDate: { lte: now },
         endDate: { gte: now },
       },
-      select: {
-        id: true,
-        storeId: true,
-        godrejSKUId: true, // Fixed
-        planId: true,
-      },
     });
-
-    if (activeCampaigns.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          stores: [],
-          devices: [],
-          plans: [],
-          period,
-          activeCampaignsCount: 0,
-        },
-      });
-    }
-
-    const campaignIds = activeCampaigns.map((c) => c.id);
 
     // Get sales reports for active campaigns within the period
     // Filter by isCompaignActive = true
@@ -79,6 +58,13 @@ export async function GET(req: NextRequest) {
             id: true,
             name: true,
             city: true,
+          },
+        },
+        secUser: {
+          select: {
+            id: true,
+            fullName: true,
+            phone: true,
           },
         },
         godrejSKU: { // Fixed
@@ -103,6 +89,19 @@ export async function GET(req: NextRequest) {
       storeId: string;
       storeName: string;
       city: string | null;
+      totalSales: number;
+      totalIncentive: number;
+      ew1: number;
+      ew2: number;
+      ew3: number;
+      ew4: number;
+    }>();
+
+    // Aggregate by canvasser (SEC)
+    const canvasserMap = new Map<string, {
+      secId: string;
+      canvasserName: string;
+      identifier: string; // phone or employee ID
       totalSales: number;
       totalIncentive: number;
       ew1: number;
@@ -162,6 +161,33 @@ export async function GET(req: NextRequest) {
         });
       }
 
+      // Canvasser aggregation
+      if (report.secId && report.secUser) {
+        const secKey = report.secId;
+        if (canvasserMap.has(secKey)) {
+          const existing = canvasserMap.get(secKey)!;
+          existing.totalSales += 1;
+          existing.totalIncentive += report.spotincentiveEarned;
+
+          if (isEW1) existing.ew1 += 1;
+          if (isEW2) existing.ew2 += 1;
+          if (isEW3) existing.ew3 += 1;
+          if (isEW4) existing.ew4 += 1;
+        } else {
+          canvasserMap.set(secKey, {
+            secId: report.secUser.id,
+            canvasserName: report.secUser.fullName || 'Unknown',
+            identifier: report.secUser.phone,
+            totalSales: 1,
+            totalIncentive: report.spotincentiveEarned,
+            ew1: isEW1 ? 1 : 0,
+            ew2: isEW2 ? 1 : 0,
+            ew3: isEW3 ? 1 : 0,
+            ew4: isEW4 ? 1 : 0,
+          });
+        }
+      }
+
       // Device aggregation
       const deviceKey = report.godrejSKUId;
       if (deviceMap.has(deviceKey)) {
@@ -205,6 +231,15 @@ export async function GET(req: NextRequest) {
         totalIncentive: store.totalIncentive > 0 ? `₹${store.totalIncentive.toLocaleString('en-IN')}` : '-',
       }));
 
+    const topCanvassers = Array.from(canvasserMap.values())
+      .sort((a, b) => b.totalIncentive - a.totalIncentive)
+      .slice(0, limit)
+      .map((canvasser, index) => ({
+        rank: index + 1,
+        ...canvasser,
+        totalIncentive: canvasser.totalIncentive > 0 ? `₹${canvasser.totalIncentive.toLocaleString('en-IN')}` : '-',
+      }));
+
     const topDevices = Array.from(deviceMap.values())
       .sort((a, b) => b.totalIncentive - a.totalIncentive)
       .slice(0, limit)
@@ -228,10 +263,11 @@ export async function GET(req: NextRequest) {
       success: true,
       data: {
         stores: topStores,
+        canvassers: topCanvassers,
         devices: topDevices,
         plans: topPlans,
         period,
-        activeCampaignsCount: activeCampaigns.length,
+        activeCampaignsCount,
         totalSalesReports: salesReports.length,
       },
     });

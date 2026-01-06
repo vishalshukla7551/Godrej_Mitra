@@ -297,7 +297,7 @@ export default function RoleLogin() {
                 Login with phone
               </Link>
             </p>
-            <p className="text-sm text-gray-600">
+            {/* <p className="text-sm text-gray-600">
               Need an account?{' '}
               <Link
                 href="/signup"
@@ -305,7 +305,7 @@ export default function RoleLogin() {
               >
                 Sign up for different roles
               </Link>
-            </p>
+            </p> */}
           </div>
 
           <div className="mt-8 text-center">
