@@ -223,9 +223,22 @@ export default function CanvasserLogin() {
           className="w-full bg-white rounded-2xl p-6 sm:p-8 md:p-10 relative"
           style={{ boxShadow: 'rgba(0,0,0,0.08) 0px 4px 12px' }}
         >
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Canvasser Login</h1>
-            <p className="text-gray-500">Login with your phone number</p>
+          <div className="flex flex-col items-center mb-8">
+            {/* Logo Section */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-lg bg-[#5E1846] flex items-center justify-center shadow-md shadow-[#5E1846]/20">
+                <span className="text-white text-xl font-bold font-sans">S</span>
+              </div>
+              <div className="flex flex-col">
+                <h1 className="text-2xl font-bold text-[#5E1846] leading-tight tracking-tight">Sales<span className="text-[#3056FF]">mitr</span></h1>
+                <p className="text-xs text-gray-500 italic font-medium tracking-wide">Safalta ka Sathi</p>
+              </div>
+            </div>
+
+            <div className="w-full text-left">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Canvasser Login</h1>
+              <p className="text-gray-500">Login with your phone number</p>
+            </div>
           </div>
 
           <form
