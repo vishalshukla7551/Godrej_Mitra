@@ -37,7 +37,7 @@ model Store {
   numberOfSec Int?  // Number of SECs associated with the store (nullable)
   periodicAttachRates periodicAttachRate[]
   samsungIncentiveInfo Json?  // Array<Object>: { month: String(MM-YYYY), samsungIncentiveAmount: Int, samsungIncentivePaidAt: Date | null }    
- // dailyIncentiveReports   DailyIncentiveReport[]
+
   spotIncentiveReports           SpotIncentiveReport[]
   spotIncentiveCampaigns  SpotIncentiveCampaign[]
   secUsers                SEC[]
@@ -66,7 +66,7 @@ model GodrejSKU {
   serialNumber           String? // Added as per user request (possibly a misnomer for validation pattern?)
   plans                  Plan[]
   SpotIncentiveReport           SpotIncentiveReport[]
-  //dailyIncentiveReports       DailyIncentiveReport[]
+
   spotIncentiveCampaigns SpotIncentiveCampaign[]
   @@map("GodrejSKU")
 }
@@ -78,7 +78,7 @@ model Plan {
   PlanPrice              Int
   GodrejSKU              GodrejSKU?             @relation(fields: [godrejSKUId], references: [id])
   godrejSKUId            String?                 @db.ObjectId
- // dailyIncentiveReports           DailyIncentiveReport[]
+
   SpotIncentiveReport           SpotIncentiveReport[]
   spotIncentiveCampaigns SpotIncentiveCampaign[]
   @@map("Plan")
@@ -270,7 +270,7 @@ model SEC {
   AgencyName   String?
   AgentCode    String?
   SpotIncentiveReport           SpotIncentiveReport[]
-  //dailyIncentiveReports       DailyIncentiveReport[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
