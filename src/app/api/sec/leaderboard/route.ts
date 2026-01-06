@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         storeId: true,
-        samsungSKUId: true,
+        godrejSKUId: true, // Fixed
         planId: true,
       },
     });
@@ -81,18 +81,18 @@ export async function GET(req: NextRequest) {
             city: true,
           },
         },
-        samsungSKU: {
+        godrejSKU: { // Fixed
           select: {
             id: true,
-            ModelName: true,
             Category: true,
+            // ModelName removed
           },
         },
         plan: {
           select: {
             id: true,
             planType: true,
-            price: true,
+            PlanPrice: true, // Fixed from price
           },
         },
       },
@@ -105,13 +105,13 @@ export async function GET(req: NextRequest) {
       city: string | null;
       totalSales: number;
       totalIncentive: number;
-      adldUnits: number;
-      comboUnits: number;
-      adldRevenue: number;
-      comboRevenue: number;
+      ew1: number;
+      ew2: number;
+      ew3: number;
+      ew4: number;
     }>();
 
-    // Aggregate by device (Samsung SKU)
+    // Aggregate by device (Godrej SKU)
     const deviceMap = new Map<string, {
       deviceId: string;
       deviceName: string;
@@ -130,24 +130,24 @@ export async function GET(req: NextRequest) {
     }>();
 
     salesReports.forEach((report: any) => {
-      // Determine if this is ADLD or Combo based on plan type
-      const isADLD = report.plan.planType === 'ADLD_1_YR';
-      const isCombo = report.plan.planType === 'COMBO_2_YRS';
-      
+      // Determine EW bucket
+      const planType = report.plan.planType || '';
+      const isEW1 = planType.includes('1_YR');
+      const isEW2 = planType.includes('2_YR');
+      const isEW3 = planType.includes('3_YR');
+      const isEW4 = planType.includes('4_YR');
+
       // Store aggregation
       const storeKey = report.storeId;
       if (storeMap.has(storeKey)) {
         const existing = storeMap.get(storeKey)!;
         existing.totalSales += 1;
         existing.totalIncentive += report.spotincentiveEarned;
-        
-        if (isADLD) {
-          existing.adldUnits += 1;
-          existing.adldRevenue += 200; // ADLD price ₹200
-        } else if (isCombo) {
-          existing.comboUnits += 1;
-          existing.comboRevenue += 300; // Combo price ₹300
-        }
+
+        if (isEW1) existing.ew1 += 1;
+        if (isEW2) existing.ew2 += 1;
+        if (isEW3) existing.ew3 += 1;
+        if (isEW4) existing.ew4 += 1;
       } else {
         storeMap.set(storeKey, {
           storeId: report.store.id,
@@ -155,24 +155,24 @@ export async function GET(req: NextRequest) {
           city: report.store.city,
           totalSales: 1,
           totalIncentive: report.spotincentiveEarned,
-          adldUnits: isADLD ? 1 : 0,
-          comboUnits: isCombo ? 1 : 0,
-          adldRevenue: isADLD ? 200 : 0,
-          comboRevenue: isCombo ? 300 : 0,
+          ew1: isEW1 ? 1 : 0,
+          ew2: isEW2 ? 1 : 0,
+          ew3: isEW3 ? 1 : 0,
+          ew4: isEW4 ? 1 : 0,
         });
       }
 
       // Device aggregation
-      const deviceKey = report.samsungSKUId;
+      const deviceKey = report.godrejSKUId;
       if (deviceMap.has(deviceKey)) {
         const existing = deviceMap.get(deviceKey)!;
         existing.totalSales += 1;
         existing.totalIncentive += report.spotincentiveEarned;
       } else {
         deviceMap.set(deviceKey, {
-          deviceId: report.samsungSKU.id,
-          deviceName: report.samsungSKU.ModelName,
-          category: report.samsungSKU.Category,
+          deviceId: report.godrejSKU.id,
+          deviceName: report.godrejSKU.Category, // Use Category as primary name
+          category: report.godrejSKU.Category,
           totalSales: 1,
           totalIncentive: report.spotincentiveEarned,
         });
@@ -188,7 +188,7 @@ export async function GET(req: NextRequest) {
         planMap.set(planKey, {
           planId: report.plan.id,
           planType: report.plan.planType,
-          planPrice: report.plan.price,
+          planPrice: report.plan.PlanPrice || 0,
           totalSales: 1,
           totalIncentive: report.spotincentiveEarned,
         });
@@ -203,8 +203,6 @@ export async function GET(req: NextRequest) {
         rank: index + 1,
         ...store,
         totalIncentive: store.totalIncentive > 0 ? `₹${store.totalIncentive.toLocaleString('en-IN')}` : '-',
-        adldRevenue: store.adldRevenue > 0 ? `₹${store.adldRevenue.toLocaleString('en-IN')}` : '-',
-        comboRevenue: store.comboRevenue > 0 ? `₹${store.comboRevenue.toLocaleString('en-IN')}` : '-',
       }));
 
     const topDevices = Array.from(deviceMap.values())

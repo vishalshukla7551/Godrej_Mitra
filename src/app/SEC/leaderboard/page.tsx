@@ -29,10 +29,10 @@ interface LeaderboardStore {
   city: string | null;
   totalSales: number;
   totalIncentive: string;
-  adldUnits: number;
-  comboUnits: number;
-  adldRevenue: string;
-  comboRevenue: string;
+  ew1: number;
+  ew2: number;
+  ew3: number;
+  ew4: number;
 }
 
 interface LeaderboardData {
@@ -43,8 +43,6 @@ interface LeaderboardData {
   activeCampaignsCount: number;
   totalSalesReports: number;
 }
-
-
 
 interface ActiveCampaignsData {
   campaigns: any[];
@@ -87,8 +85,6 @@ export default function SalesChampionLeaderboardPage() {
       } else {
         setError('Failed to load leaderboard data');
       }
-
-
 
       if (activeCampaignsResult.success) {
         setActiveCampaignsData(activeCampaignsResult.data);
@@ -161,8 +157,6 @@ export default function SalesChampionLeaderboardPage() {
               Top stores by total incentives
             </p>
 
-            {/* Stats - removed Total Sales per request */}
-
             {/* Month selector - responsive, shows all months */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white text-sm mb-3">
               <span className="text-xs uppercase tracking-wide text-gray-300">Month</span>
@@ -183,10 +177,6 @@ export default function SalesChampionLeaderboardPage() {
               </select>
             </div>
           </div>
-
-
-
-          {/* Active Campaigns - Hidden from UI but data still fetched */}
 
           {/* Loading/Error States */}
           {loading && (
@@ -269,69 +259,73 @@ export default function SalesChampionLeaderboardPage() {
                       <p className="text-sm">No active campaigns or sales data available</p>
                     </div>
                   ) : (
-                    <table className="w-full table-fixed">
-                      <thead>
-                        <tr className="bg-gray-100 text-gray-600 text-[9px] uppercase font-semibold">
-                          <th className="text-left px-1.5 py-1.5 w-[50px]">Rank</th>
-                          <th className="text-left px-1.5 py-1.5">Store</th>
-                          <th className="text-center px-1 py-1.5 w-[42px]">ADLD</th>
-                          <th className="text-center px-1 py-1.5 w-[50px]">Combo</th>
-                          <th className="text-right px-1.5 py-1.5 w-[70px]">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {leaderboardData.stores.map((store) => {
-                          const medal = store.rank === 1 ? '👑' : store.rank === 2 ? '🥈' : store.rank === 3 ? '🥉' : null;
-                          const rankColor = store.rank === 1 ? 'text-yellow-600' : store.rank === 2 ? 'text-gray-500' : store.rank === 3 ? 'text-orange-600' : 'text-gray-700';
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[300px] table-fixed">
+                        <thead>
+                          <tr className="bg-gray-100 text-gray-600 text-[9px] uppercase font-semibold">
+                            <th className="text-left px-2 py-2 w-[40px]">#</th>
+                            <th className="text-left px-2 py-2">Store</th>
+                            <th className="text-center px-1 py-2 w-[35px]">EW1</th>
+                            <th className="text-center px-1 py-2 w-[35px]">EW2</th>
+                            <th className="text-center px-1 py-2 w-[35px]">EW3</th>
+                            <th className="text-center px-1 py-2 w-[35px]">EW4</th>
+                            <th className="text-right px-2 py-2 w-[60px]">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {leaderboardData.stores.map((store) => {
+                            const medal = store.rank === 1 ? '👑' : store.rank === 2 ? '🥈' : store.rank === 3 ? '🥉' : null;
+                            const rankColor = store.rank === 1 ? 'text-yellow-600' : store.rank === 2 ? 'text-gray-500' : store.rank === 3 ? 'text-orange-600' : 'text-gray-700';
 
-                          return (
-                            <tr key={store.storeId} className="border-b border-gray-100 last:border-none">
-                              {/* Rank */}
-                              <td className="px-1.5 py-2">
-                                <div className="flex items-center gap-1">
-                                  {medal && <span className="text-sm">{medal}</span>}
-                                  <span className={`text-xs font-bold ${rankColor}`}>{store.rank}</span>
-                                </div>
-                              </td>
+                            return (
+                              <tr key={store.storeId} className="border-b border-gray-100 last:border-none">
+                                {/* Rank */}
+                                <td className="px-2 py-2">
+                                  <div className="flex items-center gap-1">
+                                    {medal && <span className="text-sm">{medal}</span>}
+                                    {!medal && <span className={`text-xs font-bold ${rankColor}`}>{store.rank}</span>}
+                                  </div>
+                                </td>
 
-                              {/* Store name + city */}
-                              <td className="px-1.5 py-2">
-                                <div className="font-medium text-gray-900 text-[10px] leading-tight line-clamp-1">
-                                  {store.storeName}
-                                </div>
-                                <div className="text-[8px] text-gray-500 leading-tight mt-0.5">
-                                  {store.city || 'N/A'}
-                                </div>
-                              </td>
+                                {/* Store name + city */}
+                                <td className="px-2 py-2">
+                                  <div className="font-medium text-gray-900 text-[10px] leading-tight line-clamp-1">
+                                    {store.storeName}
+                                  </div>
+                                  <div className="text-[8px] text-gray-500 leading-tight mt-0.5">
+                                    {store.city || 'N/A'}
+                                  </div>
+                                </td>
 
-                              {/* ADLD units */}
-                              <td className="px-1 py-2 text-center">
-                                <span className="text-[10px] font-medium text-gray-900">
-                                  {store.adldUnits > 0 ? store.adldUnits : '0'}
-                                </span>
-                              </td>
+                                {/* EW columns */}
+                                <td className="px-1 py-2 text-center">
+                                  <span className="text-[10px] font-medium text-gray-700">{store.ew1 || '-'}</span>
+                                </td>
+                                <td className="px-1 py-2 text-center">
+                                  <span className="text-[10px] font-medium text-gray-700">{store.ew2 || '-'}</span>
+                                </td>
+                                <td className="px-1 py-2 text-center">
+                                  <span className="text-[10px] font-medium text-gray-700">{store.ew3 || '-'}</span>
+                                </td>
+                                <td className="px-1 py-2 text-center">
+                                  <span className="text-[10px] font-medium text-gray-700">{store.ew4 || '-'}</span>
+                                </td>
 
-                              {/* Combo units */}
-                              <td className="px-1 py-2 text-center">
-                                <span className="text-[10px] font-medium text-gray-900">
-                                  {store.comboUnits > 0 ? store.comboUnits : '0'}
-                                </span>
-                              </td>
-
-                              {/* Total incentive + Sales count */}
-                              <td className="px-1.5 py-2 text-right">
-                                <div className="font-semibold text-green-600 text-[11px] leading-tight">
-                                  {store.totalIncentive}
-                                </div>
-                                <div className="text-[8px] text-gray-500 leading-tight mt-0.5">
-                                  {store.totalSales} sales
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                                {/* Total incentive + Sales count */}
+                                <td className="px-2 py-2 text-right">
+                                  <div className="font-semibold text-green-600 text-[11px] leading-tight">
+                                    {store.totalIncentive}
+                                  </div>
+                                  <div className="text-[8px] text-gray-500 leading-tight mt-0.5">
+                                    {store.totalSales} sales
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </div>
               </section>
