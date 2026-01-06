@@ -327,6 +327,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 onChange={(e) => {
                   setDeviceId(e.target.value);
                   setApplianceSubCategory(''); // Reset sub-category when category changes
+                  setInvoicePrice(''); // Reset invoice price when category changes
                 }}
                 disabled={loadingDevices}
                 className="w-full pl-4 pr-10 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none disabled:opacity-50"
@@ -357,7 +358,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 onChange={(e) => setApplianceSubCategory(e.target.value)}
                 className="w-full pl-4 pr-10 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                 style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'right 1rem center',
                   backgroundSize: '1.25rem',
