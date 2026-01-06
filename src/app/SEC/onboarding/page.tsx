@@ -97,7 +97,7 @@ export default function SECOnboardingPage() {
     }
 
     if (!trimmedSecId) {
-      setError('Please enter your SEC ID');
+      setError('Please enter your Canvasser ID');
       return;
     }
 
@@ -126,7 +126,7 @@ export default function SECOnboardingPage() {
 
         // Show SEC ID specific error below the field
         if (errorMsg === 'SEC ID already in use') {
-          setSecIdError(errorMsg);
+          setSecIdError('Canvasser ID already in use');
           return;
         }
 
@@ -169,7 +169,7 @@ export default function SECOnboardingPage() {
       <main className="flex-1 flex flex-col px-6 pt-12 pb-8 max-w-md mx-auto w-full">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Tell us about yourself</h1>
-          <p className="text-sm text-gray-500">We need a few details to set up your SEC profile</p>
+          <p className="text-sm text-gray-500">We need a few details to set up your Canvasser profile</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -183,8 +183,8 @@ export default function SECOnboardingPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900 mb-2">SEC ID</label>
-            <input type="text" value={secId} onChange={(e) => { setSecId(e.target.value); setSecIdError(null); }} placeholder="Enter your SEC ID" className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500" />
+            <label className="block text-sm font-medium text-gray-900 mb-2">Canvasser ID</label>
+            <input type="text" value={secId} onChange={(e) => { setSecId(e.target.value); setSecIdError(null); }} placeholder="Enter your Canvasser ID" className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500" />
             {secIdError && (
               <p className="text-sm text-red-600 mt-1">{secIdError}</p>
             )}

@@ -108,9 +108,15 @@ export default function LandingPage({ userName = '' }) {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden pb-32">
 
+        {/* Greeting Section */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 mt-6 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Hello {userName},</h1>
+          <p className="text-sm text-gray-500 mt-1">Welcome! Choose your action below</p>
+        </div>
+
         {/* Banner Carousel */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 mb-4 sm:mb-5 md:mb-6 mt-4 sm:mt-5 md:mt-6">
-          <div className="relative overflow-hidden rounded-xl md:rounded-2xl">
+          <div className="relative overflow-hidden rounded-xl md:rounded-2xl shadow-lg border border-gray-100">
             <div
               className="flex transition-transform duration-500 ease-in-out"
               style={{ transform: `translateX(-${activeSlide * 100}%)` }}
@@ -120,32 +126,44 @@ export default function LandingPage({ userName = '' }) {
                   key={banner.id}
                   className="w-full flex-shrink-0"
                 >
-                  <div
-                    className={`bg-gradient-to-br ${banner.gradient} px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 lg:py-8 rounded-xl md:rounded-2xl min-h-[160px] sm:min-h-[180px] md:min-h-[220px] lg:min-h-[260px] flex flex-col justify-center items-center text-center`}
-                  >
-                    <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-800 mb-0.5 sm:mb-1">
-                      {banner.title}
-                    </p>
-                    <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-gray-900 mb-0.5 sm:mb-1 md:mb-2">
-                      {banner.subtitle}
-                    </h2>
-                    <p className="text-[10px] sm:text-xs md:text-sm font-semibold text-gray-800 mb-2 sm:mb-3 md:mb-4">
-                      {banner.description}
-                    </p>
-                    <div className="space-y-1.5 sm:space-y-2 md:space-y-2.5 w-full max-w-[280px] sm:max-w-[320px] md:max-w-[400px] lg:max-w-[500px]">
-                      {banner.highlights.map((highlight, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-white/95 rounded-full px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold text-gray-900"
-                        >
-                          {highlight}
-                        </div>
-                      ))}
+                  {banner.id === 1 ? (
+                    // Premium Image Banner for the first slide
+                    <div className="w-full aspect-[2/1] md:aspect-[3/1] relative bg-[#0f172a] rounded-xl overflow-hidden shadow-lg">
+                      <img
+                        src="/images/banners/godrej_incentive_banner.png"
+                        alt="Godrej Canvasser Incentive"
+                        className="w-full h-full object-cover object-center"
+                      />
                     </div>
-                    <p className="text-[9px] sm:text-[10px] md:text-xs font-medium text-gray-800 mt-2 sm:mt-3 md:mt-4">
-                      {banner.validity}
-                    </p>
-                  </div>
+                  ) : (
+                    // Regular Gradient Banners for others
+                    <div
+                      className={`bg-gradient-to-br ${banner.gradient} px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 lg:py-8 min-h-[160px] sm:min-h-[180px] md:min-h-[220px] lg:min-h-[260px] flex flex-col justify-center items-center text-center`}
+                    >
+                      <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-800 mb-0.5 sm:mb-1">
+                        {banner.title}
+                      </p>
+                      <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-gray-900 mb-0.5 sm:mb-1 md:mb-2">
+                        {banner.subtitle}
+                      </h2>
+                      <p className="text-[10px] sm:text-xs md:text-sm font-semibold text-gray-800 mb-2 sm:mb-3 md:mb-4">
+                        {banner.description}
+                      </p>
+                      <div className="space-y-1.5 sm:space-y-2 md:space-y-2.5 w-full max-w-[280px] sm:max-w-[320px] md:max-w-[400px] lg:max-w-[500px]">
+                        {banner.highlights.map((highlight, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-white/95 rounded-full px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold text-gray-900"
+                          >
+                            {highlight}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[9px] sm:text-[10px] md:text-xs font-medium text-gray-800 mt-2 sm:mt-3 md:mt-4">
+                        {banner.validity}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
