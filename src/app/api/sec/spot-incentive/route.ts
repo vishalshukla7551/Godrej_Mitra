@@ -23,9 +23,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Find SEC user
+    // Find SEC user with store information
     const secUser = await prisma.sEC.findUnique({
       where: { phone },
+      include: {
+        store: true,
+      },
     });
 
     if (!secUser) {
@@ -44,7 +47,7 @@ export async function GET(req: NextRequest) {
         plan: {
           select: {
             planType: true,
-            price: true,
+            PlanPrice: true, // Fixed: price -> PlanPrice
           },
         },
         store: {
@@ -53,10 +56,10 @@ export async function GET(req: NextRequest) {
             city: true,
           },
         },
-        samsungSKU: {
+        godrejSKU: { // Fixed: samsungSKU -> godrejSKU
           select: {
-            ModelName: true,
             Category: true,
+            // ModelName does not exist on GodrejSKU
           },
         },
       },
@@ -67,69 +70,88 @@ export async function GET(req: NextRequest) {
 
     // Format date helper
     const formatDate = (date: Date) => {
-      const d = new Date(date);
-      const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const yyyy = d.getFullYear();
-      return `${dd}-${mm}-${yyyy}`;
+      try {
+        const d = new Date(date);
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        return `${dd}-${mm}-${yyyy}`;
+      } catch (e) {
+        return '';
+      }
     };
 
     // Transform data for frontend
     const transactions = spotReports.map((report: any) => {
-      const planType = report.plan.planType;
+      const planType = report.plan?.planType || ''; // Handle potential null plan
+
+      // Clean up plan name for display
       let planName = planType.replace(/_/g, ' ');
+
+      // GodrejSKU only has Category
+      const deviceName = report.godrejSKU?.Category || 'Unknown Device';
 
       return {
         id: report.id,
         date: formatDate(report.Date_of_sale),
-        deviceName: report.samsungSKU.ModelName || report.samsungSKU.Category,
+        deviceName: deviceName,
         planName: planName,
         incentive: report.spotincentiveEarned > 0 ? `₹${report.spotincentiveEarned.toLocaleString('en-IN')}` : '-',
         incentiveAmount: report.spotincentiveEarned,
         voucherCode: report.voucherCode || 'N/A',
         isPaid: !!report.spotincentivepaidAt,
-        paidAt: report.spotincentivepaidAt 
+        paidAt: report.spotincentivepaidAt
           ? formatDate(report.spotincentivepaidAt)
           : null,
         isCompaignActive: report.isCompaignActive,
-        storeName: report.store.name,
-        storeCity: report.store.city,
+        storeName: report.store?.name || 'Unknown Store',
+        storeCity: report.store?.city || '',
         imei: report.imei,
       };
     });
 
     // Calculate summary statistics
-    const totalEarned = spotReports.reduce((sum: number, report: any) => sum + report.spotincentiveEarned, 0);
+    const totalEarned = spotReports.reduce((sum: number, report: any) => sum + (report.spotincentiveEarned || 0), 0);
     const totalPaid = spotReports
       .filter((report: any) => report.spotincentivepaidAt)
-      .reduce((sum: number, report: any) => sum + report.spotincentiveEarned, 0);
+      .reduce((sum: number, report: any) => sum + (report.spotincentiveEarned || 0), 0);
     const totalPending = totalEarned - totalPaid;
     const totalUnits = spotReports.length;
     const activeCampaignUnits = spotReports.filter((report: any) => report.isCompaignActive).length;
 
-    // Generate sales summary data grouped by date with ADLD and combo tracking
+    // Generate sales summary data grouped by date with EW tracking
     const salesSummaryMap = new Map<string, {
       date: string;
-      adld: number;
-      combo: number;
+      ew1: number;
+      ew2: number;
+      ew3: number;
+      ew4: number;
       units: number;
     }>();
 
     spotReports.forEach((report: any) => {
       const dateKey = formatDate(report.Date_of_sale);
-      const isADLD = report.plan.planType === 'ADLD_1_YR';
-      const isCombo = report.plan.planType === 'COMBO_2_YRS';
+      const planType = report.plan?.planType || '';
+
+      const isEW1 = planType.includes('1_YR');
+      const isEW2 = planType.includes('2_YR');
+      const isEW3 = planType.includes('3_YR');
+      const isEW4 = planType.includes('4_YR');
 
       if (salesSummaryMap.has(dateKey)) {
         const existing = salesSummaryMap.get(dateKey)!;
         existing.units += 1;
-        if (isADLD) existing.adld += 1;
-        if (isCombo) existing.combo += 1;
+        if (isEW1) existing.ew1 += 1;
+        if (isEW2) existing.ew2 += 1;
+        if (isEW3) existing.ew3 += 1;
+        if (isEW4) existing.ew4 += 1;
       } else {
         salesSummaryMap.set(dateKey, {
           date: dateKey,
-          adld: isADLD ? 1 : 0,
-          combo: isCombo ? 1 : 0,
+          ew1: isEW1 ? 1 : 0,
+          ew2: isEW2 ? 1 : 0,
+          ew3: isEW3 ? 1 : 0,
+          ew4: isEW4 ? 1 : 0,
           units: 1,
         });
       }
@@ -137,15 +159,19 @@ export async function GET(req: NextRequest) {
 
     const salesSummary = Array.from(salesSummaryMap.values())
       .sort((a, b) => {
-        const dateA = new Date(a.date.split('-').reverse().join('-'));
-        const dateB = new Date(b.date.split('-').reverse().join('-'));
-        return dateB.getTime() - dateA.getTime(); // Most recent first
+        try {
+          const dateA = new Date(a.date.split('-').reverse().join('-'));
+          const dateB = new Date(b.date.split('-').reverse().join('-'));
+          return dateB.getTime() - dateA.getTime(); // Most recent first
+        } catch (e) {
+          return 0;
+        }
       });
 
     // Calculate Financial Year Stats
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
-    
+
     const fyStats: Record<string, {
       units: string;
       totalEarned: string;
@@ -156,10 +182,10 @@ export async function GET(req: NextRequest) {
     // Calculate stats for each FY (April to March)
     for (let year = currentYear - 4; year <= currentYear; year++) {
       const fy = `FY-${String(year).slice(-2)}`;
-      
+
       const fyStart = new Date(year, 3, 1); // April 1
       const fyEnd = new Date(year + 1, 2, 31); // March 31
-      
+
       const fyReports = spotReports.filter((report: any) => {
         const reportDate = new Date(report.Date_of_sale);
         return reportDate >= fyStart && reportDate <= fyEnd;
@@ -171,9 +197,10 @@ export async function GET(req: NextRequest) {
 
       fyReports.forEach((report: any) => {
         fyUnits += 1;
-        fyEarned += report.spotincentiveEarned;
+        const earned = report.spotincentiveEarned || 0;
+        fyEarned += earned;
         if (report.spotincentivepaidAt) {
-          fyPaid += report.spotincentiveEarned;
+          fyPaid += earned;
         }
       });
 
@@ -203,6 +230,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
+        // Add SEC and Store metadata
+        sec: {
+          id: secUser.id,
+          fullName: secUser.fullName,
+          phone: secUser.phone,
+        },
+        store: {
+          id: secUser.store?.id,
+          name: secUser.store?.name,
+          city: secUser.store?.city,
+          numberOfSec: secUser.store?.numberOfSec || 1,
+        },
+        // Spot incentive data
         transactions,
         salesSummary,
         summary: {

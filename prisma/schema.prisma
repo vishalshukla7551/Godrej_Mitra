@@ -110,7 +110,7 @@ model SpotIncentiveReport {
   @@index([Date_of_sale])
 }
 
-model DailyIncentiveReport {
+/*model DailyIncentiveReport {
   id                      String                 @id @default(auto()) @map("_id") @db.ObjectId
   secId                   String?                 @db.ObjectId
   secUser                 SEC?                    @relation(fields: [secId], references: [id])
@@ -131,6 +131,7 @@ model DailyIncentiveReport {
   @@index([storeId])
   @@index([Date_of_sale])
 }
+*/
 
 
 enum IncentiveType {

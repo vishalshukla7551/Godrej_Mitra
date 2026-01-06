@@ -27,13 +27,13 @@ export default function SECLogin() {
   useEffect(() => {
     const phoneInput = document.getElementById('phone') as HTMLInputElement;
     const otpInput = document.getElementById('otp') as HTMLInputElement;
-    
+
     if (phoneInput) {
       phoneInput.style.setProperty('background-color', '#e8f0fe', 'important');
       phoneInput.style.setProperty('border', '1px solid #d1d5db', 'important');
       phoneInput.style.setProperty('outline', 'none', 'important');
     }
-    
+
     if (otpInput) {
       otpInput.style.setProperty('background-color', 'transparent', 'important');
       otpInput.style.setProperty('border', '1px solid #d1d5db', 'important');
@@ -223,223 +223,222 @@ export default function SECLogin() {
           className="w-full bg-white rounded-2xl p-6 sm:p-8 md:p-10 relative"
           style={{ boxShadow: 'rgba(0,0,0,0.08) 0px 4px 12px' }}
         >
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">SEC Login</h1>
-          <p className="text-gray-500">Login with your phone number</p>
-        </div>
-
-        <form
-          onSubmit={otpSent ? handleVerifyOTP : handleSendOTP}
-          className="space-y-6"
-          autoComplete="off"
-        >
-          <div>
-            <label
-              htmlFor="phone"
-              className={labelBaseClasses}
-            >
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              name="sec-phone"
-              autoComplete="off"
-              inputMode="tel"
-              value={phoneNumber}
-              onChange={handlePhoneChange}
-              placeholder="Enter your phone number"
-              className={inputBaseClasses}
-              style={{
-                backgroundColor: '#e8f0fe',
-                border: '1px solid #d1d5db',
-                outline: 'none',
-                transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
-              }}
-              onFocus={(e) => {
-                e.target.style.setProperty('border-color', 'rgb(120, 164, 235)', 'important');
-                e.target.style.setProperty('box-shadow', 'rgba(59, 130, 246, 0.06) 0px 0px 0px 1.77453px', 'important');
-                e.target.style.setProperty('outline', 'none', 'important');
-              }}
-              onBlur={(e) => {
-                e.target.style.setProperty('border-color', '#d1d5db', 'important');
-                e.target.style.setProperty('box-shadow', 'none', 'important');
-              }}
-            />
-            {validationMessage && (
-              <p
-                className={`mt-2 text-sm ${
-                  isValidNumber ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {validationMessage}
-              </p>
-            )}
-            {error && !otpSent && (
-              <p className="mt-2 text-sm text-red-600">
-                {error}
-              </p>
-            )}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Canvasser Login</h1>
+            <p className="text-gray-500">Login with your phone number</p>
           </div>
 
-          <div className="flex items-start">
-            <div className="flex items-center h-5">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
-              />
-            </div>
-            <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
-              I have read and agree to the{' '}
-              <Link
-                href="/terms"
-                className="text-blue-600 hover:underline font-medium"
-              >
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link
-                href="/privacy"
-                className="text-blue-600 hover:underline font-medium"
-              >
-                Privacy Policy
-              </Link>
-            </label>
-          </div>
-
-
-
-          <button
-            type="button"
-            onClick={handleSendOTP}
-            disabled={loading || otpSent}
-            className="w-full text-white font-semibold py-2.5 transition-colors text-base disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            style={{
-              background:
-                loading || otpSent ? '#d1d5db' : 'linear-gradient(135deg, #E53935 0%, #FF4D4D 100%)',
-              borderRadius: '12px',
-              boxShadow: loading || otpSent ? 'none' : 'rgba(229, 57, 53, 0.2) 0px 4px 12px',
-            }}
-            onMouseEnter={(e) => {
-              if (!loading && !otpSent) {
-                e.currentTarget.style.background = 'linear-gradient(135deg, #C62828 0%, #E53935 100%)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!loading && !otpSent) {
-                e.currentTarget.style.background = 'linear-gradient(135deg, #E53935 0%, #FF4D4D 100%)';
-              }
-            }}
+          <form
+            onSubmit={otpSent ? handleVerifyOTP : handleSendOTP}
+            className="space-y-6"
+            autoComplete="off"
           >
-            {loading && !otpSent && <ButtonLoader variant="light" size="md" />}
-            {loading && !otpSent ? 'Sending...' : 'Send OTP'}
-          </button>
-
-          {otpSent && (
-            <>
-              {/* Divider */}
-              <div style={{
-                height: '1px',
-                background: 'linear-gradient(90deg, transparent, #e5e7eb, transparent)',
-                marginBottom: '24px'
-              }} />
-              
-              <div>
-                <p className="text-center mb-3" style={{ fontSize: '14px', color: '#374151', fontWeight: 500 }}>
-                  OTP sent to registered whatsapp number
+            <div>
+              <label
+                htmlFor="phone"
+                className={labelBaseClasses}
+              >
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                name="sec-phone"
+                autoComplete="off"
+                inputMode="tel"
+                value={phoneNumber}
+                onChange={handlePhoneChange}
+                placeholder="Enter your phone number"
+                className={inputBaseClasses}
+                style={{
+                  backgroundColor: '#e8f0fe',
+                  border: '1px solid #d1d5db',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.setProperty('border-color', 'rgb(120, 164, 235)', 'important');
+                  e.target.style.setProperty('box-shadow', 'rgba(59, 130, 246, 0.06) 0px 0px 0px 1.77453px', 'important');
+                  e.target.style.setProperty('outline', 'none', 'important');
+                }}
+                onBlur={(e) => {
+                  e.target.style.setProperty('border-color', '#d1d5db', 'important');
+                  e.target.style.setProperty('box-shadow', 'none', 'important');
+                }}
+              />
+              {validationMessage && (
+                <p
+                  className={`mt-2 text-sm ${isValidNumber ? 'text-green-600' : 'text-red-600'
+                    }`}
+                >
+                  {validationMessage}
                 </p>
+              )}
+              {error && !otpSent && (
+                <p className="mt-2 text-sm text-red-600">
+                  {error}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
                 <input
-                  type="text"
-                  id="otp"
-                  name="otp"
-                  autoComplete="off"
-                  inputMode="numeric"
-                  pattern="\d{6}"
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="Enter OTP"
-                  className={inputBaseClasses}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: '1px solid #d1d5db',
-                    outline: 'none',
-                    textAlign: 'center',
-                    transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.setProperty('border-color', 'rgb(120, 164, 235)', 'important');
-                    e.target.style.setProperty('box-shadow', 'rgba(59, 130, 246, 0.06) 0px 0px 0px 1.77453px', 'important');
-                    e.target.style.setProperty('outline', 'none', 'important');
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.setProperty('border-color', '#d1d5db', 'important');
-                    e.target.style.setProperty('box-shadow', 'none', 'important');
-                  }}
+                  type="checkbox"
+                  id="terms"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer"
                 />
-                {error && (
-                  <p className="mt-2 text-sm text-red-600 text-center">
-                    {error}
+              </div>
+              <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
+                I have read and agree to the{' '}
+                <Link
+                  href="/terms"
+                  className="text-blue-600 hover:underline font-medium"
+                >
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link
+                  href="/privacy"
+                  className="text-blue-600 hover:underline font-medium"
+                >
+                  Privacy Policy
+                </Link>
+              </label>
+            </div>
+
+
+
+            <button
+              type="button"
+              onClick={handleSendOTP}
+              disabled={loading || otpSent}
+              className="w-full text-white font-semibold py-2.5 transition-colors text-base disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              style={{
+                background:
+                  loading || otpSent ? '#d1d5db' : 'linear-gradient(135deg, #E53935 0%, #FF4D4D 100%)',
+                borderRadius: '12px',
+                boxShadow: loading || otpSent ? 'none' : 'rgba(229, 57, 53, 0.2) 0px 4px 12px',
+              }}
+              onMouseEnter={(e) => {
+                if (!loading && !otpSent) {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #C62828 0%, #E53935 100%)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading && !otpSent) {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #E53935 0%, #FF4D4D 100%)';
+                }
+              }}
+            >
+              {loading && !otpSent && <ButtonLoader variant="light" size="md" />}
+              {loading && !otpSent ? 'Sending...' : 'Send OTP'}
+            </button>
+
+            {otpSent && (
+              <>
+                {/* Divider */}
+                <div style={{
+                  height: '1px',
+                  background: 'linear-gradient(90deg, transparent, #e5e7eb, transparent)',
+                  marginBottom: '24px'
+                }} />
+
+                <div>
+                  <p className="text-center mb-3" style={{ fontSize: '14px', color: '#374151', fontWeight: 500 }}>
+                    OTP sent to registered whatsapp number
                   </p>
-                )}
-              </div>
+                  <input
+                    type="text"
+                    id="otp"
+                    name="otp"
+                    autoComplete="off"
+                    inputMode="numeric"
+                    pattern="\d{6}"
+                    maxLength={6}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Enter OTP"
+                    className={inputBaseClasses}
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: '1px solid #d1d5db',
+                      outline: 'none',
+                      textAlign: 'center',
+                      transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.setProperty('border-color', 'rgb(120, 164, 235)', 'important');
+                      e.target.style.setProperty('box-shadow', 'rgba(59, 130, 246, 0.06) 0px 0px 0px 1.77453px', 'important');
+                      e.target.style.setProperty('outline', 'none', 'important');
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.setProperty('border-color', '#d1d5db', 'important');
+                      e.target.style.setProperty('box-shadow', 'none', 'important');
+                    }}
+                  />
+                  {error && (
+                    <p className="mt-2 text-sm text-red-600 text-center">
+                      {error}
+                    </p>
+                  )}
+                </div>
 
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleVerifyOTP}
-                  disabled={loading}
-                  className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-colors text-base disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  style={{ 
-                    backgroundColor: loading ? '#d1d5db' : '#10b981'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#059669';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#10b981';
-                    }
-                  }}
-                >
-                  {loading && <ButtonLoader variant="light" size="md" />}
-                  {loading ? 'Verifying...' : 'Verify'}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleVerifyOTP}
+                    disabled={loading}
+                    className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-colors text-base disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    style={{
+                      backgroundColor: loading ? '#d1d5db' : '#10b981'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.backgroundColor = '#059669';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.backgroundColor = '#10b981';
+                      }
+                    }}
+                  >
+                    {loading && <ButtonLoader variant="light" size="md" />}
+                    {loading ? 'Verifying...' : 'Verify'}
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOtpSent(false);
-                    setOtp('');
-                    setError(null);
-                  }}
-                  disabled={loading}
-                  className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-colors text-base disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#6b7280' }}
-                  onMouseEnter={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#4b5563';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#6b7280';
-                    }
-                  }}
-                >
-                Cancel
-              </button>
-              </div>
-            </>
-          )}
-        </form>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpSent(false);
+                      setOtp('');
+                      setError(null);
+                    }}
+                    disabled={loading}
+                    className="flex-1 text-white font-semibold py-2.5 rounded-xl transition-colors text-base disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#6b7280' }}
+                    onMouseEnter={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.backgroundColor = '#4b5563';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.backgroundColor = '#6b7280';
+                      }
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </form>
 
-        {/* <div className="mt-6 text-center space-y-3">
+          {/* <div className="mt-6 text-center space-y-3">
           <p className="text-sm text-gray-600">
             Different Role?{' '}
             <Link
@@ -460,19 +459,19 @@ export default function SECLogin() {
           </p>
         </div> */}
 
-        <div className="mt-8 text-center">
-          <div className="flex items-center justify-center text-gray-500 gap-1">
-            <span className="text-base">Powered by</span>
-            <Image
-              src="/zopper-icon.png"
-              alt="Zopper icon"
-              width={24}
-              height={24}
-              className="inline-block"
-            />
-            <span className="text-base font-semibold text-gray-900">Zopper</span>
+          <div className="mt-8 text-center">
+            <div className="flex items-center justify-center text-gray-500 gap-1">
+              <span className="text-base">Powered by</span>
+              <Image
+                src="/zopper-icon.png"
+                alt="Zopper icon"
+                width={24}
+                height={24}
+                className="inline-block"
+              />
+              <span className="text-base font-semibold text-gray-900">Zopper</span>
+            </div>
           </div>
-        </div>
         </div>
 
         {/* Gift Box - Mobile: touching the bottom of the card */}

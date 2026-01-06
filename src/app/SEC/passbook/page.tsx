@@ -12,11 +12,16 @@ type FilterType = (typeof monthlyFilters)[number];
 
 type MonthlySale = {
   date: string;
-  adld1Year: number;
-  combo2Year: number;
-  adld: number;
-  combo: number;
   units: number;
+  ew1: number;
+  ew2: number;
+  ew3: number;
+  ew4: number;
+  // Legacy fields (optional)
+  adld1Year?: number;
+  combo2Year?: number;
+  adld?: number;
+  combo?: number;
   ex1?: number;
   ex2?: number;
   ex3?: number;
@@ -97,7 +102,7 @@ const formatMonthYear = (dateStr: string) => {
 };
 
 export default function IncentivePassbookPage() {
-  const [activeTab, setActiveTab] = useState<'monthly' | 'spot'>('monthly');
+  const [activeTab, setActiveTab] = useState<'monthly' | 'spot'>('spot');
   const [activeFilter, setActiveFilter] = useState<FilterType>('All');
   const [search, setSearch] = useState('');
   const [selectedMonth, setSelectedMonth] = useState<string>('All');
@@ -125,42 +130,39 @@ export default function IncentivePassbookPage() {
         setLoading(true);
         setError(null);
 
-        // Fetch both passbook and spot incentive data
-        const [passbookRes, spotRes] = await Promise.all([
-          fetch('/api/sec/passbook'),
-          fetch('/api/sec/spot-incentive')
-        ]);
+        // Fetch only spot incentive data (now contains store/sec info)
+        const spotRes = await fetch('/api/sec/spot-incentive');
 
-        if (!passbookRes.ok) {
-          if (passbookRes.status === 401) {
+        if (!spotRes.ok) {
+          if (spotRes.status === 401) {
             setError('Unauthorized. Please login again.');
             return;
           }
-          const errorData = await passbookRes.json().catch(() => ({ error: 'Failed to fetch data' }));
-          setError(errorData.error || 'Failed to fetch passbook data');
+          const errorData = await spotRes.json().catch(() => ({ error: 'Failed to fetch data' }));
+          setError(errorData.error || 'Failed to fetch spot incentive data');
           return;
         }
 
-        const passbookResult = await passbookRes.json();
-        if (passbookResult.success && passbookResult.data) {
-          setPassbookData(passbookResult.data);
-          setStoreData(passbookResult.data.store);
-          setSecData(passbookResult.data.sec);
-          // Set numberOfSECs from store data
-          if (passbookResult.data.store?.numberOfSec) {
-            setNumberOfSECs(passbookResult.data.store.numberOfSec);
+        const spotResult = await spotRes.json();
+
+        if (spotResult.success && spotResult.data) {
+          setSpotIncentiveData(spotResult.data);
+          // Store and SEC data are now returned by spot-incentive API
+          if (spotResult.data.store) {
+            setStoreData(spotResult.data.store);
+            if (spotResult.data.store.numberOfSec) {
+              setNumberOfSECs(spotResult.data.store.numberOfSec);
+            }
           }
+          if (spotResult.data.sec) {
+            setSecData(spotResult.data.sec);
+          }
+
+          // Passbook data is no longer fetched, but we might need a dummy structure if other parts rely on it
+          // OR better, just don't set it.
+          // setPassbookData(null); 
         } else {
-          setError(passbookResult.error || 'Invalid response from server');
-          return;
-        }
-
-        // Handle spot incentive data
-        if (spotRes.ok) {
-          const spotResult = await spotRes.json();
-          if (spotResult.success && spotResult.data) {
-            setSpotIncentiveData(spotResult.data);
-          }
+          setError(spotResult.error || 'Invalid response from server');
         }
       } catch (err) {
         console.error('Error fetching passbook data:', err);
@@ -178,9 +180,9 @@ export default function IncentivePassbookPage() {
   yesterday.setDate(today.getDate() - 1);
 
   // Get sales summary data based on active tab
-  const salesSummaryData = activeTab === 'monthly'
-    ? (passbookData?.monthlyIncentive?.salesSummary || [])
-    : (passbookData?.spotIncentive?.salesSummary || []);
+  const salesSummaryData: MonthlySale[] = activeTab === 'monthly'
+    ? []
+    : (spotIncentiveData?.salesSummary || []);
 
   // Get unique months from sales summary
   const allMonths = Array.from(
@@ -194,8 +196,8 @@ export default function IncentivePassbookPage() {
   );
 
   // Get available FYs from API data or default
-  const allFYs = passbookData?.monthlyIncentive?.fyStats
-    ? Object.keys(passbookData.monthlyIncentive.fyStats)
+  const allFYs = spotIncentiveData?.fyStats
+    ? Object.keys(spotIncentiveData.fyStats)
     : ['FY-25', 'FY-24', 'FY-23', 'FY-22', 'FY-21'];
 
   const filteredMonthlySales = salesSummaryData
@@ -294,35 +296,7 @@ export default function IncentivePassbookPage() {
 
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="px-4 pt-4">
-          {/* Top Tabs - 3D Segmented Control */}
-          <div className="flex bg-gray-100 rounded-2xl p-1.5 mb-4 shadow-inner">
-            <button
-              type="button"
-              onClick={() => setActiveTab('monthly')}
-              className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${activeTab === 'monthly'
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-xl scale-[1.02] transform'
-                : 'bg-white text-gray-600 shadow-md hover:shadow-lg'
-                }`}
-              style={activeTab !== 'monthly' ? {
-                animation: 'softPulse 2.5s ease-in-out infinite',
-              } : {}}
-            >
-              💰 Monthly Incentive
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('spot')}
-              className={`flex-1 ml-2 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${activeTab === 'spot'
-                ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-xl scale-[1.02] transform'
-                : 'bg-white text-gray-600 shadow-md hover:shadow-lg'
-                }`}
-              style={activeTab !== 'spot' ? {
-                animation: 'softPulse 2.5s ease-in-out infinite',
-              } : {}}
-            >
-              ⚡ Spot Incentive
-            </button>
-          </div>
+
 
           {/* Pulse Animation Styles */}
           <style jsx global>{`
@@ -425,35 +399,17 @@ export default function IncentivePassbookPage() {
             </button>
           </div>
 
-          {activeTab === 'monthly' ? (
-            <MonthlyIncentiveSection
-              rows={filteredMonthlySales}
-              transactions={monthlyTransactions}
-              allMonths={allMonths}
-              selectedMonth={selectedMonth}
-              setSelectedMonth={setSelectedMonth}
-              selectedFY={selectedFY}
-              setSelectedFY={setSelectedFY}
-              allFYs={allFYs}
-              setSelectedIncentiveData={setSelectedIncentiveData}
-              setShowIncentiveModal={setShowIncentiveModal}
-              loadingIncentiveDetails={loadingIncentiveDetails}
-              setLoadingIncentiveDetails={setLoadingIncentiveDetails}
-              numberOfSECs={numberOfSECs}
-            />
-          ) : (
-            <SpotIncentiveSection
-              rows={spotIncentiveData?.salesSummary || []}
-              transactions={spotTransactions}
-              allMonths={allSpotMonths}
-              selectedMonth={selectedMonth}
-              setSelectedMonth={setSelectedMonth}
-              selectedFY={selectedFY}
-              setSelectedFY={setSelectedFY}
-              allFYs={allFYs}
-              spotIncentiveData={spotIncentiveData}
-            />
-          )}
+          <SpotIncentiveSection
+            rows={spotIncentiveData?.salesSummary || []}
+            transactions={spotTransactions}
+            allMonths={allSpotMonths}
+            selectedMonth={selectedMonth}
+            setSelectedMonth={setSelectedMonth}
+            selectedFY={selectedFY}
+            setSelectedFY={setSelectedFY}
+            allFYs={allFYs}
+            spotIncentiveData={spotIncentiveData}
+          />
 
 
         </div>
@@ -1060,10 +1016,10 @@ function SpotIncentiveSection({
         <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
           <div className="grid grid-cols-6 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
             <span>Date</span>
-            <span className="text-center">EX1</span>
-            <span className="text-center">EX2</span>
-            <span className="text-center">EX3</span>
-            <span className="text-center">EX4</span>
+            <span className="text-center">EW1</span>
+            <span className="text-center">EW2</span>
+            <span className="text-center">EW3</span>
+            <span className="text-center">EW4</span>
             <span className="text-right">Units</span>
           </div>
           {filteredSalesData.length === 0 ? (
@@ -1074,14 +1030,13 @@ function SpotIncentiveSection({
             filteredSalesData.map((row: any, idx: number) => (
               <div
                 key={row.date + idx}
-
                 className="grid grid-cols-6 px-3 py-2 border-t border-gray-100 text-gray-800"
               >
                 <span>{row.date}</span>
-                <span className="text-center text-blue-600 font-medium">{row.ex1 || row.adld || 0}</span>
-                <span className="text-center text-purple-600 font-medium">{row.ex2 || row.combo || 0}</span>
-                <span className="text-center text-gray-600">{row.ex3 || 0}</span>
-                <span className="text-center text-gray-600">{row.ex4 || 0}</span>
+                <span className="text-center text-blue-600 font-medium">{row.ew1 || 0}</span>
+                <span className="text-center text-purple-600 font-medium">{row.ew2 || 0}</span>
+                <span className="text-center text-gray-600">{row.ew3 || 0}</span>
+                <span className="text-center text-gray-600">{row.ew4 || 0}</span>
                 <span className="text-right">{row.units}</span>
               </div>
             ))
