@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-// OLD CONFETTI IMPORT - Uncomment after Christmas
-// import Confetti from 'react-confetti';
+import Confetti from 'react-confetti';
 import SECHeader from '@/app/SEC/SECHeader';
 import SECFooter from '@/app/SEC/SECFooter';
-import ChristmasSuccessModal from '@/components/ChristmasSuccessModal';
+import SuccessModal from '@/components/SuccessModal';
 
 export default function SecIncentiveForm({ initialSecId = '' }) {
   const router = useRouter();
@@ -18,13 +17,17 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const [deviceId, setDeviceId] = useState('');
   const [applianceSubCategory, setApplianceSubCategory] = useState('');
   const [planId, setPlanId] = useState('');
-  const [imeiExists, setImeiExists] = useState(false); // Kept for safety if referenced elsewhere, but logic removed
-  const [serialNumber, setSerialNumber] = useState(''); // Added serialNumber state
+  const [imeiExists, setImeiExists] = useState(false);
+  const [serialNumber, setSerialNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSecAlert, setShowSecAlert] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [earnedIncentive, setEarnedIncentive] = useState(0);
+  const [secInput, setSecInput] = useState('');
+  const [secError, setSecError] = useState('');
+  const [showSecModal, setShowSecModal] = useState(false);
 
   // Data from APIs
   const [stores, setStores] = useState([]);
@@ -154,12 +157,12 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
       setEarnedIncentive(data.salesReport.incentiveEarned);
       setShowSuccessModal(true);
 
-      // OLD CONFETTI CODE - Uncomment after Christmas
-      // setShowConfetti(true);
+      // OLD CONFETTI CODE RESTORED
+      setShowConfetti(true);
       // Stop confetti after 4 seconds
-      // setTimeout(() => {
-      //   setShowConfetti(false);
-      // }, 4000);
+      setTimeout(() => {
+        setShowConfetti(false);
+      }, 4000);
 
       // Reset form
       setDateOfSale('');
@@ -167,6 +170,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
       setDeviceId('');
       setInvoicePrice('');
       setPlanId('');
+      setSerialNumber('');
       // imei reset removed
 
     } catch (error) {
@@ -179,18 +183,13 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
   const handleCloseSuccess = () => {
     setShowSuccessModal(false);
-    // OLD CONFETTI CODE - Uncomment after Christmas
-    // setShowConfetti(false);
+    setShowConfetti(false);
     router.push('/SEC/passbook');
   };
 
   const handleCancelConfirm = () => {
     setShowConfirmModal(false);
   };
-
-
-
-  // IMEI helper functions removed
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
@@ -438,13 +437,9 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                       const data = await res.json();
 
                       if (res.ok) {
-                        // Transform DB plans to frontend format
-                        // Frontend expects: { id: '...', label: '...', price: ... }
-                        // DB returns: { planType: 'EXTENDED_WARRANTY_1_YR', PlanPrice: 1015, ... }
-
                         const formattedPlans = data.plans.map(p => ({
                           id: p.id,
-                          label: p.planType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()), // Friendly label
+                          label: p.planType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
                           price: p.PlanPrice
                         }));
 
@@ -502,8 +497,6 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               </select>
             </div>
 
-
-
             {/* Serial Number */}
             <div>
               <label htmlFor="serialNumber" className="block text-sm font-medium text-gray-700 mb-2">
@@ -519,7 +512,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
               />
             </div>
 
-            {/* Submit Button - Christmas Theme */}
+            {/* Submit Button */}
             <div className="pt-4 pb-6">
               <button
                 type="submit"
@@ -539,8 +532,20 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
       <SECFooter />
 
-      {/* Christmas Success Modal */}
-      <ChristmasSuccessModal
+      {/* Confetti */}
+      {showConfetti && (
+        <div className="fixed inset-0 z-[60] pointer-events-none">
+          <Confetti
+            width={typeof window !== 'undefined' ? window.innerWidth : 300}
+            height={typeof window !== 'undefined' ? window.innerHeight : 800}
+            recycle={false}
+            numberOfPieces={200}
+          />
+        </div>
+      )}
+
+      {/* Success Modal */}
+      <SuccessModal
         isOpen={showSuccessModal}
         earnedIncentive={earnedIncentive}
         onClose={handleCloseSuccess}
@@ -568,8 +573,6 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 <span className="text-sm text-gray-500">Canvasser ID</span>
                 <span className="text-sm text-gray-900 font-medium">{secId}</span>
               </div>
-
-              {/* ... other code ... */}
 
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Date of Sale</span>
@@ -610,8 +613,6 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                   ₹{plans.find(p => p.id === planId)?.price || '0'}
                 </span>
               </div>
-
-
             </div>
 
             <div className="flex gap-3">

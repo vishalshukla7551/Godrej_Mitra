@@ -5,7 +5,7 @@ import { GlobalAuthInterceptor } from "@/components/GlobalAuthInterceptor";
 // Google fonts removed for build-time reliability; using system fonts via CSS
 
 export const metadata: Metadata = {
-  title: "SalesDost - Welcome",
+  title: "Salesmitr",
   description: "Sales incentive management platform",
 };
 

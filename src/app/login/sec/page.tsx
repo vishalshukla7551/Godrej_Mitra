@@ -90,10 +90,10 @@ export default function SECLogin() {
       return;
     }
 
-    if (!agreed) {
-      alert('Please agree to the Terms of Service and Privacy Policy');
-      return;
-    }
+    // if (!agreed) {
+    //   alert('Please agree to the Terms of Service and Privacy Policy');
+    //   return;
+    // }
 
     setPhoneNumber(digitsOnly);
     setValidationMessage('Valid number');
@@ -281,7 +281,7 @@ export default function SECLogin() {
               )}
             </div>
 
-            <div className="flex items-start">
+            {/* <div className="flex items-start">
               <div className="flex items-center h-5">
                 <input
                   type="checkbox"
@@ -307,7 +307,7 @@ export default function SECLogin() {
                   Privacy Policy
                 </Link>
               </label>
-            </div>
+            </div> */}
 
 
 
