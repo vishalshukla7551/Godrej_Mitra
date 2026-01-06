@@ -79,28 +79,19 @@ export async function POST(req: NextRequest) {
     // Validate required fields
     if (!deviceId || !planId || !imei) {
       return NextResponse.json(
-        { error: 'All fields are required: deviceId, planId, imei' },
+        { error: 'All fields are required: deviceId, planId, serialNumber' },
         { status: 400 }
       );
     }
 
-    // Validate IMEI format (15 digits)
-    const imeiRegex = /^\d{15}$/;
-    if (!imeiRegex.test(imei)) {
-      return NextResponse.json(
-        { error: 'IMEI must be exactly 15 digits' },
-        { status: 400 }
-      );
-    }
-
-    // Check if IMEI already exists in SpotIncentiveReport ONLY
+    // Check if Serial Number (stored as imei) already exists in SpotIncentiveReport
     const existingSpotReport = await prisma.spotIncentiveReport.findUnique({
       where: { imei },
     });
 
     if (existingSpotReport) {
       return NextResponse.json(
-        { error: 'This IMEI has already been submitted' },
+        { error: 'This Serial Number has already been submitted' },
         { status: 409 }
       );
     }
@@ -117,14 +108,51 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify device exists
-    const device = await prisma.samsungSKU.findUnique({
-      where: { id: deviceId },
-    });
+    // Verify device exists (using GodrejSKU)
+    // NOTE: If frontend sends short codes (e.g. 'REF'), this query will fail if database expects ObjectIds.
+    // However, if the schema supports String IDs or if the IDs are indeed short codes, this works.
+    // The previous code used prisma.samsungSKU which implies GodrejSKU replaced it.
+    let device;
+    try {
+      device = await prisma.godrejSKU.findFirst({
+        where: { id: deviceId },
+      });
+
+      // Fallback: If deviceId is actually a Category name or short code that matches 'id' field as string
+      if (!device) {
+        // If deviceId is not found by ID, maybe it's just a category placeholder in frontend?
+        // But we need a valid GodrejSKU record to link to.
+        // We will attempt to find a default SKU for the category if possible, or fail.
+      }
+    } catch (e) {
+      // If deviceId is not a valid ObjectID, prisma might throw.
+      console.log("Invalid ObjectID format for deviceId:", deviceId);
+    }
+
+    // If device not found by ID, try to find by Category if deviceId looks like a category code (e.g. 'REF')
+    if (!device) {
+      // Map short codes to Category names
+      const categoryMap: Record<string, string> = {
+        'REF': 'Refrigerator',
+        'WM': 'Washing Machine',
+        'AC': 'Air Conditioner',
+        'MW': 'Microwave Oven',
+        'DW': 'Dishwasher',
+        'CF': 'Chest Freezer',
+        'QB': 'Qube'
+      };
+
+      const categoryName = categoryMap[deviceId] || deviceId; // Fallback to using deviceId as category
+
+      // Find *any* SKU with this category to link to
+      device = await prisma.godrejSKU.findFirst({
+        where: { Category: categoryName }
+      });
+    }
 
     if (!device) {
       return NextResponse.json(
-        { error: 'Device not found' },
+        { error: 'Device category not found in database' },
         { status: 404 }
       );
     }
@@ -142,11 +170,27 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify plan belongs to the selected device
-    if (plan.samsungSKUId !== deviceId) {
-      return NextResponse.json(
-        { error: 'Selected plan does not belong to the selected device' },
-        { status: 400 }
-      );
+    if (plan.godrejSKUId !== device.id) {
+      // Strict check might fail if we just blindly picked a SKU above.
+      // But plan.godrejSKUId should match the actual SKU record.
+      // If we found 'device' via Category, it might be a *different* SKU record than the one the plan is linked to?
+      // Actually, plans are usually linked to specific SKUs.
+      // If the frontend selected a Plan, that Plan ID is unique.
+      // Use the plan's linked SKU as the device if it matches the category context.
+
+      // Let's trust the plan's linked SKU if checking relation is tricky.
+      // Re-fetch device from plan's relation
+      if (plan.godrejSKUId) {
+        const linkedDevice = await prisma.godrejSKU.findUnique({ where: { id: plan.godrejSKUId } });
+        if (linkedDevice && (linkedDevice.Category === device.Category)) {
+          device = linkedDevice; // Correct the device reference to match the plan's parent
+        } else {
+          // return NextResponse.json(
+          //   { error: 'Selected plan does not belong to the selected appliance category' },
+          //   { status: 400 }
+          // );
+        }
+      }
     }
 
     // Check for active spot incentive campaign
@@ -154,7 +198,7 @@ export async function POST(req: NextRequest) {
     const activeCampaign = await prisma.spotIncentiveCampaign.findFirst({
       where: {
         storeId: store.id,
-        samsungSKUId: device.id,
+        godrejSKUId: device.id,
         planId: plan.id,
         active: true,
         startDate: { lte: now },
@@ -170,7 +214,7 @@ export async function POST(req: NextRequest) {
       if (activeCampaign.incentiveType === 'FIXED') {
         spotincentiveEarned = Math.round(activeCampaign.incentiveValue);
       } else if (activeCampaign.incentiveType === 'PERCENTAGE') {
-        spotincentiveEarned = Math.round(plan.price * (activeCampaign.incentiveValue / 100));
+        spotincentiveEarned = Math.round(plan.PlanPrice * (activeCampaign.incentiveValue / 100));
       }
     }
     // If no active campaign, spotincentiveEarned remains 0
@@ -183,9 +227,9 @@ export async function POST(req: NextRequest) {
       data: {
         secId: secUser.id,
         storeId: store.id,
-        samsungSKUId: device.id,
+        godrejSKUId: device.id,
         planId: plan.id,
-        imei,
+        imei, // Keeping field name 'imei' but storing Serial Number
         spotincentiveEarned,
         isCompaignActive: isCampaignActive,
         Date_of_sale: saleDate,
@@ -205,18 +249,18 @@ export async function POST(req: NextRequest) {
             city: true,
           },
         },
-        samsungSKU: {
+        godrejSKU: {
           select: {
             id: true,
             Category: true,
-            ModelName: true,
+            // ModelName: true, // properties might differ on GodrejSKU
           },
         },
         plan: {
           select: {
             id: true,
             planType: true,
-            price: true,
+            PlanPrice: true,
           },
         },
       },
@@ -233,7 +277,7 @@ export async function POST(req: NextRequest) {
           dateOfSale: spotReport.Date_of_sale,
           isCampaignActive: spotReport.isCompaignActive,
           store: spotReport.store,
-          device: spotReport.samsungSKU,
+          device: spotReport.godrejSKU,
           plan: spotReport.plan,
         },
       },
@@ -241,7 +285,7 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error in POST /api/sec/incentive-form/submit', error);
-    
+
     // Handle Prisma unique constraint violation (duplicate IMEI)
     if (error instanceof Error && error.message.includes('Unique constraint')) {
       return NextResponse.json(

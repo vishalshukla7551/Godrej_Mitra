@@ -19,21 +19,18 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
   const [applianceSubCategory, setApplianceSubCategory] = useState('');
   const [planId, setPlanId] = useState('');
   const [imeiExists, setImeiExists] = useState(false); // Kept for safety if referenced elsewhere, but logic removed
-  // IMEI state removed
+  const [serialNumber, setSerialNumber] = useState(''); // Added serialNumber state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSecAlert, setShowSecAlert] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [earnedIncentive, setEarnedIncentive] = useState(0);
-  // OLD CONFETTI STATE - Uncomment after Christmas
-  // const [showConfetti, setShowConfetti] = useState(false);
 
   // Data from APIs
   const [stores, setStores] = useState([]);
   const [devices, setDevices] = useState([
     { id: 'REF', Category: 'Home', ModelName: 'Refrigerator' },
     { id: 'WM', Category: 'Home', ModelName: 'Washing Machine' },
-    { id: 'AC', Category: 'Home', ModelName: 'Air Conditioner' },
     { id: 'MW', Category: 'Home', ModelName: 'Microwave Oven' },
     { id: 'DW', Category: 'Home', ModelName: 'Dishwasher' },
     { id: 'CF', Category: 'Home', ModelName: 'Chest Freezer' },
@@ -85,12 +82,6 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
     setLoadingStores(false);
   }, []);
 
-  // Fetch devices on mount
-  // Fetch devices effect removed - using dummy data
-
-  // Fetch plans when device is selected
-  // Fetch plans effect removed - using dummy data
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -121,7 +112,10 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
       alert('⚠️ Please select a plan');
       return;
     }
-    // IMEI validation removed
+    if (!serialNumber) {
+      alert('⚠️ Please enter the serial number');
+      return;
+    }
 
     // Show confirmation modal instead of submitting directly
     setShowConfirmModal(true);
@@ -140,7 +134,7 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
         body: JSON.stringify({
           deviceId,
           planId,
-          // imei removed
+          imei: serialNumber, // Send serialNumber as imei
           invoicePrice,
           dateOfSale: dateOfSale || undefined,
           // Send client values for security verification (server will validate)
@@ -387,7 +381,6 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                       </>
                     );
                   } else if (
-                    lowerCategoryName.includes('air conditioner') ||
                     lowerCategoryName.includes('air cooler') ||
                     lowerCategoryName.includes('dishwasher') ||
                     lowerCategoryName.includes('chest freezer') ||
@@ -511,6 +504,21 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
 
 
 
+            {/* Serial Number */}
+            <div>
+              <label htmlFor="serialNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                Serial Number
+              </label>
+              <input
+                type="text"
+                id="serialNumber"
+                value={serialNumber}
+                onChange={(e) => setSerialNumber(e.target.value.toUpperCase())}
+                placeholder="Enter Serial Number"
+                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+              />
+            </div>
+
             {/* Submit Button - Christmas Theme */}
             <div className="pt-4 pb-6">
               <button
@@ -525,22 +533,9 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>
             </div>
-            {/* OLD SUBMIT BUTTON - Uncomment after Christmas
-            <div className="pt-4 pb-6">
-              <button
-                type="submit"
-                disabled={!!imeiError || !!duplicateError || imeiExists || !imeiNumber || imeiNumber.length !== 15 || isCheckingDuplicate || isSubmitting || !storeId || !deviceId || !planId}
-                className="w-full bg-black text-white font-semibold py-4 rounded-2xl hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all text-base"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit'}
-              </button>
-            </div>
-            */}
           </form>
         </div>
       </main>
-
-
 
       <SECFooter />
 
@@ -550,42 +545,6 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
         earnedIncentive={earnedIncentive}
         onClose={handleCloseSuccess}
       />
-
-      {/* OLD SUCCESS MODAL - Uncomment after Christmas and remove ChristmasSuccessModal above
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          {showConfetti && (
-            <Confetti
-              width={typeof window !== 'undefined' ? window.innerWidth : 300}
-              height={typeof window !== 'undefined' ? window.innerHeight : 200}
-              numberOfPieces={300}
-              recycle={false}
-            />
-          )}
-          <div className="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm w-full animate-[fadeIn_0.3s_ease-in]">
-            <div className="text-6xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold text-blue-600 mb-3">
-              Congratulations!
-            </h2>
-            <p className="text-gray-700 text-base mb-2">
-              You've earned
-            </p>
-            <p className="text-3xl font-bold text-green-600 mb-6">
-              ₹{earnedIncentive}
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              incentive! 🎊
-            </p>
-            <button
-              onClick={handleCloseSuccess}
-              className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              View My Report
-            </button>
-          </div>
-        </div>
-      )}
-      */}
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
@@ -610,6 +569,8 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 <span className="text-sm text-gray-900 font-medium">{secId}</span>
               </div>
 
+              {/* ... other code ... */}
+
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Date of Sale</span>
                 <span className="text-sm text-gray-900 font-medium">{dateOfSale || 'Not set'}</span>
@@ -626,6 +587,13 @@ export default function SecIncentiveForm({ initialSecId = '' }) {
                 <span className="text-sm text-gray-500">Device</span>
                 <span className="text-sm text-gray-900 font-medium text-right ml-4">
                   {devices.find(d => d.id === deviceId)?.ModelName || deviceId}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">Serial Number</span>
+                <span className="text-sm text-gray-900 font-medium text-right ml-4">
+                  {serialNumber}
                 </span>
               </div>
 
