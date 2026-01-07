@@ -289,7 +289,7 @@ export default function RoleLogin() {
 
           <div className="mt-6 text-center space-y-3">
             <p className="text-sm text-gray-600">
-              Are You Sec?{' '}
+              Are you canvasser?{' '}
               <Link
                 href="/login/canvasser"
                 className="text-blue-600 hover:underline font-medium"
