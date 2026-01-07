@@ -89,12 +89,7 @@ export default function ZopperAdministratorPage() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Link
-                  href="/Zopper-Administrator/monthly-incentive-report"
-                  className="rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-slate-950 shadow-md shadow-sky-900/60 transition-transform transition-colors hover:-translate-y-0.5 hover:bg-sky-400"
-                >
-                  View Today&apos;s Incentives
-                </Link>
+
                 <Link
                   href="/Zopper-Administrator/process-voucher-excel"
                   className="rounded-full border border-slate-500/60 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-slate-100 shadow-sm transition-transform transition-colors hover:-translate-y-0.5 hover:bg-slate-800"
@@ -134,13 +129,7 @@ export default function ZopperAdministratorPage() {
                   Track incentives and performance across your entire network.
                 </p>
                 <div className="space-y-3">
-                  <Link
-                    href="/Zopper-Administrator/monthly-incentive-report"
-                    className="flex items-center justify-between rounded-full bg-gradient-to-r from-sky-500 to-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm shadow-sky-900/60 transition-transform transition-shadow hover:-translate-y-0.5 hover:shadow-lg"
-                  >
-                    <span>Monthly Incentive Report</span>
-                    <span className="text-lg">→</span>
-                  </Link>
+
                   <Link
                     href="/Zopper-Administrator/spot-incentive-report"
                     className="flex items-center justify-between rounded-full bg-gradient-to-r from-indigo-500 to-violet-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm shadow-violet-900/60 transition-transform transition-shadow hover:-translate-y-0.5 hover:shadow-lg"
@@ -187,41 +176,7 @@ export default function ZopperAdministratorPage() {
                 </div>
               </div>
 
-              {/* Testing Section */}
-              <div className="group rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur-sm shadow-sm shadow-slate-950/70 transition-transform transition-shadow hover:-translate-y-1 hover:border-violet-400/60 hover:shadow-xl">
-                <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-white">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/20 text-lg">
-                    📝
-                  </span>
-                  <span>Testing</span>
-                </h2>
-                <p className="mb-3 text-xs text-slate-300">
-                  Manage tests, invites, and maintain your question bank.
-                </p>
-                <div className="space-y-3">
-                  <Link
-                    href="/Zopper-Administrator/test/results"
-                    className="flex items-center justify-between rounded-full bg-gradient-to-r from-indigo-500 to-sky-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm shadow-indigo-900/60 transition-transform transition-shadow hover:-translate-y-0.5 hover:shadow-lg"
-                  >
-                    <span>View Test Results</span>
-                    <span className="text-lg">→</span>
-                  </Link>
-                  <Link
-                    href="/Zopper-Administrator/test/invites"
-                    className="flex items-center justify-between rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm shadow-violet-900/60 transition-transform transition-shadow hover:-translate-y-0.5 hover:shadow-lg"
-                  >
-                    <span>Send Test Invites</span>
-                    <span className="text-lg">→</span>
-                  </Link>
-                  <Link
-                    href="/Zopper-Administrator/test/questions"
-                    className="flex items-center justify-between rounded-full bg-gradient-to-r from-purple-500 to-pink-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm shadow-purple-900/60 transition-transform transition-shadow hover:-translate-y-0.5 hover:shadow-lg"
-                  >
-                    <span>Insert Questions</span>
-                    <span className="text-lg">→</span>
-                  </Link>
-                </div>
-              </div>
+
 
               {/* Support Section */}
               <div className="group rounded-2xl border border-white/15 bg-white/5 p-6 backdrop-blur-sm shadow-sm shadow-slate-950/70 transition-transform transition-shadow hover:-translate-y-1 hover:border-rose-400/60 hover:shadow-xl">
@@ -264,13 +219,7 @@ export default function ZopperAdministratorPage() {
                     <span>Process Voucher Excel</span>
                     <span className="text-lg">→</span>
                   </Link>
-                  <Link
-                    href="/Zopper-Administrator/process-invalid-imeis"
-                    className="flex items-center justify-between rounded-full bg-gradient-to-r from-orange-500 to-red-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm shadow-orange-900/60 transition-transform transition-shadow hover:-translate-y-0.5 hover:shadow-lg"
-                  >
-                    <span>Process Invalid IMEIs</span>
-                    <span className="text-lg">→</span>
-                  </Link>
+
                 </div>
               </div>
 

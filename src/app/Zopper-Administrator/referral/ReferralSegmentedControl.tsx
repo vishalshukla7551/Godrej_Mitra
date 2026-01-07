@@ -36,7 +36,7 @@ export default function ReferralSegmentedControl() {
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
       const currentIndex = segments.findIndex(s => s.id === activeSegment);
-      const nextIndex = e.key === 'ArrowLeft' 
+      const nextIndex = e.key === 'ArrowLeft'
         ? (currentIndex - 1 + segments.length) % segments.length
         : (currentIndex + 1) % segments.length;
       handleSegmentClick(segments[nextIndex]);
@@ -58,8 +58,8 @@ export default function ReferralSegmentedControl() {
                   flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-medium
                   transition-all duration-200 ease-in-out flex-1
                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                  ${isActive 
-                    ? 'bg-blue-600 text-white shadow-md' 
+                  ${isActive
+                    ? 'bg-blue-600 text-white shadow-md'
                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
                   }
                 `}

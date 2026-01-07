@@ -13,15 +13,15 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get('limit') || '10');
-    
+
     // Get month and year from query params
     const now = new Date();
     const monthParam = searchParams.get('month');
     const yearParam = searchParams.get('year');
-    
+
     const month = monthParam ? parseInt(monthParam) - 1 : now.getMonth(); // 0-indexed
     const year = yearParam ? parseInt(yearParam) : now.getFullYear();
-    
+
     // Calculate date range for the selected month
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0, 23, 59, 59, 999); // Last day of month
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         storeId: true,
-        samsungSKUId: true,
+        godrejSKUId: true,
         planId: true,
       },
     });
@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
         success: true,
         data: {
           stores: [],
+          canvassers: [],
           devices: [],
           plans: [],
           month: month + 1,
@@ -59,17 +60,28 @@ export async function GET(req: NextRequest) {
     const salesReports = await prisma.spotIncentiveReport.findMany({
       where: {
         isCompaignActive: true,
-        Date_of_sale: { 
+        Date_of_sale: {
           gte: startDate,
           lte: endDate,
         },
       },
       include: {
         store: true,
-        samsungSKU: true,
+        secUser: true,
+        godrejSKU: true,
         plan: true,
       },
     });
+
+    // Helper to calculate EW counts
+    const calculateEWCounts = (planType: string, current: any) => {
+      switch (planType) {
+        case 'EXTENDED_WARRANTY_1_YR': current.ew1 += 1; break;
+        case 'EXTENDED_WARRANTY_2_YR': current.ew2 += 1; break;
+        case 'EXTENDED_WARRANTY_3_YR': current.ew3 += 1; break;
+        case 'EXTENDED_WARRANTY_4_YR': current.ew4 += 1; break;
+      }
+    };
 
     // Aggregate by store
     const storeMap = new Map<
@@ -80,10 +92,30 @@ export async function GET(req: NextRequest) {
         city: string | null;
         totalSales: number;
         totalIncentive: number;
+        ew1: number;
+        ew2: number;
+        ew3: number;
+        ew4: number;
       }
     >();
 
-    // Aggregate by device (Samsung SKU)
+    // Aggregate by Canvasser (SEC)
+    const secMap = new Map<
+      string,
+      {
+        secId: string;
+        canvasserName: string;
+        identifier: string; // Employee ID or Phone
+        totalSales: number;
+        totalIncentive: number;
+        ew1: number;
+        ew2: number;
+        ew3: number;
+        ew4: number;
+      }
+    >();
+
+    // Aggregate by device (Godrej SKU)
     const deviceMap = new Map<
       string,
       {
@@ -114,27 +146,51 @@ export async function GET(req: NextRequest) {
         const existing = storeMap.get(storeKey)!;
         existing.totalSales += 1;
         existing.totalIncentive += report.spotincentiveEarned;
+        calculateEWCounts(report.plan.planType, existing);
       } else {
-        storeMap.set(storeKey, {
+        const newStore = {
           storeId: report.store.id,
           storeName: report.store.name,
           city: report.store.city,
           totalSales: 1,
           totalIncentive: report.spotincentiveEarned,
-        });
+          ew1: 0, ew2: 0, ew3: 0, ew4: 0
+        };
+        calculateEWCounts(report.plan.planType, newStore);
+        storeMap.set(storeKey, newStore);
+      }
+
+      // SEC aggregation
+      const secKey = report.secId;
+      if (secMap.has(secKey)) {
+        const existing = secMap.get(secKey)!;
+        existing.totalSales += 1;
+        existing.totalIncentive += report.spotincentiveEarned;
+        calculateEWCounts(report.plan.planType, existing);
+      } else {
+        const newSec = {
+          secId: report.secUser.id,
+          canvasserName: report.secUser.fullName || 'Unknown',
+          identifier: report.secUser.employeeId || report.secUser.phone,
+          totalSales: 1,
+          totalIncentive: report.spotincentiveEarned,
+          ew1: 0, ew2: 0, ew3: 0, ew4: 0
+        };
+        calculateEWCounts(report.plan.planType, newSec);
+        secMap.set(secKey, newSec);
       }
 
       // Device aggregation
-      const deviceKey = report.samsungSKUId;
+      const deviceKey = report.godrejSKUId;
       if (deviceMap.has(deviceKey)) {
         const existing = deviceMap.get(deviceKey)!;
         existing.totalSales += 1;
         existing.totalIncentive += report.spotincentiveEarned;
       } else {
         deviceMap.set(deviceKey, {
-          deviceId: report.samsungSKU.id,
-          deviceName: report.samsungSKU.ModelName,
-          category: report.samsungSKU.Category,
+          deviceId: report.godrejSKU.id,
+          deviceName: report.godrejSKU.Category, // Fallback
+          category: report.godrejSKU.Category,
           totalSales: 1,
           totalIncentive: report.spotincentiveEarned,
         });
@@ -150,7 +206,7 @@ export async function GET(req: NextRequest) {
         planMap.set(planKey, {
           planId: report.plan.id,
           planType: report.plan.planType,
-          planPrice: report.plan.price,
+          planPrice: report.plan.PlanPrice,
           totalSales: 1,
           totalIncentive: report.spotincentiveEarned,
         });
@@ -165,6 +221,15 @@ export async function GET(req: NextRequest) {
         rank: index + 1,
         ...store,
         totalIncentive: store.totalIncentive > 0 ? `₹${store.totalIncentive.toLocaleString('en-IN')}` : '-',
+      }));
+
+    const topCanvassers = Array.from(secMap.values())
+      .sort((a, b) => b.totalSales - a.totalSales)
+      .slice(0, limit)
+      .map((sec, index) => ({
+        rank: index + 1,
+        ...sec,
+        totalIncentive: sec.totalIncentive > 0 ? `₹${sec.totalIncentive.toLocaleString('en-IN')}` : '-',
       }));
 
     const topDevices = Array.from(deviceMap.values())
@@ -190,6 +255,7 @@ export async function GET(req: NextRequest) {
       success: true,
       data: {
         stores: topStores,
+        canvassers: topCanvassers,
         devices: topDevices,
         plans: topPlans,
         month: month + 1,

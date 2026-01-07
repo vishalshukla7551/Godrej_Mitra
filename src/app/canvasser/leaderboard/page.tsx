@@ -386,6 +386,16 @@ export default function SalesChampionLeaderboardPage() {
                   )}
                 </div>
               </section>
+
+              {/* Keep Pushing Higher Animation */}
+              <div className="mt-8 mb-4 flex flex-col items-center justify-center space-y-2">
+                <div className="animate-bounce">
+                  <span className="text-4xl filter drop-shadow-lg transform -rotate-45">🚀</span>
+                </div>
+                <p className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-500 font-bold text-lg tracking-wider animate-pulse">
+                  Keep Pushing Higher!
+                </p>
+              </div>
             </>
           )}
         </div>

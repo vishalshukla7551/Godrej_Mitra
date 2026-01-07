@@ -87,12 +87,7 @@ export async function GET(req: NextRequest) {
           }
         },
         {
-          samsungSKU: {
-            ModelName: { contains: search, mode: 'insensitive' }
-          }
-        },
-        {
-          samsungSKU: {
+          godrejSKU: {
             Category: { contains: search, mode: 'insensitive' }
           }
         },
@@ -124,18 +119,17 @@ export async function GET(req: NextRequest) {
             city: true,
           }
         },
-        samsungSKU: {
+        godrejSKU: {
           select: {
             id: true,
             Category: true,
-            ModelName: true,
           }
         },
         plan: {
           select: {
             id: true,
             planType: true,
-            price: true,
+            PlanPrice: true,
           }
         }
       },
@@ -163,7 +157,7 @@ export async function GET(req: NextRequest) {
       createdAt: formatDate(report.createdAt),
       submittedAt: formatDate(report.Date_of_sale || report.createdAt),
       imei: report.imei,
-      planPrice: report.plan.price,
+      planPrice: report.plan.PlanPrice,
       incentiveEarned: report.spotincentiveEarned,
       isPaid: !!report.spotincentivepaidAt,
       paidAt: report.spotincentivepaidAt ? formatDate(report.spotincentivepaidAt) : null,
@@ -180,14 +174,14 @@ export async function GET(req: NextRequest) {
         city: report.store.city || 'Not Set'
       },
       samsungSKU: {
-        id: report.samsungSKU.id,
-        Category: report.samsungSKU.Category,
-        ModelName: report.samsungSKU.ModelName
+        id: report.godrejSKU.id,
+        Category: report.godrejSKU.Category,
+        ModelName: report.godrejSKU.Category // Fallback
       },
       plan: {
         id: report.plan.id,
         planType: report.plan.planType,
-        price: report.plan.price
+        price: report.plan.PlanPrice
       }
     }));
 
@@ -196,7 +190,7 @@ export async function GET(req: NextRequest) {
     const totalIncentivePaid = reports
       .filter((report: any) => report.spotincentivepaidAt)
       .reduce((sum: number, report: any) => sum + report.spotincentiveEarned, 0);
-    
+
     const uniqueStores = new Set(reports.map((report: any) => report.storeId));
     const uniqueSECs = new Set(reports.map((report: any) => report.secId));
 
@@ -257,7 +251,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Error in GET /api/zopper-admin/spot-incentive-report', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
