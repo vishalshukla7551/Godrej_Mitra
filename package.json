@@ -13,7 +13,9 @@
     "check-attach-rates": "tsx scripts/check-store-attach-rates.ts",
     "set-attach-rates": "tsx scripts/set-store-attach-rates.ts",
     "test-device-bonus": "tsx scripts/test-device-bonus-incentive.ts",
-    "send-daily-report": "tsx scripts/send-daily-combo-adld-report.ts"
+    "send-daily-report": "tsx scripts/send-daily-combo-adld-report.ts",
+    "load-stores": "tsx scripts/load-store-data.ts",
+    "verify-stores": "tsx scripts/verify-store-format.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
