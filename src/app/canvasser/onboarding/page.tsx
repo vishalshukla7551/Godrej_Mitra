@@ -223,7 +223,7 @@ export default function CanvasserOnboardingPage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
 
-            <button type="submit" disabled={submitting} className="flex-1 ml-4 h-12 bg-black text-white rounded-full font-semibold text-base flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed">{submitting ? 'Saving...' : 'Next'}</button>
+            <button type="submit" disabled={submitting} className="flex-1 ml-4 h-12 text-white rounded-full font-semibold text-base flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed" style={{ backgroundColor: '#5E1846' }}>{submitting ? 'Saving...' : 'Next'}</button>
           </div>
         </form>
       </main>
