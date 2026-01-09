@@ -44,6 +44,74 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
   const [loadingDevices, setLoadingDevices] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(false);
 
+  // Auto-fetch plans when invoice price changes
+  useEffect(() => {
+    // Don't fetch if required fields are missing
+    if (!invoicePrice || !deviceId) {
+      setPlans([]);
+      setPlanId('');
+      return;
+    }
+
+    // Validate invoice price is a number
+    const priceNum = parseFloat(invoicePrice);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      return;
+    }
+
+    // Debounce the API call
+    const timeoutId = setTimeout(async () => {
+      // Find category name from ID
+      const selectedDevice = devices.find(d => d.id === deviceId);
+      const categoryName = selectedDevice?.ModelName;
+
+      if (!categoryName) return;
+
+      try {
+        setLoadingPlans(true);
+        const res = await fetch('/api/canvasser/plans/fetch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            category: categoryName,
+            price: invoicePrice
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          const formattedPlans = data.plans.map(p => ({
+            id: p.id,
+            label: p.planType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
+            price: p.PlanPrice
+          }));
+
+          setPlans(formattedPlans);
+          setPlanId(''); // Reset selected plan
+
+          if (formattedPlans.length === 0) {
+            // Silently handle no plans - user will see empty dropdown
+            console.log('No plans found for this price range');
+          }
+        } else {
+          console.error('Error fetching plans:', data.error);
+          setPlans([]);
+          setPlanId('');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        setPlans([]);
+        setPlanId('');
+      } finally {
+        setLoadingPlans(false);
+      }
+    }, 800); // 800ms debounce
+
+    // Cleanup timeout on unmount or when dependencies change
+    return () => clearTimeout(timeoutId);
+  }, [invoicePrice, deviceId, devices]);
+
   // Load SEC phone and store from authUser in localStorage on mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -86,7 +154,7 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
       try {
         setLoadingStores(true);
         const response = await fetch('/api/canvasser/incentive-form/stores');
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch stores');
         }
@@ -307,13 +375,13 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
               <label htmlFor="storeId" className="block text-sm font-medium text-gray-700 mb-2">
                 Store Name
               </label>
-              
+
               {/* Fixed Store Display */}
               <div className="flex items-center gap-2 w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300">
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-gray-200 text-gray-600 text-xs">
                   🏬
                 </span>
-                
+
                 <div className="flex-1">
                   {loadingStores ? (
                     <span className="text-gray-500">Loading store...</span>
@@ -336,7 +404,7 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
                   </svg>
                 </div>
               </div>
-              
+
               {/* Helper text */}
               <div className="mt-2 flex items-center justify-between">
                 <p className="text-xs text-gray-500">
@@ -350,6 +418,7 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
                 </a>
               </div>
             </div>
+
 
             {/* Device Name */}
             <div>
@@ -442,72 +511,27 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
               <label htmlFor="invoicePrice" className="block text-sm font-medium text-gray-700 mb-2">
                 Appliance Invoice Price
               </label>
-              <div className="flex gap-2">
+              <div className="relative">
                 <input
                   type="text"
                   id="invoicePrice"
                   value={invoicePrice}
                   onChange={(e) => setInvoicePrice(e.target.value)}
                   placeholder="Enter Invoice Price"
-                  className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
                 />
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!invoicePrice || !deviceId) {
-                      alert('Please select a category and enter invoice price first');
-                      return;
-                    }
-
-                    // Find category name from ID
-                    const selectedDevice = devices.find(d => d.id === deviceId);
-                    const categoryName = selectedDevice?.ModelName;
-
-                    if (!categoryName) return;
-
-                    try {
-                      setLoadingPlans(true);
-                      const res = await fetch('/api/canvasser/plans/fetch', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          category: categoryName,
-                          price: invoicePrice
-                        })
-                      });
-
-                      const data = await res.json();
-
-                      if (res.ok) {
-                        const formattedPlans = data.plans.map(p => ({
-                          id: p.id,
-                          label: p.planType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-                          price: p.PlanPrice
-                        }));
-
-                        setPlans(formattedPlans);
-                        setPlanId(''); // Reset selected plan
-
-                        if (formattedPlans.length === 0) {
-                          alert('No plans found for this price range');
-                        }
-                      } else {
-                        console.error('Error fetching plans:', data.error);
-                        alert('Failed to fetch plans');
-                      }
-                    } catch (error) {
-                      console.error('Error:', error);
-                      alert('An error occurred while checking plans');
-                    } finally {
-                      setLoadingPlans(false);
-                    }
-                  }}
-                  disabled={loadingPlans}
-                  className="bg-black text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loadingPlans ? 'Checking...' : 'Check'}
-                </button>
+                {loadingPlans && (
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                    <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                )}
               </div>
+              <p className="mt-2 text-xs text-gray-500">
+                Plans will be automatically fetched based on the price
+              </p>
             </div>
 
             {/* Plan Type */}
