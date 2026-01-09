@@ -172,25 +172,6 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
     loadStores();
   }, []);
 
-<<<<<<< HEAD
-=======
-  // Filter stores based on search term
-  useEffect(() => {
-    if (!storeSearch.trim()) {
-      setFilteredStores(stores);
-      return;
-    }
-
-    const searchLower = storeSearch.toLowerCase();
-    const filtered = stores.filter(store =>
-      store.name.toLowerCase().includes(searchLower) ||
-      (store.city && store.city.toLowerCase().includes(searchLower))
-    );
-
-    setFilteredStores(filtered);
-  }, [stores, storeSearch]);
-
->>>>>>> ef6a09c (feat: Auto-fetch plans on invoice price entry)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -394,14 +375,13 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
               <label htmlFor="storeId" className="block text-sm font-medium text-gray-700 mb-2">
                 Store Name
               </label>
-<<<<<<< HEAD
-              
+
               {/* Fixed Store Display */}
               <div className="flex items-center gap-2 w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300">
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-gray-200 text-gray-600 text-xs">
                   🏬
                 </span>
-                
+
                 <div className="flex-1">
                   {loadingStores ? (
                     <span className="text-gray-500">Loading store...</span>
@@ -416,66 +396,6 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
                   ) : (
                     <span className="text-gray-500">No store assigned</span>
                   )}
-=======
-
-              {/* Store Dropdown */}
-              <div className="relative">
-                <div
-                  className={`
-                    flex items-center gap-2 w-full px-4 py-3 rounded-xl bg-white border transition-colors cursor-pointer
-                    ${isStoreDropdownOpen ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-300'}
-                    ${loadingStores ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-400'}
-                  `}
-                  onClick={() => {
-                    if (!loadingStores && stores.length > 0) {
-                      setIsStoreDropdownOpen(!isStoreDropdownOpen);
-                      if (!isStoreDropdownOpen) {
-                        setStoreSearch('');
-                      }
-                    }
-                  }}
-                >
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-gray-100 text-gray-700 text-xs">
-                    🏬
-                  </span>
-
-                  <div className="flex-1">
-                    {loadingStores ? (
-                      <span className="text-gray-500">Loading stores...</span>
-                    ) : storeId ? (
-                      <span className="text-gray-900">
-                        {(() => {
-                          const store = stores.find(s => s.id === storeId);
-                          if (!store) return 'Store not found';
-                          return `${store.name}${store.city ? ` - ${store.city}` : ''}`;
-                        })()}
-                      </span>
-                    ) : (
-                      <span className="text-gray-500">Select a store</span>
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="ml-2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!loadingStores && stores.length > 0) {
-                        setIsStoreDropdownOpen(!isStoreDropdownOpen);
-                      }
-                    }}
-                  >
-                    <svg
-                      className={`w-4 h-4 transform transition-transform ${isStoreDropdownOpen ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
->>>>>>> ef6a09c (feat: Auto-fetch plans on invoice price entry)
                 </div>
 
                 <div className="text-gray-400">
@@ -498,6 +418,7 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
                 </a>
               </div>
             </div>
+
 
             {/* Device Name */}
             <div>
