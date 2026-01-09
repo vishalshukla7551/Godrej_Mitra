@@ -206,6 +206,10 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
       alert('⚠️ Please enter the serial number');
       return;
     }
+    if (serialNumber.length < 16 || serialNumber.length > 18) {
+      alert('⚠️ Serial number must be 16-18 digits');
+      return;
+    }
 
     // Show confirmation modal instead of submitting directly
     setShowConfirmModal(true);
@@ -566,16 +570,40 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
             {/* Serial Number */}
             <div>
               <label htmlFor="serialNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                Serial Number
+                Serial Number <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 id="serialNumber"
                 value={serialNumber}
-                onChange={(e) => setSerialNumber(e.target.value.toUpperCase())}
-                placeholder="Enter Serial Number"
-                className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+                  setSerialNumber(value);
+                }}
+                placeholder="Enter 16-18 digit Serial Number"
+                maxLength={18}
+                className={`w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 ${serialNumber && (serialNumber.length < 16 || serialNumber.length > 18)
+                  ? 'focus:ring-red-500 border-red-300'
+                  : 'focus:ring-blue-500'
+                  } placeholder:text-gray-400`}
               />
+              <div className="mt-2 flex items-center justify-between">
+                <p className={`text-xs ${serialNumber.length >= 16 && serialNumber.length <= 18
+                  ? 'text-green-600'
+                  : serialNumber.length > 0
+                    ? 'text-red-600'
+                    : 'text-gray-500'
+                  }`}>
+                  {serialNumber.length > 0
+                    ? `${serialNumber.length} digits ${serialNumber.length >= 16 && serialNumber.length <= 18
+                      ? '✓ Valid'
+                      : serialNumber.length < 16
+                        ? `(${16 - serialNumber.length} more needed)`
+                        : '(Too long)'
+                    }`
+                    : 'Must be 16-18 digits'}
+                </p>
+              </div>
             </div>
 
             {/* Submit Button */}

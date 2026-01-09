@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { deviceId, planId, imei, dateOfSale, clientSecPhone, clientStoreId } = body;
+    const { deviceId, planId, imei, dateOfSale, clientSecPhone, clientStoreId, invoicePrice } = body;
 
     // Get SEC phone from authenticated user (server-side, cannot be manipulated)
     const secPhone = authUser.username;
@@ -80,6 +80,22 @@ export async function POST(req: NextRequest) {
     if (!deviceId || !planId || !imei) {
       return NextResponse.json(
         { error: 'All fields are required: deviceId, planId, serialNumber' },
+        { status: 400 }
+      );
+    }
+
+    // Validate Serial Number length (16-18 digits)
+    if (imei.length < 16 || imei.length > 18) {
+      return NextResponse.json(
+        { error: 'Serial Number must be 16-18 characters long' },
+        { status: 400 }
+      );
+    }
+
+    // Validate Serial Number format (alphanumeric only)
+    if (!/^[A-Z0-9]+$/i.test(imei)) {
+      return NextResponse.json(
+        { error: 'Serial Number must contain only letters and numbers' },
         { status: 400 }
       );
     }
@@ -193,7 +209,59 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check for active spot incentive campaign
+
+    // ========================================
+    // CALCULATE INCENTIVE FROM MR PRICE LIST
+    // ========================================
+
+    // Extract tenure from plan type (e.g., EXTENDED_WARRANTY_3_YR -> 3)
+    const planTypeStr = plan.planType.toString();
+    let tenure = 1;
+    if (planTypeStr.includes('1_YR')) tenure = 1;
+    else if (planTypeStr.includes('2_YR')) tenure = 2;
+    else if (planTypeStr.includes('3_YR')) tenure = 3;
+    else if (planTypeStr.includes('4_YR')) tenure = 4;
+
+    // Parse invoice price from body
+    const parsedInvoicePrice = parseInt(invoicePrice);
+
+    // Find matching MR incentive record
+    const incentiveRecord = await prisma.mRIncentive.findFirst({
+      where: {
+        category: device.Category,
+        minPrice: { lte: parsedInvoicePrice },
+        OR: [
+          { maxPrice: { gte: parsedInvoicePrice } },
+          { maxPrice: null } // For ranges like "70000+" with no upper limit
+        ]
+      }
+    });
+
+    let spotincentiveEarned = 0;
+
+    if (incentiveRecord) {
+      // Get incentive amount based on tenure
+      switch (tenure) {
+        case 1:
+          spotincentiveEarned = incentiveRecord.incentive1Year;
+          break;
+        case 2:
+          spotincentiveEarned = incentiveRecord.incentive2Year;
+          break;
+        case 3:
+          spotincentiveEarned = incentiveRecord.incentive3Year;
+          break;
+        case 4:
+          spotincentiveEarned = incentiveRecord.incentive4Year;
+          break;
+      }
+
+      console.log(`Incentive calculated: ${device.Category} @ ₹${parsedInvoicePrice} for ${tenure}Y = ₹${spotincentiveEarned}`);
+    } else {
+      console.warn(`No MR incentive found for ${device.Category} at price ₹${parsedInvoicePrice}`);
+    }
+
+    // Check for active spot incentive campaign (legacy - can be removed later if not needed)
     const now = new Date();
     const activeCampaign = await prisma.spotIncentiveCampaign.findFirst({
       where: {
@@ -206,18 +274,22 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Calculate spot incentive based on active campaign
-    let spotincentiveEarned = 0;
     const isCampaignActive = !!activeCampaign;
 
+    // If there's an active campaign, use the higher of the two incentives
     if (activeCampaign) {
+      let campaignIncentive = 0;
       if (activeCampaign.incentiveType === 'FIXED') {
-        spotincentiveEarned = Math.round(activeCampaign.incentiveValue);
+        campaignIncentive = Math.round(activeCampaign.incentiveValue);
       } else if (activeCampaign.incentiveType === 'PERCENTAGE') {
-        spotincentiveEarned = Math.round(plan.PlanPrice * (activeCampaign.incentiveValue / 100));
+        campaignIncentive = Math.round(plan.PlanPrice * (activeCampaign.incentiveValue / 100));
       }
+
+      // Use the higher incentive
+      spotincentiveEarned = Math.max(spotincentiveEarned, campaignIncentive);
+      console.log(`Campaign bonus applied: Final incentive = ₹${spotincentiveEarned}`);
     }
-    // If no active campaign, spotincentiveEarned remains 0
+
 
     // Use provided dateOfSale or default to now
     const saleDate = dateOfSale ? new Date(dateOfSale) : now;

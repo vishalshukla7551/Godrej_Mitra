@@ -3,11 +3,21 @@ import { prisma } from '@/lib/prisma';
 
 /**
  * GET /api/zopper-administrator/leaderboard
- * Same behavior as SEC leaderboard:
- * - Returns top stores, devices, plans for active spot incentive campaigns
- * - month query: number (1-12, optional - defaults to current month)
- * - year query: number (optional - defaults to current year)
- * - limit query: number (default: 10)
+ * Get leaderboard data showing:
+ * - Top performing stores (by total incentive earned)
+ * - Top performing canvassers (by total incentive earned)
+ * - Top performing devices (Godrej SKUs)
+ * - Top performing plans
+ * 
+ * Based on ALL sales reports with calculated MR incentives + campaign bonuses
+ * The spotincentiveEarned field contains incentives calculated from:
+ * - MR Price List (newer/yellow incentive plan)
+ * - Active campaign bonuses (if applicable)
+ * 
+ * Query params:
+ * - month: number (1-12, optional - defaults to current month)
+ * - year: number (optional - defaults to current year)
+ * - limit: number (default: 10)
  */
 export async function GET(req: NextRequest) {
   try {
@@ -26,50 +36,53 @@ export async function GET(req: NextRequest) {
     const startDate = new Date(year, month, 1);
     const endDate = new Date(year, month + 1, 0, 23, 59, 59, 999); // Last day of month
 
-    // Get all active campaigns
-    const activeCampaigns = await prisma.spotIncentiveCampaign.findMany({
+    // Get count of currently active campaigns for metadata only
+    const activeCampaignsCount = await prisma.spotIncentiveCampaign.count({
       where: {
         active: true,
         startDate: { lte: now },
         endDate: { gte: now },
       },
-      select: {
-        id: true,
-        storeId: true,
-        godrejSKUId: true,
-        planId: true,
-      },
     });
 
-    if (activeCampaigns.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          stores: [],
-          canvassers: [],
-          devices: [],
-          plans: [],
-          month: month + 1,
-          year,
-          activeCampaignsCount: 0,
-        },
-      });
-    }
-
-    // Get sales reports for active campaigns within the selected month
+    // Get ALL sales reports within the selected month
+    // This includes both MR incentive-based sales AND campaign sales
     const salesReports = await prisma.spotIncentiveReport.findMany({
       where: {
-        isCompaignActive: true,
         Date_of_sale: {
           gte: startDate,
           lte: endDate,
         },
       },
       include: {
-        store: true,
-        secUser: true,
-        godrejSKU: true,
-        plan: true,
+        store: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+          },
+        },
+        secUser: {
+          select: {
+            id: true,
+            fullName: true,
+            phone: true,
+            employeeId: true,
+          },
+        },
+        godrejSKU: {
+          select: {
+            id: true,
+            Category: true,
+          },
+        },
+        plan: {
+          select: {
+            id: true,
+            planType: true,
+            PlanPrice: true,
+          },
+        },
       },
     });
 
@@ -213,9 +226,9 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Convert to arrays and sort by total sales (descending)
+    // Convert to arrays and sort by total incentive earned (descending)
     const topStores = Array.from(storeMap.values())
-      .sort((a, b) => b.totalSales - a.totalSales)
+      .sort((a, b) => b.totalIncentive - a.totalIncentive)
       .slice(0, limit)
       .map((store, index) => ({
         rank: index + 1,
@@ -224,7 +237,7 @@ export async function GET(req: NextRequest) {
       }));
 
     const topCanvassers = Array.from(secMap.values())
-      .sort((a, b) => b.totalSales - a.totalSales)
+      .sort((a, b) => b.totalIncentive - a.totalIncentive)
       .slice(0, limit)
       .map((sec, index) => ({
         rank: index + 1,
@@ -233,7 +246,7 @@ export async function GET(req: NextRequest) {
       }));
 
     const topDevices = Array.from(deviceMap.values())
-      .sort((a, b) => b.totalSales - a.totalSales)
+      .sort((a, b) => b.totalIncentive - a.totalIncentive)
       .slice(0, limit)
       .map((device, index) => ({
         rank: index + 1,
@@ -242,7 +255,7 @@ export async function GET(req: NextRequest) {
       }));
 
     const topPlans = Array.from(planMap.values())
-      .sort((a, b) => b.totalSales - a.totalSales)
+      .sort((a, b) => b.totalIncentive - a.totalIncentive)
       .slice(0, limit)
       .map((plan, index) => ({
         rank: index + 1,
@@ -260,7 +273,7 @@ export async function GET(req: NextRequest) {
         plans: topPlans,
         month: month + 1,
         year,
-        activeCampaignsCount: activeCampaigns.length,
+        activeCampaignsCount: activeCampaignsCount,
         totalSalesReports: salesReports.length,
       },
     });

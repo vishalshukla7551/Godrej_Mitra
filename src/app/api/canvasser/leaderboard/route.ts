@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 /**
- * GET /api/leaderboard
- * Get leaderboard data for active campaigns showing:
- * - Top performing stores
- * - Top performing devices (Samsung SKUs)
+ * GET /api/canvasser/leaderboard
+ * Get leaderboard data showing:
+ * - Top performing stores (by total incentive earned)
+ * - Top performing canvassers (by total incentive earned)
+ * - Top performing devices (Godrej SKUs)
  * - Top performing plans
- * - Based on sales reports linked to active campaigns only
+ * 
+ * Based on ALL sales reports with calculated MR incentives + campaign bonuses
+ * The spotincentiveEarned field contains incentives calculated from:
+ * - MR Price List (newer/yellow incentive plan)
+ * - Active campaign bonuses (if applicable)
  * 
  * Query params:
  * - period: 'week' | 'month' | 'all' (default: 'month')
@@ -45,11 +50,11 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Get sales reports for active campaigns within the period
-    // Filter by isCompaignActive = true
+    // Get ALL sales reports within the period
+    // This includes both MR incentive-based sales AND campaign sales
+    // The spotincentiveEarned field contains the calculated incentive amount
     const salesReports: any = await prisma.spotIncentiveReport.findMany({
       where: {
-        isCompaignActive: true,
         Date_of_sale: { gte: startDate },
       },
       include: {
@@ -65,20 +70,20 @@ export async function GET(req: NextRequest) {
             id: true,
             fullName: true,
             phone: true,
+            employeeId: true,
           },
         },
-        godrejSKU: { // Fixed
+        godrejSKU: {
           select: {
             id: true,
             Category: true,
-            // ModelName removed
           },
         },
         plan: {
           select: {
             id: true,
             planType: true,
-            PlanPrice: true, // Fixed from price
+            PlanPrice: true,
           },
         },
       },
@@ -177,7 +182,7 @@ export async function GET(req: NextRequest) {
           canvasserMap.set(secKey, {
             secId: report.secUser.id,
             canvasserName: report.secUser.fullName || 'Unknown',
-            identifier: report.secUser.phone,
+            identifier: report.secUser.employeeId || report.secUser.phone,
             totalSales: 1,
             totalIncentive: report.spotincentiveEarned,
             ew1: isEW1 ? 1 : 0,
