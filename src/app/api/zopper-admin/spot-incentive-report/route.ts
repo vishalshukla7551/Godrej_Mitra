@@ -195,7 +195,7 @@ export async function GET(req: NextRequest) {
     const uniqueSECs = new Set(reports.map((report: any) => report.secId));
 
     // Get available filters data
-    const [stores, planTypes] = await Promise.all([
+    const [stores, planTypes, mrIncentives] = await Promise.all([
       prisma.store.findMany({
         select: {
           id: true,
@@ -214,6 +214,9 @@ export async function GET(req: NextRequest) {
         orderBy: {
           planType: 'asc'
         }
+      }),
+      prisma.mRIncentive.findMany({
+        orderBy: { category: 'asc' }
       })
     ]);
 
@@ -244,7 +247,8 @@ export async function GET(req: NextRequest) {
             city: store.city
           })),
           planTypes: planTypes.map(plan => plan.planType)
-        }
+        },
+        mrIncentives
       }
     });
 

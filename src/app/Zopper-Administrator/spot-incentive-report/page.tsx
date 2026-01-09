@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaDownload, FaSignOutAlt, FaSpinner } from 'react-icons/fa';
+import { FaDownload, FaSignOutAlt, FaSpinner, FaInfoCircle, FaTimes } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import { clientLogout } from '@/lib/clientLogout';
 
@@ -38,6 +38,18 @@ interface SpotIncentiveReport {
   };
 }
 
+interface MRIncentive {
+  id: string;
+  category: string;
+  priceRange: string;
+  minPrice: number;
+  maxPrice: number | null;
+  incentive1Year: number;
+  incentive2Year: number;
+  incentive3Year: number;
+  incentive4Year: number;
+}
+
 interface ApiResponse {
   success: boolean;
   data: {
@@ -62,6 +74,7 @@ interface ApiResponse {
       stores: Array<{ id: string; name: string; city: string }>;
       planTypes: string[];
     };
+    mrIncentives?: MRIncentive[];
   };
 }
 
@@ -99,6 +112,7 @@ export default function SpotIncentiveReport() {
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
   const [startDate, setStartDate] = useState('');
   const [page, setPage] = useState(1);
+  const [showIncentives, setShowIncentives] = useState(false);
   const pageSize = 50;
 
   // API state
@@ -202,6 +216,7 @@ export default function SpotIncentiveReport() {
   const pagination = data?.pagination || { page: 1, totalPages: 1, hasNext: false, hasPrev: false };
   const summary = data?.summary || { activeStores: 0, activeSECs: 0, totalReports: 0, totalIncentiveEarned: 0, totalIncentivePaid: 0 };
   const filters = data?.filters || { stores: [], planTypes: [] };
+  const mrIncentives = data?.mrIncentives || [];
 
   const exportExcel = () => {
     const exportData = reports.map(report => ({
@@ -250,6 +265,14 @@ export default function SpotIncentiveReport() {
                   <span className="h-2 w-2 rounded-full bg-emerald-400" />
                   Live
                 </span>
+
+                <button
+                  onClick={() => setShowIncentives(true)}
+                  className="ml-4 flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                >
+                  <FaInfoCircle />
+                  View Incentive Rules
+                </button>
               </div>
             </div>
           </div>
@@ -484,6 +507,58 @@ export default function SpotIncentiveReport() {
           )
         }
       </div >
+
+      {/* MR Incentive Rules Modal */}
+      {showIncentives && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-slate-900 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-slate-700 flex flex-col">
+            <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-slate-800">
+              <h3 className="text-xl font-bold text-white">Incentive Rules</h3>
+              <button
+                onClick={() => setShowIncentives(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
+
+            <div className="overflow-auto p-0 max-h-[calc(90vh-60px)]">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-800 sticky top-0">
+                  <tr>
+                    <th className="p-3 text-slate-300 font-semibold border-b border-slate-700">Category</th>
+                    <th className="p-3 text-slate-300 font-semibold border-b border-slate-700">Price Range</th>
+                    <th className="p-3 text-slate-300 font-semibold border-b border-slate-700">1 Year</th>
+                    <th className="p-3 text-slate-300 font-semibold border-b border-slate-700">2 Year</th>
+                    <th className="p-3 text-slate-300 font-semibold border-b border-slate-700">3 Year</th>
+                    <th className="p-3 text-slate-300 font-semibold border-b border-slate-700">4 Year</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {mrIncentives.length > 0 ? (
+                    mrIncentives.map((rule) => (
+                      <tr key={rule.id} className="hover:bg-slate-800/50">
+                        <td className="p-3 text-slate-300">{rule.category}</td>
+                        <td className="p-3 text-slate-400 font-mono text-xs">{rule.priceRange}</td>
+                        <td className="p-3 text-emerald-400 font-medium">₹{rule.incentive1Year}</td>
+                        <td className="p-3 text-emerald-400 font-medium">₹{rule.incentive2Year}</td>
+                        <td className="p-3 text-emerald-400 font-medium">₹{rule.incentive3Year}</td>
+                        <td className="p-3 text-emerald-400 font-medium">₹{rule.incentive4Year}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-slate-500">
+                        No incentive rules found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div >
   );
 }
