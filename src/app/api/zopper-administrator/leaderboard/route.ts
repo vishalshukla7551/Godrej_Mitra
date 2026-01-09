@@ -29,12 +29,22 @@ export async function GET(req: NextRequest) {
     const monthParam = searchParams.get('month');
     const yearParam = searchParams.get('year');
 
-    const month = monthParam ? parseInt(monthParam) - 1 : now.getMonth(); // 0-indexed
-    const year = yearParam ? parseInt(yearParam) : now.getFullYear();
+    let startDate: Date;
+    let endDate: Date;
 
-    // Calculate date range for the selected month
-    const startDate = new Date(year, month, 1);
-    const endDate = new Date(year, month + 1, 0, 23, 59, 59, 999); // Last day of month
+    if (monthParam && yearParam) {
+      // Specific month and year filtering
+      const month = parseInt(monthParam) - 1; // 0-indexed
+      const year = parseInt(yearParam);
+      startDate = new Date(year, month, 1);
+      endDate = new Date(year, month + 1, 0, 23, 59, 59, 999); // Last day of month
+    } else {
+      // Default to current month if no specific month/year provided
+      const month = now.getMonth();
+      const year = now.getFullYear();
+      startDate = new Date(year, month, 1);
+      endDate = new Date(year, month + 1, 0, 23, 59, 59, 999);
+    }
 
     // Get count of currently active campaigns for metadata only
     const activeCampaignsCount = await prisma.spotIncentiveCampaign.count({
@@ -271,8 +281,8 @@ export async function GET(req: NextRequest) {
         canvassers: topCanvassers,
         devices: topDevices,
         plans: topPlans,
-        month: month + 1,
-        year,
+        month: monthParam ? parseInt(monthParam) : now.getMonth() + 1,
+        year: yearParam ? parseInt(yearParam) : now.getFullYear(),
         activeCampaignsCount: activeCampaignsCount,
         totalSalesReports: salesReports.length,
       },

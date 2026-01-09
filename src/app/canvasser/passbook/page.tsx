@@ -6,9 +6,9 @@ import CanvasserFooter from '@/app/canvasser/CanvasserFooter';
 import { downloadReport } from './downloadReport';
 
 // Filter options
-const monthlyFilters = ['Today', 'Yesterday', 'All'] as const;
+const monthlyFilters = ['Today', 'Yesterday'] as const;
 
-type FilterType = (typeof monthlyFilters)[number];
+type FilterType = (typeof monthlyFilters)[number] | null;
 
 type MonthlySale = {
   date: string;
@@ -102,11 +102,31 @@ const formatMonthYear = (dateStr: string) => {
 };
 
 export default function IncentivePassbookPage() {
+  // Get current month and year for default selection
+  const currentDate = new Date();
+  const currentMonthName = currentDate.toLocaleDateString('en-IN', { month: 'long' });
+  const currentYearShort = currentDate.getFullYear().toString().slice(-2);
+  const currentMonthYear = `${currentMonthName} ${currentYearShort}`;
+
+  // Get current FY and generate FY options from current FY onwards
+  const getCurrentFY = () => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    
+    // If current month is April or later, we're in the FY that ends next year
+    // If current month is before April, we're in the FY that ends this year
+    const fyEndYear = currentMonth >= 3 ? currentYear + 1 : currentYear;
+    return `FY-${fyEndYear.toString().slice(-2)}`;
+  };
+
+  const currentFY = getCurrentFY();
+
   const [activeTab, setActiveTab] = useState<'monthly' | 'spot'>('spot');
-  const [activeFilter, setActiveFilter] = useState<FilterType>('All');
+  const [activeFilter, setActiveFilter] = useState<FilterType | null>(null);
   const [search, setSearch] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState<string>('All');
-  const [selectedFY, setSelectedFY] = useState<string>('FY-25');
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthYear);
+  const [selectedFY, setSelectedFY] = useState<string>(currentFY);
   const [sortAsc, setSortAsc] = useState<boolean>(false);
 
   // API data state
@@ -184,25 +204,42 @@ export default function IncentivePassbookPage() {
     ? []
     : (spotIncentiveData?.salesSummary || []);
 
-  // Get unique months from sales summary
-  const allMonths = Array.from(
-    new Set(salesSummaryData.filter(r => r && r.date).map((r) => formatMonthYear(r.date)))
-  );
+  // Generate all months from current year onwards (next 3 years)
+  const generateAllMonths = () => {
+    const months = ['All Months'];
+    const currentYear = currentDate.getFullYear();
+    
+    for (let year = currentYear; year <= currentYear + 2; year++) {
+      const yearShort = year.toString().slice(-2);
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      
+      monthNames.forEach(monthName => {
+        months.push(`${monthName} ${yearShort}`);
+      });
+    }
+    
+    return months;
+  };
 
-  // Get unique months from spot incentive sales summary
-  const spotSalesSummaryData = spotIncentiveData?.salesSummary || [];
-  const allSpotMonths: string[] = Array.from(
-    new Set(spotSalesSummaryData.map((r: any) => formatMonthYear(r.date)))
-  );
+  const allMonths = generateAllMonths();
 
-  // Get available FYs from API data or default
-  const allFYs = spotIncentiveData?.fyStats
-    ? Object.keys(spotIncentiveData.fyStats)
-    : ['FY-25', 'FY-24', 'FY-23', 'FY-22', 'FY-21'];
+  const currentFYNumber = parseInt(currentFY.split('-')[1]);
+  
+  // Generate FY options from current FY onwards (next 5 years)
+  const allFYs = [];
+  for (let i = 0; i < 5; i++) {
+    const fyNumber = currentFYNumber + i;
+    allFYs.push(`FY-${fyNumber.toString().padStart(2, '0')}`);
+  }
 
   const filteredMonthlySales = salesSummaryData
     .filter((row) => {
       const d = parseDate(row.date);
+      
+      // Apply date filter (Today/Yesterday) if selected
       if (activeFilter === 'Today') {
         return (
           d.getDate() === today.getDate() &&
@@ -217,14 +254,17 @@ export default function IncentivePassbookPage() {
           d.getFullYear() === yesterday.getFullYear()
         );
       }
+      
+      // If no date filter is selected, show all data for the selected month
       return true;
     })
     .filter((row) =>
-      selectedMonth === 'All' ? true : formatMonthYear(row.date) === selectedMonth
+      selectedMonth === 'All Months' ? true : formatMonthYear(row.date) === selectedMonth
     )
     .filter((row) => {
       if (!search.trim()) return true;
       const term = search.toLowerCase();
+      // Allow searching by date (DD-MM-YYYY format)
       return row.date.toLowerCase().includes(term);
     })
     .sort((a, b) => {
@@ -330,15 +370,25 @@ export default function IncentivePassbookPage() {
               <button
                 key={filter}
                 type="button"
-                onClick={() => setActiveFilter(filter)}
+                onClick={() => setActiveFilter(activeFilter === filter ? null : filter)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium border ${activeFilter === filter
                   ? 'bg-black text-white border-black'
-                  : 'bg-white text-gray-700 border-gray-200'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
                   }`}
               >
                 {filter}
               </button>
             ))}
+            {activeFilter && (
+              <button
+                type="button"
+                onClick={() => setActiveFilter(null)}
+                className="px-2 py-1.5 rounded-full text-xs font-medium text-gray-500 hover:text-gray-700"
+                title="Clear filter"
+              >
+                ✕ Clear
+              </button>
+            )}
           </div>
 
           {/* Search bar */}
@@ -361,12 +411,15 @@ export default function IncentivePassbookPage() {
               </div>
               <input
                 type="text"
-                placeholder="Search (e.g., 15-10-2025)"
+                placeholder="Search by date (e.g., 15-01-2026 or 15-01)"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-300"
               />
             </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Search for specific dates in DD-MM-YYYY format (e.g., 15-01-2026) or partial dates (e.g., 15-01)
+            </p>
           </div>
 
           {/* Sort & Download buttons */}
@@ -402,13 +455,15 @@ export default function IncentivePassbookPage() {
           <SpotIncentiveSection
             rows={spotIncentiveData?.salesSummary || []}
             transactions={spotTransactions}
-            allMonths={allSpotMonths}
+            allMonths={allMonths}
             selectedMonth={selectedMonth}
             setSelectedMonth={setSelectedMonth}
             selectedFY={selectedFY}
             setSelectedFY={setSelectedFY}
             allFYs={allFYs}
             spotIncentiveData={spotIncentiveData}
+            activeFilter={activeFilter}
+            search={search}
           />
 
 
@@ -759,12 +814,12 @@ function MonthlyIncentiveSection({
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-gray-600">Month</span>
             <select
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white focus:outline-none focus:border-gray-300"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
             >
-              <option value="All">All Months</option>
-              {allMonths.map((m) => (
+              <option value="All Months">All Months</option>
+              {allMonths.slice(1).map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>
@@ -921,6 +976,8 @@ function SpotIncentiveSection({
   setSelectedFY,
   allFYs,
   spotIncentiveData,
+  activeFilter,
+  search,
 }: {
   rows: MonthlySale[];
   transactions: SpotVoucher[];
@@ -931,6 +988,8 @@ function SpotIncentiveSection({
   setSelectedFY: (fy: string) => void;
   allFYs: string[];
   spotIncentiveData: any;
+  activeFilter: FilterType;
+  search: string;
 }) {
   // Helper function to check if a date falls within a financial year
   const isDateInFY = (dateStr: string, fy: string) => {
@@ -952,6 +1011,33 @@ function SpotIncentiveSection({
     }
   };
 
+  // Helper functions for date parsing and formatting
+  const parseDate = (ddmmyyyy: string) => {
+    try {
+      const [dd, mm, yyyy] = ddmmyyyy.split('-').map(Number);
+      const date = new Date(yyyy || new Date().getFullYear(), (mm || 1) - 1, dd || 1);
+      if (isNaN(date.getTime())) {
+        return new Date();
+      }
+      return date;
+    } catch (error) {
+      console.warn('Invalid date format:', ddmmyyyy);
+      return new Date();
+    }
+  };
+
+  const formatMonthYear = (dateStr: string) => {
+    try {
+      const d = parseDate(dateStr);
+      const monthName = d.toLocaleDateString('en-IN', { month: 'long' });
+      const yearShort = d.getFullYear().toString().slice(-2);
+      return `${monthName} ${yearShort}`;
+    } catch (error) {
+      console.warn('Error formatting date:', dateStr);
+      return 'Invalid Date';
+    }
+  };
+
   // Get all available sales data and transactions
   const allSalesData = rows || []; // Use the rows prop passed to component
   const allTransactions = transactions || [];
@@ -963,6 +1049,67 @@ function SpotIncentiveSection({
 
   let filteredTransactions = allTransactions.filter((txn: any) => {
     return isDateInFY(txn.date, selectedFY);
+  });
+
+  // Apply additional filters (Today/Yesterday and search)
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  filteredSalesData = filteredSalesData.filter((row: any) => {
+    const d = parseDate(row.date);
+    
+    // Apply date filter (Today/Yesterday) if selected
+    if (activeFilter === 'Today') {
+      return (
+        d.getDate() === today.getDate() &&
+        d.getMonth() === today.getMonth() &&
+        d.getFullYear() === today.getFullYear()
+      );
+    }
+    if (activeFilter === 'Yesterday') {
+      return (
+        d.getDate() === yesterday.getDate() &&
+        d.getMonth() === yesterday.getMonth() &&
+        d.getFullYear() === yesterday.getFullYear()
+      );
+    }
+    
+    return true;
+  }).filter((row: any) =>
+    selectedMonth === 'All Months' ? true : formatMonthYear(row.date) === selectedMonth
+  ).filter((row: any) => {
+    if (!search.trim()) return true;
+    const term = search.toLowerCase();
+    return row.date.toLowerCase().includes(term);
+  });
+
+  filteredTransactions = filteredTransactions.filter((txn: any) => {
+    const d = parseDate(txn.date);
+    
+    // Apply date filter (Today/Yesterday) if selected
+    if (activeFilter === 'Today') {
+      return (
+        d.getDate() === today.getDate() &&
+        d.getMonth() === today.getMonth() &&
+        d.getFullYear() === today.getFullYear()
+      );
+    }
+    if (activeFilter === 'Yesterday') {
+      return (
+        d.getDate() === yesterday.getDate() &&
+        d.getMonth() === yesterday.getMonth() &&
+        d.getFullYear() === yesterday.getFullYear()
+      );
+    }
+    
+    return true;
+  }).filter((txn: any) =>
+    selectedMonth === 'All Months' ? true : formatMonthYear(txn.date) === selectedMonth
+  ).filter((txn: any) => {
+    if (!search.trim()) return true;
+    const term = search.toLowerCase();
+    return txn.date.toLowerCase().includes(term);
   });
 
   // Fallback: if no data for selected FY, show all data
@@ -999,12 +1146,12 @@ function SpotIncentiveSection({
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-gray-600">Month</span>
             <select
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white focus:outline-none focus:border-gray-300"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
             >
-              <option value="All">All Months</option>
-              {allMonths.map((m) => (
+              <option value="All Months">All Months</option>
+              {allMonths.slice(1).map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>
@@ -1068,7 +1215,7 @@ function SpotIncentiveSection({
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-gray-600">Financial Year</span>
             <select
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white"
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700 bg-white focus:outline-none focus:border-gray-300"
               value={selectedFY}
               onChange={(e) => setSelectedFY(e.target.value)}
             >

@@ -16,6 +16,8 @@ import { prisma } from '@/lib/prisma';
  * 
  * Query params:
  * - period: 'week' | 'month' | 'all' (default: 'month')
+ * - month: number (1-12, optional - for specific month filtering)
+ * - year: number (optional - for specific year filtering)
  * - limit: number (default: 10)
  */
 export async function GET(req: NextRequest) {
@@ -23,22 +25,37 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const period = searchParams.get('period') || 'month';
     const limit = parseInt(searchParams.get('limit') || '10');
+    const monthParam = searchParams.get('month');
+    const yearParam = searchParams.get('year');
 
-    // Calculate date range based on period
+    // Calculate date range based on period and specific month/year if provided
     const now = new Date();
     let startDate: Date;
+    let endDate: Date;
 
-    switch (period) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case 'all':
-      default:
-        startDate = new Date(0); // Beginning of time
-        break;
+    if (monthParam && yearParam) {
+      // Specific month and year filtering
+      const month = parseInt(monthParam) - 1; // 0-indexed
+      const year = parseInt(yearParam);
+      startDate = new Date(year, month, 1);
+      endDate = new Date(year, month + 1, 0, 23, 59, 59, 999); // Last day of month
+    } else {
+      // Default period-based filtering
+      switch (period) {
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          endDate = now;
+          break;
+        case 'month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          endDate = now;
+          break;
+        case 'all':
+        default:
+          startDate = new Date(0); // Beginning of time
+          endDate = now;
+          break;
+      }
     }
 
     // Get count of currently active campaigns for metadata only
@@ -50,12 +67,15 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Get ALL sales reports within the period
+    // Get ALL sales reports within the date range
     // This includes both MR incentive-based sales AND campaign sales
     // The spotincentiveEarned field contains the calculated incentive amount
     const salesReports: any = await prisma.spotIncentiveReport.findMany({
       where: {
-        Date_of_sale: { gte: startDate },
+        Date_of_sale: { 
+          gte: startDate,
+          lte: endDate
+        },
       },
       include: {
         store: {

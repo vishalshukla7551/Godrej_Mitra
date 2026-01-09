@@ -18,8 +18,31 @@ const MONTHS = [
     'December',
 ] as const;
 
-const CURRENT_YEAR_SHORT = new Date().getFullYear().toString().slice(-2);
-const MONTH_OPTIONS = MONTHS.map((month) => `${month} ${CURRENT_YEAR_SHORT}`);
+// Generate month options from current year onwards (next 3 years)
+const generateMonthOptions = () => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const options = ['All Months'];
+    
+    for (let year = currentYear; year <= currentYear + 2; year++) {
+        const yearShort = year.toString().slice(-2);
+        MONTHS.forEach(month => {
+            options.push(`${month} ${yearShort}`);
+        });
+    }
+    
+    return options;
+};
+
+const MONTH_OPTIONS = generateMonthOptions();
+
+// Get current month as default
+const getCurrentMonth = () => {
+    const now = new Date();
+    const monthName = now.toLocaleDateString('en-US', { month: 'long' });
+    const yearShort = now.getFullYear().toString().slice(-2);
+    return `${monthName} ${yearShort}`;
+};
 
 interface LeaderboardEntry {
     rank: number;
@@ -53,16 +76,27 @@ export default function LeaderboardPage() {
     const [data, setData] = useState<LeaderboardData | null>(null);
     const [activeTab, setActiveTab] = useState<'store' | 'sec'>('store');
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedMonth, setSelectedMonth] = useState<string>(
-        MONTH_OPTIONS[new Date().getMonth()] ?? `November ${CURRENT_YEAR_SHORT}`,
-    );
+    const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
     const [error, setError] = useState<string | null>(null);
 
     const fetchLeaderboard = async () => {
         try {
             setIsLoading(true);
             setError(null);
-            const res = await fetch('/api/zopper-administrator/leaderboard?limit=20');
+            
+            // Parse month and year from selectedMonth if not "All Months"
+            let queryParams = '?limit=20';
+            if (selectedMonth !== 'All Months') {
+                const [monthName, yearShort] = selectedMonth.split(' ');
+                const monthIndex = MONTHS.indexOf(monthName as any);
+                const year = 2000 + parseInt(yearShort);
+                
+                if (monthIndex !== -1 && !isNaN(year)) {
+                    queryParams += `&month=${monthIndex + 1}&year=${year}`;
+                }
+            }
+            
+            const res = await fetch(`/api/zopper-administrator/leaderboard${queryParams}`);
             const json = await res.json();
             if (json.success) {
                 setData(json.data);
@@ -79,7 +113,7 @@ export default function LeaderboardPage() {
 
     useEffect(() => {
         fetchLeaderboard();
-    }, []);
+    }, [selectedMonth]); // Re-fetch when month changes
 
     if (loading) return null;
 
@@ -105,6 +139,19 @@ export default function LeaderboardPage() {
 
     return (
         <div className="h-screen bg-[#020617] flex flex-col overflow-hidden">
+            <style jsx global>{`
+              select:focus {
+                outline: none !important;
+                border: none !important;
+                box-shadow: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                appearance: none !important;
+              }
+              select::-ms-expand {
+                display: none;
+              }
+            `}</style>
             <main className="flex-1 overflow-y-auto pb-32">
                 <div className="px-4 pt-4 pb-6">
                     {/* Top bar */}
@@ -164,7 +211,13 @@ export default function LeaderboardPage() {
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white text-sm mb-3">
                             <span className="text-xs uppercase tracking-wide text-gray-300">Month</span>
                             <select
-                                className="bg-transparent text-white text-sm outline-none border-none pr-4 cursor-pointer"
+                                className="bg-transparent text-white text-sm outline-none border-none pr-4 cursor-pointer focus:outline-none focus:ring-0 focus:border-none"
+                                style={{ 
+                                  boxShadow: 'none',
+                                  WebkitAppearance: 'none',
+                                  MozAppearance: 'none',
+                                  appearance: 'none'
+                                }}
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
                             >
