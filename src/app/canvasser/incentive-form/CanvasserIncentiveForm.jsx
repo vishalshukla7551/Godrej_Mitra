@@ -34,10 +34,10 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
   const [devices, setDevices] = useState([
     { id: 'REF', Category: 'Home', ModelName: 'Refrigerator' },
     { id: 'WM', Category: 'Home', ModelName: 'Washing Machine' },
+    { id: 'AC', Category: 'Home', ModelName: 'Air Cooler' },
     { id: 'MW', Category: 'Home', ModelName: 'Microwave Oven' },
     { id: 'DW', Category: 'Home', ModelName: 'Dishwasher' },
     { id: 'CF', Category: 'Home', ModelName: 'Chest Freezer' },
-    { id: 'QB', Category: 'Home', ModelName: 'Qube' },
   ]);
   const [plans, setPlans] = useState([]);
   const [loadingStores, setLoadingStores] = useState(true);
@@ -170,6 +170,38 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
     };
 
     loadStores();
+  }, []);
+
+  // Load devices from API
+  useEffect(() => {
+    const loadDevices = async () => {
+      try {
+        setLoadingDevices(true);
+        const response = await fetch('/api/canvasser/devices');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch devices');
+        }
+
+        const data = await response.json();
+        if (data.success && data.devices) {
+          // Map database devices to the format expected by the form
+          const formattedDevices = data.devices.map(device => ({
+            id: device.id,
+            Category: device.Category,
+            ModelName: device.Category // Use Category as ModelName for display
+          }));
+          setDevices(formattedDevices);
+        }
+      } catch (error) {
+        console.error('Error loading devices:', error);
+        // Keep hardcoded fallback if API fails
+      } finally {
+        setLoadingDevices(false);
+      }
+    };
+
+    loadDevices();
   }, []);
 
   const handleSubmit = async (e) => {

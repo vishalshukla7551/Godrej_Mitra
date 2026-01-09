@@ -151,11 +151,10 @@ export async function POST(req: NextRequest) {
       const categoryMap: Record<string, string> = {
         'REF': 'Refrigerator',
         'WM': 'Washing Machine',
-        'AC': 'Air Conditioner',
+        'AC': 'Air Cooler',
         'MW': 'Microwave Oven',
         'DW': 'Dishwasher',
-        'CF': 'Chest Freezer',
-        'QB': 'Qube'
+        'CF': 'Chest Freezer'
       };
 
       const categoryName = categoryMap[deviceId] || deviceId; // Fallback to using deviceId as category
@@ -176,6 +175,14 @@ export async function POST(req: NextRequest) {
     // Verify plan exists and get price
     const plan = await prisma.plan.findUnique({
       where: { id: planId },
+      select: {
+        id: true,
+        planType: true,
+        priceRange: true,
+        PlanPrice: true,
+        incentiveAmount: true,
+        godrejSKUId: true
+      }
     });
 
     if (!plan) {
@@ -214,54 +221,14 @@ export async function POST(req: NextRequest) {
     // CALCULATE INCENTIVE FROM MR PRICE LIST
     // ========================================
 
-    // Extract tenure from plan type (e.g., EXTENDED_WARRANTY_3_YR -> 3)
-    const planTypeStr = plan.planType.toString();
-    let tenure = 1;
-    if (planTypeStr.includes('1_YR')) tenure = 1;
-    else if (planTypeStr.includes('2_YR')) tenure = 2;
-    else if (planTypeStr.includes('3_YR')) tenure = 3;
-    else if (planTypeStr.includes('4_YR')) tenure = 4;
 
-    // Parse invoice price from body
-    const parsedInvoicePrice = parseInt(invoicePrice);
+    // Get incentive directly from plan (already contains MR Price List amount)
+    let spotincentiveEarned = plan.incentiveAmount || 0;
 
-    // Find matching MR incentive record
-    const incentiveRecord = await prisma.mRIncentive.findFirst({
-      where: {
-        category: device.Category,
-        minPrice: { lte: parsedInvoicePrice },
-        OR: [
-          { maxPrice: { gte: parsedInvoicePrice } },
-          { maxPrice: null } // For ranges like "70000+" with no upper limit
-        ]
-      }
-    });
 
-    let spotincentiveEarned = 0;
+    console.log(`Base Incentive: ${device.Category} | ${plan.priceRange} | ${plan.planType} = ₹${spotincentiveEarned}`);
 
-    if (incentiveRecord) {
-      // Get incentive amount based on tenure
-      switch (tenure) {
-        case 1:
-          spotincentiveEarned = incentiveRecord.incentive1Year;
-          break;
-        case 2:
-          spotincentiveEarned = incentiveRecord.incentive2Year;
-          break;
-        case 3:
-          spotincentiveEarned = incentiveRecord.incentive3Year;
-          break;
-        case 4:
-          spotincentiveEarned = incentiveRecord.incentive4Year;
-          break;
-      }
-
-      console.log(`Incentive calculated: ${device.Category} @ ₹${parsedInvoicePrice} for ${tenure}Y = ₹${spotincentiveEarned}`);
-    } else {
-      console.warn(`No MR incentive found for ${device.Category} at price ₹${parsedInvoicePrice}`);
-    }
-
-    // Check for active spot incentive campaign (legacy - can be removed later if not needed)
+    // Check for active campaign (adds bonus on top of base incentive)
     const now = new Date();
     const activeCampaign = await prisma.spotIncentiveCampaign.findFirst({
       where: {
@@ -285,9 +252,9 @@ export async function POST(req: NextRequest) {
         campaignIncentive = Math.round(plan.PlanPrice * (activeCampaign.incentiveValue / 100));
       }
 
-      // Use the higher incentive
-      spotincentiveEarned = Math.max(spotincentiveEarned, campaignIncentive);
-      console.log(`Campaign bonus applied: Final incentive = ₹${spotincentiveEarned}`);
+      // Add campaign bonus to base incentive
+      spotincentiveEarned += campaignIncentive;
+      console.log(`Campaign bonus: +₹${campaignIncentive} → Total: ₹${spotincentiveEarned}`);
     }
 
 

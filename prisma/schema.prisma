@@ -76,6 +76,7 @@ model Plan {
   planType               PlanType
   priceRange              String
   PlanPrice              Int
+  incentiveAmount        Int                     @default(0) // MR Incentive amount for this plan
   GodrejSKU              GodrejSKU?             @relation(fields: [godrejSKUId], references: [id])
   godrejSKUId            String?                 @db.ObjectId
 
@@ -366,32 +367,6 @@ model PriceIncentiveSlab {
   updatedAt       DateTime @updatedAt
 
   @@index([minPrice, maxPrice])
-}
-model MRIncentive {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  
-  // Appliance category (e.g., "Refrigerator", "Washing Machine", "AC", etc.)
-  category        String
-  
-  // Price range in the format "5000-15000", "15001-20000", etc.
-  priceRange      String
-  
-  // Minimum and maximum prices for easier querying
-  minPrice        Int      // Inclusive
-  maxPrice        Int?     // Exclusive (null means no upper limit, e.g., "70000+")
-  
-  // Incentive amounts for each warranty tenure (NEW/YELLOW plan from Excel)
-  incentive1Year  Int      // Incentive for 1-year warranty
-  incentive2Year  Int      // Incentive for 2-year warranty
-  incentive3Year  Int      // Incentive for 3-year warranty
-  incentive4Year  Int      // Incentive for 4-year warranty
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Composite index for fast lookup by category and price
-  @@index([category, minPrice, maxPrice])
-  @@map("MRIncentive")
 }
 
 model TestSubmission {

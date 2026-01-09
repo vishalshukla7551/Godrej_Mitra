@@ -195,7 +195,7 @@ export async function GET(req: NextRequest) {
     const uniqueSECs = new Set(reports.map((report: any) => report.secId));
 
     // Get available filters data
-    const [stores, planTypes, mrIncentives] = await Promise.all([
+    const [stores, planTypes] = await Promise.all([
       prisma.store.findMany({
         select: {
           id: true,
@@ -214,11 +214,62 @@ export async function GET(req: NextRequest) {
         orderBy: {
           planType: 'asc'
         }
-      }),
-      prisma.mRIncentive.findMany({
-        orderBy: { category: 'asc' }
       })
     ]);
+
+    // Reconstruct Incentive Rules from Plans
+    // Fetch all plans with their categories
+    const allPlans = await prisma.plan.findMany({
+      include: {
+        GodrejSKU: {
+          select: { Category: true }
+        }
+      }
+    });
+
+    // Group by Category + Price Range
+    const rulesMap = new Map<string, any>();
+
+    allPlans.forEach(plan => {
+      const category = plan.GodrejSKU?.Category;
+      const priceRange = plan.priceRange;
+
+      if (category && priceRange) {
+        const key = `${category}-${priceRange}`;
+
+        if (!rulesMap.has(key)) {
+          rulesMap.set(key, {
+            id: key,
+            category,
+            priceRange,
+            minPrice: 0, // Not strictly needed for display
+            maxPrice: 0,
+            incentive1Year: 0,
+            incentive2Year: 0,
+            incentive3Year: 0,
+            incentive4Year: 0
+          });
+        }
+
+        const rule = rulesMap.get(key);
+        const incentive = (plan as any).incentiveAmount || 0;
+        const type = plan.planType.toString();
+
+        if (type.includes('1_YR')) rule.incentive1Year = incentive;
+        else if (type.includes('2_YR')) rule.incentive2Year = incentive;
+        else if (type.includes('3_YR')) rule.incentive3Year = incentive;
+        else if (type.includes('4_YR')) rule.incentive4Year = incentive;
+      }
+    });
+
+    // Convert map to array and sort
+    const mrIncentives = Array.from(rulesMap.values()).sort((a, b) => {
+      if (a.category !== b.category) return a.category.localeCompare(b.category);
+      // Try to sort by price range numerically if possible
+      const priceA = parseInt(a.priceRange.split('-')[0]) || 0;
+      const priceB = parseInt(b.priceRange.split('-')[0]) || 0;
+      return priceA - priceB;
+    });
 
     return NextResponse.json({
       success: true,

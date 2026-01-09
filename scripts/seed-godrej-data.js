@@ -30,10 +30,6 @@ const categories = [
     {
         name: 'Microwave Oven',
         subCategories: ['All']
-    },
-    {
-        name: 'Qube',
-        subCategories: ['All']
     }
 ];
 
