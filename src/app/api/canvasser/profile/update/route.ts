@@ -10,8 +10,6 @@ import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
-    const agencyName: string | null | undefined = body?.agencyName;
-    const agentCode: string | null | undefined = body?.agentCode;
 
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
@@ -33,15 +31,6 @@ export async function POST(req: NextRequest) {
     const updateData: any = {
       updatedAt: new Date(),
     };
-
-    // Only update fields if provided
-    if (agencyName !== undefined) {
-      updateData.AgencyName = agencyName || null;
-    }
-
-    if (agentCode !== undefined) {
-      updateData.AgentCode = agentCode || null;
-    }
 
     const secRecord = await prisma.sEC.update({
       where: { phone },
@@ -73,8 +62,6 @@ export async function POST(req: NextRequest) {
       id: updatedRecord.id,
       phone: updatedRecord.phone,
       fullName: updatedRecord.fullName,
-      AgencyName: updatedRecord.AgencyName,
-      AgentCode: updatedRecord.AgentCode,
       storeId: updatedRecord.storeId,
       store: storeDetails,
     });

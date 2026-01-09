@@ -31,7 +31,7 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [storeName, setStoreName] = useState('');
-  const [agencyName, setAgencyName] = useState('');
+
   const [submittingPersonalInfo, setSubmittingPersonalInfo] = useState(false);
   const [personalInfoError, setPersonalInfoError] = useState<string | null>(null);
   const [showStoreChangeBanner, setShowStoreChangeBanner] = useState(false);
@@ -94,12 +94,9 @@ export default function ProfilePage() {
       const fullNameFromAuth = (auth?.fullName || '').trim();
       const phoneFromAuth = (auth?.username || auth?.phone || '').trim();
       const storeNameFromAuth = auth?.store?.name || '';
-      const agencyNameFromAuth = (auth?.AgencyName || '').trim();
-
       if (fullNameFromAuth) setFullName(fullNameFromAuth);
       if (phoneFromAuth) setPhoneNumber(phoneFromAuth);
       if (storeNameFromAuth) setStoreName(storeNameFromAuth);
-      if (agencyNameFromAuth) setAgencyName(agencyNameFromAuth);
 
       // Load existing KYC info if available
       if (auth?.kycInfo) {
@@ -265,9 +262,7 @@ export default function ProfilePage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          agencyName: agencyName.trim() || null,
-        }),
+        body: JSON.stringify({}),
       });
 
       if (!res.ok) {
@@ -285,7 +280,6 @@ export default function ProfilePage() {
             const parsed = JSON.parse(raw) as any;
             const updated = {
               ...parsed,
-              AgencyName: responseData.AgencyName,
             };
             window.localStorage.setItem('authUser', JSON.stringify(updated));
           }
@@ -538,42 +532,7 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Agency */}
-              <div className="mb-4 pt-4 border-t border-gray-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-sm font-semibold text-gray-900">Agency</span>
-                </div>
-                <div>
-                  <label htmlFor="agencyName" className="block text-xs text-gray-600 mb-1">Agency Name</label>
-                  <select
-                    id="agencyName"
-                    value={agencyName}
-                    onChange={(e) => setAgencyName(e.target.value)}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 1rem center',
-                      backgroundSize: '1.25rem',
-                    }}
-                  >
-                    <option value="">Select Agency</option>
-                    <option value="AGENCY001">AGENCY001</option>
-                    <option value="AGENCY002">AGENCY002</option>
-                    <option value="AGENCY003">AGENCY003</option>
-                    <option value="AGENCY004">AGENCY004</option>
-                    <option value="AGENCY005">AGENCY005</option>
-                    <option value="AGENCY006">AGENCY006</option>
-                    <option value="AGENCY007">AGENCY007</option>
-                    <option value="AGENCY008">AGENCY008</option>
-                    <option value="AGENCY009">AGENCY009</option>
-                    <option value="AGENCY010">AGENCY010</option>
-                  </select>
-                </div>
-              </div>
+
 
               {/* Error Message */}
               {personalInfoError && (

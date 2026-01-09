@@ -1014,6 +1014,16 @@ function SpotIncentiveSection({
         </div>
 
         <div className="border border-gray-200 rounded-xl overflow-hidden text-xs bg-white">
+          {/* Year labels row */}
+          <div className="grid grid-cols-6 bg-gray-100 px-3 py-1 text-xs text-gray-600">
+            <span></span>
+            <span className="text-center">1 year</span>
+            <span className="text-center">2 year</span>
+            <span className="text-center">3 year</span>
+            <span className="text-center">4 year</span>
+            <span></span>
+          </div>
+          {/* Main headers row */}
           <div className="grid grid-cols-6 bg-gray-50 px-3 py-2 font-semibold text-gray-700">
             <span>Date</span>
             <span className="text-center">EW1</span>
