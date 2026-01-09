@@ -271,6 +271,7 @@ model SEC {
   AgencyName   String?
   AgentCode    String?
   SpotIncentiveReport           SpotIncentiveReport[]
+  supportQueries                SupportQuery[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -388,4 +389,60 @@ model TestSubmission {
   @@index([secId])
   @@index([phone])
   @@index([createdAt])
-} 
+}
+
+enum SupportQueryStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum SupportQueryCategory {
+  TECHNICAL_ISSUE
+  ACCOUNT_PROBLEM
+  PAYMENT_INQUIRY
+  TRAINING_SUPPORT
+  GENERAL_INQUIRY
+  BUG_REPORT
+  FEATURE_REQUEST
+  OTHER
+}
+
+model SupportQuery {
+  id            String               @id @default(auto()) @map("_id") @db.ObjectId
+  queryNumber   String               @unique // Q0001, Q0002, etc.
+  secId         String               @db.ObjectId
+  secUser       SEC                  @relation(fields: [secId], references: [id])
+  category      SupportQueryCategory
+  description   String               // Max 500 words
+  status        SupportQueryStatus   @default(PENDING)
+  submittedAt   DateTime             @default(now())
+  lastUpdatedAt DateTime             @updatedAt
+  resolvedAt    DateTime?
+  
+  // Thread/conversation
+  messages      SupportQueryMessage[]
+  
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([secId])
+  @@index([status])
+  @@index([submittedAt])
+}
+
+model SupportQueryMessage {
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  queryId         String       @db.ObjectId
+  query           SupportQuery @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  message         String
+  isFromAdmin     Boolean      @default(false) // true if from admin, false if from canvasser
+  adminName       String?      // Name of admin who sent the message
+  sentAt          DateTime     @default(now())
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([queryId])
+  @@index([sentAt])
+}

@@ -182,6 +182,18 @@ export default function ZopperAdministratorLayout({
               <span className="text-sm leading-normal">Referral</span>
             </Link>
 
+            {/* Canvasser Help Requests */}
+            <Link
+              href="/Zopper-Administrator/help-requests"
+              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/help-requests')
+                ? 'bg-blue-600 text-white font-semibold'
+                : 'text-white hover:bg-white/5'
+                }`}
+            >
+              <span className="text-lg shrink-0">🆘</span>
+              <span className="text-sm leading-normal">Canvasser Help Requests</span>
+            </Link>
+
             {/* Process Voucher Excel */}
             <Link
               href="/Zopper-Administrator/process-voucher-excel"
@@ -196,17 +208,7 @@ export default function ZopperAdministratorLayout({
 
 
 
-            {/* Help Requests */}
-            <Link
-              href="/Zopper-Administrator/help-requests"
-              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/help-requests')
-                ? 'bg-blue-600 text-white font-semibold'
-                : 'text-white hover:bg-white/5'
-                }`}
-            >
-              <span className="text-lg shrink-0">🆘</span>
-              <span className="text-sm leading-normal">Help Requests</span>
-            </Link>
+
           </div>
         </nav>
       </aside>
