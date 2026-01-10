@@ -166,6 +166,8 @@ export default function IncentivePassbookPage() {
         const spotResult = await spotRes.json();
 
         if (spotResult.success && spotResult.data) {
+          console.log('Received spot incentive data:', spotResult.data);
+          console.log('FY Stats:', spotResult.data.fyStats);
           setSpotIncentiveData(spotResult.data);
           // Store and SEC data are now returned by spot-incentive API
           if (spotResult.data.store) {
@@ -182,6 +184,7 @@ export default function IncentivePassbookPage() {
           // OR better, just don't set it.
           // setPassbookData(null); 
         } else {
+          console.error('Spot incentive API error:', spotResult);
           setError(spotResult.error || 'Invalid response from server');
         }
       } catch (err) {
@@ -1229,37 +1232,71 @@ function SpotIncentiveSection({
         </div>
         <p className="text-[11px] text-gray-500 mb-3">Your spot incentive earnings overview</p>
 
-        {/* Summary Cards - 2x2 Grid */}
+        {/* Summary Cards - Enhanced 2x2 Grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           {/* Total Earned Incentive */}
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 text-white">
-            <p className="text-[10px] opacity-90 mb-1">Total Earned Incentive</p>
-            <p className="text-lg font-bold">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-white shadow-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs opacity-90">Total Earned Incentive</p>
+              <span className="text-lg">💰</span>
+            </div>
+            <p className="text-xl font-bold mb-1">
               {spotIncentiveData?.fyStats?.[selectedFY]?.totalEarned || '₹0'}
+            </p>
+            <p className="text-xs opacity-80">
+              Incentive earned from all sales
             </p>
           </div>
 
-          {/* Total Units */}
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-3 text-white">
-            <p className="text-[10px] opacity-90 mb-1">Total Units</p>
-            <p className="text-lg font-bold">
+          {/* Total Units Sold */}
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4 text-white shadow-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs opacity-90">Total Units Sold</p>
+              <span className="text-lg">📱</span>
+            </div>
+            <p className="text-xl font-bold mb-1">
               {spotIncentiveData?.fyStats?.[selectedFY]?.units || '0'}
+            </p>
+            <p className="text-xs opacity-80">
+              Total devices sold this FY
             </p>
           </div>
 
           {/* Paid Incentive */}
-          <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl p-3 text-white">
-            <p className="text-[10px] opacity-90 mb-1">Paid Incentive</p>
-            <p className="text-lg font-bold">
+          <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl p-4 text-white shadow-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs opacity-90">Paid Incentive</p>
+              <span className="text-lg">✅</span>
+            </div>
+            <p className="text-xl font-bold mb-1">
               {spotIncentiveData?.fyStats?.[selectedFY]?.paid || '₹0'}
+            </p>
+            <p className="text-xs opacity-80">
+              Already received payments
             </p>
           </div>
 
-          {/* Net Balance */}
-          <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-xl p-3 text-white">
-            <p className="text-[10px] opacity-90 mb-1">Net Balance</p>
-            <p className="text-lg font-bold">
-              {spotIncentiveData?.fyStats?.[selectedFY]?.net || '₹0'}
+          {/* Net Balance (Total - Paid) */}
+          <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-xl p-4 text-white shadow-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs opacity-90">Net Balance</p>
+              <span className="text-lg">⏳</span>
+            </div>
+            <p className="text-xl font-bold mb-1">
+              {(() => {
+                const totalEarned = spotIncentiveData?.fyStats?.[selectedFY]?.totalEarned || '₹0';
+                const paid = spotIncentiveData?.fyStats?.[selectedFY]?.paid || '₹0';
+                
+                // Extract numeric values from currency strings
+                const totalAmount = parseFloat(totalEarned.replace(/[₹,]/g, '')) || 0;
+                const paidAmount = parseFloat(paid.replace(/[₹,]/g, '')) || 0;
+                const netBalance = totalAmount - paidAmount;
+                
+                return `₹${netBalance.toLocaleString()}`;
+              })()}
+            </p>
+            <p className="text-xs opacity-80">
+              Pending payment amount
             </p>
           </div>
         </div>

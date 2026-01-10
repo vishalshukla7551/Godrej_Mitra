@@ -119,6 +119,21 @@ export async function GET(req: NextRequest) {
     const totalUnits = spotReports.length;
     const activeCampaignUnits = spotReports.filter((report: any) => report.isCompaignActive).length;
 
+    console.log('Summary calculations:', {
+      totalReports: spotReports.length,
+      totalEarned,
+      totalPaid,
+      totalPending,
+      totalUnits,
+      activeCampaignUnits,
+      sampleReport: spotReports[0] ? {
+        id: spotReports[0].id,
+        spotincentiveEarned: spotReports[0].spotincentiveEarned,
+        spotincentivepaidAt: spotReports[0].spotincentivepaidAt,
+        Date_of_sale: spotReports[0].Date_of_sale
+      } : null
+    });
+
     // Generate sales summary data grouped by date with EW tracking
     const salesSummaryMap = new Map<string, {
       date: string;
@@ -169,8 +184,12 @@ export async function GET(req: NextRequest) {
       });
 
     // Calculate Financial Year Stats
-    const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth() + 1;
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // 1-12
+
+    // Determine current FY (April to March)
+    const currentFYEndYear = currentMonth >= 4 ? currentYear + 1 : currentYear;
 
     const fyStats: Record<string, {
       units: string;
@@ -179,16 +198,24 @@ export async function GET(req: NextRequest) {
       net: string;
     }> = {};
 
-    // Calculate stats for each FY (April to March)
-    for (let year = currentYear - 4; year <= currentYear; year++) {
-      const fy = `FY-${String(year).slice(-2)}`;
+    // Calculate stats for current FY and previous 4 FYs
+    for (let i = 0; i < 5; i++) {
+      const fyEndYear = currentFYEndYear - i;
+      const fyStartYear = fyEndYear - 1;
+      const fy = `FY-${String(fyEndYear).slice(-2)}`;
 
-      const fyStart = new Date(year, 3, 1); // April 1
-      const fyEnd = new Date(year + 1, 2, 31); // March 31
+      const fyStart = new Date(fyStartYear, 3, 1); // April 1
+      const fyEnd = new Date(fyEndYear, 2, 31, 23, 59, 59); // March 31
+
+      console.log(`Calculating ${fy}: ${fyStart.toISOString()} to ${fyEnd.toISOString()}`);
 
       const fyReports = spotReports.filter((report: any) => {
         const reportDate = new Date(report.Date_of_sale);
-        return reportDate >= fyStart && reportDate <= fyEnd;
+        const isInRange = reportDate >= fyStart && reportDate <= fyEnd;
+        if (isInRange) {
+          console.log(`Report ${report.id} (${reportDate.toISOString()}) is in ${fy}`);
+        }
+        return isInRange;
       });
 
       let fyUnits = 0;
@@ -207,25 +234,17 @@ export async function GET(req: NextRequest) {
       const fyNet = fyEarned - fyPaid;
 
       fyStats[fy] = {
-        units: fyUnits.toLocaleString('en-IN'),
-        totalEarned: fyEarned > 0 ? `₹${fyEarned.toLocaleString('en-IN')}` : '-',
-        paid: fyPaid > 0 ? `₹${fyPaid.toLocaleString('en-IN')}` : '-',
-        net: fyNet > 0 ? `₹${fyNet.toLocaleString('en-IN')}` : '-',
+        units: fyUnits.toString(),
+        totalEarned: fyEarned > 0 ? `₹${fyEarned.toLocaleString('en-IN')}` : '₹0',
+        paid: fyPaid > 0 ? `₹${fyPaid.toLocaleString('en-IN')}` : '₹0',
+        net: fyNet > 0 ? `₹${fyNet.toLocaleString('en-IN')}` : '₹0',
       };
+
+      console.log(`${fy} Stats:`, fyStats[fy]);
     }
 
-    // Fill in missing FYs with zeros
-    const allFYs = ['FY-25', 'FY-24', 'FY-23', 'FY-22', 'FY-21'];
-    allFYs.forEach((fy) => {
-      if (!fyStats[fy]) {
-        fyStats[fy] = {
-          units: '0',
-          totalEarned: '₹0',
-          paid: '₹0',
-          net: '₹0',
-        };
-      }
-    });
+    // Remove the hardcoded FY filling since we're calculating them properly now
+    console.log('Final fyStats:', fyStats);
 
     return NextResponse.json({
       success: true,
