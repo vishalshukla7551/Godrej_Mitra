@@ -2,55 +2,10 @@ import { prisma } from '@/lib/prisma';
 
 type DeviceType = 'FOLD' | 'S25' | 'OTHER';
 
-interface IncentiveCalculationResult {
-  totalIncentive: number; // Per SEC incentive (already divided)
-  storeLevelIncentive: number; // Total store incentive (before division)
-  breakdownByStore: Array<{
-    storeId: string;
-    storeName: string;
-    totalIncentive: number;
-    attachPercentage: number | null;
-    latestAttachRateInfo?: {
-      percentage: number;
-      startDate: string;
-      endDate: string;
-    } | null;
-    breakdownBySlab: Array<{
-      slabId: string;
-      minPrice: number | null;
-      maxPrice: number | null;
-      units: number;
-      incentiveAmount: number;
-      appliedRate: number; // 0, 1.0, or 1.2
-      baseIncentive: number;
-      deviceBonuses: {
-        foldBonus: number;
-        s25Bonus: number;
-      };
-      totalIncentive: number;
-    }>;
-  }>;
-  breakdownByDate: Array<{
-    date: string; // DD-MM-YYYY format
-    unitsSold: number;
-    baseIncentive: number;
-    volumeIncentive: number;
-    unitsFold7: number;
-    unitsS25: number;
-    attachmentIncentive: number;
-    totalIncentive: number;
-  }>;
-  unitsSummary: {
-    totalUnits: number;
-    unitsAboveGate: number;
-    unitsAboveVolumeKicker: number;
-  };
-}
-
 interface GroupedSales {
   storeId: string;
   storeName: string;
-  numberOfSec: number;
+  numberOfCanvasser: number;
   attachPercentage: number | null;
   slabId: string;
   slab: {
@@ -99,49 +54,6 @@ export class IncentiveService {
     });
 
     return attachRate?.attachPercentage ?? null;
-  }
-
-  /**
-   * Get the latest attach rate for a store in a given month
-   * Returns the attach rate with the most recent end date
-   */
-  static async getLatestAttachRateForMonth(
-    storeId: string,
-    month: number,
-    year: number
-  ): Promise<{ percentage: number; startDate: string; endDate: string } | null> {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
-
-    const attachRate = await (prisma as any).periodicAttachRate.findFirst({
-      where: {
-        storeId: storeId,
-        OR: [
-          {
-            AND: [
-              { start: { lte: endDate } },
-              { end: { gte: startDate } }
-            ]
-          }
-        ]
-      },
-      orderBy: {
-        end: 'desc'  // Get the most recent period
-      },
-      select: {
-        attachPercentage: true,
-        start: true,
-        end: true
-      }
-    });
-
-    if (!attachRate) return null;
-
-    return {
-      percentage: attachRate.attachPercentage,
-      startDate: this.formatDateToDDMMYYYY(attachRate.start),
-      endDate: this.formatDateToDDMMYYYY(attachRate.end)
-    };
   }
 
   /**
@@ -324,20 +236,21 @@ export class IncentiveService {
       deviceBonuses: { foldBonus, s25Bonus }
     };
   }
+}
 
   /**
-   * Calculate monthly incentive for a SEC user
-   * NEW LOGIC: Calculate at store level (all SECs combined), then divide by numberOfSec
-   * @param numberOfSec - Number of SECs at the store (provided by frontend)
+   * Calculate monthly incentive for a Canvasser user
+   * NEW LOGIC: Calculate at store level (all Canvassers combined), then divide by numberOfCanvasser
+   * @param numberOfCanvasser - Number of Canvassers at the store (provided by frontend)
    */
   static async calculateMonthlyIncentive(
-    secId: string,
+    canvasserId: string,
     month: number,
     year: number,
-    numberOfSec: number
+    numberOfCanvasser: number
   ): Promise<IncentiveCalculationResult> {
     // Validate inputs
-    if (!secId || month < 1 || month > 12 || year < 2000) {
+    if (!canvasserId || month < 1 || month > 12 || year < 2000) {
       throw new Error('Invalid input parameters');
     }
 
@@ -350,14 +263,14 @@ export class IncentiveService {
       endDate: endDate.toISOString()
     });
 
-    // First, get the SEC user to find their store
-    const secUser = await (prisma as any).sEC.findUnique({
-      where: { id: secId },
+    // First, get the Canvasser user to find their store
+    const canvasserUser = await (prisma as any).canvasser.findUnique({
+      where: { id: canvasserId },
       include: { store: true }
     });
 
-    if (!secUser || !secUser.storeId) {
-      console.warn(`SEC ${secId} not found or not assigned to a store`);
+    if (!canvasserUser || !canvasserUser.storeId) {
+      console.warn(`Canvasser ${canvasserId} not found or not assigned to a store`);
       return {
         totalIncentive: 0,
         storeLevelIncentive: 0,
@@ -371,14 +284,14 @@ export class IncentiveService {
       };
     }
 
-    const storeId = secUser.storeId;
+    const storeId = canvasserUser.storeId;
 
     console.log(`\n========================================`);
     console.log(`🏪 STORE-LEVEL CALCULATION`);
-    console.log(`   SEC ID: ${secId}`);
+    console.log(`   Canvasser ID: ${canvasserId}`);
     console.log(`   Store ID: ${storeId}`);
-    console.log(`   Store Name: ${secUser.store?.name || 'Unknown'}`);
-    console.log(`   Number of SECs: ${numberOfSec} (from frontend)`);
+    console.log(`   Store Name: ${canvasserUser.store?.name || 'Unknown'}`);
+    console.log(`   Number of Canvassers: ${numberOfCanvasser} (from frontend)`);
     console.log(`   Period: ${month}/${year}`);
     console.log(`   Attach Rate: Will be fetched per sale from periodicAttachRate`);
     console.log(`========================================\n`);
@@ -473,7 +386,7 @@ export class IncentiveService {
         groupedSales.set(groupKey, {
           storeId: report.store.id,
           storeName: report.store.name,
-          numberOfSec: numberOfSec,
+          numberOfCanvasser: numberOfCanvasser,
           attachPercentage: saleAttachRate,
           slabId: slab.id,
           slab: {
@@ -517,15 +430,15 @@ export class IncentiveService {
     
     // Use the first group's gate/volumeKicker values (they should be the same for all groups in same store)
     const firstGroup = Array.from(groupedSales.values())[0];
-    const finalGate = firstGroup.slab.gate * firstGroup.numberOfSec;
-    const finalVolumeKicker = firstGroup.slab.volumeKicker * firstGroup.numberOfSec;
+    const finalGate = firstGroup.slab.gate * firstGroup.numberOfCanvasser;
+    const finalVolumeKicker = firstGroup.slab.volumeKicker * firstGroup.numberOfCanvasser;
     
     // Log store-level information ONCE
     console.log(`\n╔════════════════════════════════════════════════════════════╗`);
     console.log(`║                    STORE-LEVEL SUMMARY                     ║`);
     console.log(`╚════════════════════════════════════════════════════════════╝`);
     console.log(`  Store: ${firstGroup.storeName} (${firstGroup.storeId})`);
-    console.log(`  Number of SECs: ${firstGroup.numberOfSec}`);
+    console.log(`  Number of Canvassers: ${firstGroup.numberOfCanvasser}`);
     console.log(`  Attach Rate: ${firstGroup.attachPercentage !== null ? firstGroup.attachPercentage + '%' : 'N/A'}`);
     console.log(`  Total Units (All Slabs): ${totalUnits}`);
     console.log(`  Final Gate: ${finalGate} units`);
@@ -672,11 +585,11 @@ export class IncentiveService {
     console.log(`  � TOTAL UINCENTIVE: ₹${Math.round(totalIncentive).toLocaleString()}`);
     console.log(`════════════════════════════════════════════════════════════\n`);
 
-    // Calculate this SEC's share (total incentive divided by number of SECs)
-    const secShare = Math.round(totalIncentive / numberOfSec);
+    // Calculate this Canvasser's share (total incentive divided by number of Canvassers)
+    const canvasserShare = Math.round(totalIncentive / numberOfCanvasser);
 
-    console.log(`\n  Number of SECs at store: ${numberOfSec}`);
-    console.log(`  INCENTIVE PER SEC: Rs.${secShare.toLocaleString()}\n`);
+    console.log(`\n  Number of Canvassers at store: ${numberOfCanvasser}`);
+    console.log(`  INCENTIVE PER CANVASSER: Rs.${canvasserShare.toLocaleString()}\n`);
 
     // Calculate daily breakdown
     const dailyBreakdown = await this.calculateDailyBreakdown(
@@ -686,7 +599,7 @@ export class IncentiveService {
     );
 
     return {
-      totalIncentive: secShare, // Per SEC incentive (already divided)
+      totalIncentive: canvasserShare, // Per Canvasser incentive (already divided)
       storeLevelIncentive: Math.round(totalIncentive), // Total store incentive (before division)
       breakdownByStore,
       breakdownByDate: dailyBreakdown,

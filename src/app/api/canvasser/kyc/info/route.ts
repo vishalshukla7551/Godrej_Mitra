@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== 'SEC') {
+    if (!authUser || authUser.role !== 'CANVASSER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -22,36 +22,32 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Fetch SEC record with KYC info using raw MongoDB query
-    const secRecords = await (prisma as any).$runCommandRaw({
-      find: "SEC",
-      filter: { phone: phone },
-      projection: {
-        _id: 1,
-        phone: 1,
-        fullName: 1,
-        kycInfo: 1
-      },
-      limit: 1
+    // Fetch Canvasser record with KYC info
+    const canvasserRecord = await prisma.canvasser.findUnique({
+      where: { phone: phone },
+      select: {
+        id: true,
+        phone: true,
+        fullName: true,
+        kycInfo: true
+      }
     });
 
-    const secRecord = secRecords.cursor?.firstBatch?.[0] || null;
-
-    if (!secRecord) {
+    if (!canvasserRecord) {
       return NextResponse.json(
-        { error: 'SEC record not found' },
+        { error: 'Canvasser record not found' },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      hasKycInfo: !!secRecord?.kycInfo,
-      kycInfo: secRecord?.kycInfo,
-      secUser: {
-        id: secRecord?._id,
-        phone: secRecord?.phone,
-        fullName: secRecord?.fullName,
+      hasKycInfo: !!canvasserRecord?.kycInfo,
+      kycInfo: canvasserRecord?.kycInfo,
+      canvasserUser: {
+        id: canvasserRecord?.id,
+        phone: canvasserRecord?.phone,
+        fullName: canvasserRecord?.fullName,
       },
     });
   } catch (error) {

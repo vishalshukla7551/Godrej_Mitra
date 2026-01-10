@@ -41,7 +41,7 @@ export default function CanvasserLogin() {
     }
   }, [otpSent]);
 
-  // If already logged in, redirect away from SEC login.
+  // If already logged in, redirect away from Canvasser login.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const raw = window.localStorage.getItem('authUser');
@@ -154,12 +154,12 @@ export default function CanvasserLogin() {
         return;
       }
 
-      // Store SEC auth info in localStorage, same as role login does.
+      // Store Canvasser auth info in localStorage, same as role login does.
       if (typeof window !== 'undefined' && data?.user) {
         window.localStorage.setItem('authUser', JSON.stringify(data.user));
       }
 
-      // If this SEC user has not yet provided their name, send them to the
+      // If this Canvasser user has not yet provided their name, send them to the
       // one-time name capture screen before landing on the home dashboard.
       if (data.needsName) {
         // Use window.location.href to ensure localStorage is fully written before redirect
@@ -167,8 +167,8 @@ export default function CanvasserLogin() {
         return;
       }
 
-      // OTP verified successfully; redirect to SEC landing page (via shared helper).
-      const target = getHomePathForRole(data.user.role || 'SEC');
+      // OTP verified successfully; redirect to Canvasser landing page (via shared helper).
+      const target = getHomePathForRole(data.user.role || 'CANVASSER');
       // Use window.location.href to ensure localStorage is fully written before redirect
       window.location.href = target;
     } catch (err) {
@@ -256,7 +256,7 @@ export default function CanvasserLogin() {
               <input
                 type="tel"
                 id="phone"
-                name="sec-phone"
+                name="canvasser-phone"
                 autoComplete="off"
                 inputMode="tel"
                 value={phoneNumber}

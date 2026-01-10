@@ -16,14 +16,14 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Find SEC user by phone
-    const secUser = await prisma.sEC.findUnique({
+    // Find Canvasser user by phone
+    const canvasserUser = await prisma.canvasser.findUnique({
       where: { phone: authUser.profile.phone },
       select: { id: true, fullName: true, phone: true }
     });
 
-    if (!secUser) {
-      return NextResponse.json({ error: 'SEC user not found' }, { status: 404 });
+    if (!canvasserUser) {
+      return NextResponse.json({ error: 'Canvasser user not found' }, { status: 404 });
     }
 
     const { id: queryId } = await params;
@@ -38,7 +38,7 @@ export async function POST(
     const query = await prisma.supportQuery.findFirst({
       where: {
         id: queryId,
-        secId: secUser.id
+        canvasserId: canvasserUser.id
       }
     });
 
@@ -70,7 +70,7 @@ export async function POST(
         messages: {
           orderBy: { sentAt: 'asc' }
         },
-        secUser: {
+        canvasserUser: {
           select: { fullName: true, phone: true }
         }
       }

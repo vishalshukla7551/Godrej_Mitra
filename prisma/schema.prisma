@@ -12,7 +12,7 @@ enum Role {
   ASE
   ZSM
   ZSE
-  SEC
+  CANVASSER
   SAMSUNG_ADMINISTRATOR
   ZOPPER_ADMINISTRATOR
 }
@@ -34,13 +34,13 @@ model Store {
   id    String  @id @map("_id")
   name  String
   city  String?
-  numberOfSec Int?  // Number of SECs associated with the store (nullable)
+  numberOfCanvasser Int?  // Number of Canvassers associated with the store (nullable)
   periodicAttachRates periodicAttachRate[]
   samsungIncentiveInfo Json?  // Array<Object>: { month: String(MM-YYYY), samsungIncentiveAmount: Int, samsungIncentivePaidAt: Date | null }    
 
   spotIncentiveReports           SpotIncentiveReport[]
   spotIncentiveCampaigns  SpotIncentiveCampaign[]
-  secUsers                SEC[]
+  canvasserUsers          Canvasser[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -87,8 +87,8 @@ model Plan {
 
 model SpotIncentiveReport {
   id                      String                 @id @default(auto()) @map("_id") @db.ObjectId
-  secId                   String                 @db.ObjectId
-  secUser                 SEC                    @relation(fields: [secId], references: [id])
+  canvasserId             String                 @db.ObjectId
+  canvasserUser           Canvasser              @relation(fields: [canvasserId], references: [id])
   storeId                 String
   store                   Store                  @relation(fields: [storeId], references: [id])
   godrejSKUId             String                 @db.ObjectId
@@ -107,7 +107,7 @@ model SpotIncentiveReport {
   updatedAt               DateTime               @updatedAt
 
   @@unique([imei])
-  @@index([secId])
+  @@index([canvasserId])
   @@index([storeId])
   @@index([Date_of_sale])
 }
@@ -257,7 +257,7 @@ model ZSE {
   ases ASE[] @relation("ZSEToASE")
 }
 
-model SEC {
+model Canvasser {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   fullName    String?
   phone       String    @unique
@@ -347,22 +347,22 @@ model PriceIncentiveSlab {
   // - volumeKicker: Number of units after which 120% incentive applies.
   //
   // Final thresholds are calculated per store:
-  // finalGate = gate * store.numberOfSec
-  // finalVolumeKicker = volumeKicker * store.numberOfSec
+  // finalGate = gate * store.numberOfCanvasser
+  // finalVolumeKicker = volumeKicker * store.numberOfCanvasser
   //
   // STORE-LEVEL CALCULATION:
-  // Incentives are calculated for the entire store (all SECs combined),
-  // then divided equally among all SECs at that store.
+  // Incentives are calculated for the entire store (all Canvassers combined),
+  // then divided equally among all Canvassers at that store.
   //
   // Incentive rules (applied to ALL store units):
   // 1. Units < finalGate → No incentive (0%)
   // 2. Units >= finalGate and < finalVolumeKicker → 100% incentive on ALL units
   // 3. Units >= finalVolumeKicker → 120% incentive on ALL units
-  // 4. Each SEC's share = Total Store Incentive ÷ numberOfSec
+  // 4. Each Canvasser's share = Total Store Incentive ÷ numberOfCanvasser
   //
   // Note: Gate and Volume Kicker thresholds are INCLUSIVE (>= comparison)
-  gate            Int      // Threshold units per SEC before incentives apply
-  volumeKicker    Int      // Units per SEC after which 120% incentive applies
+  gate            Int      // Threshold units per Canvasser before incentives apply
+  volumeKicker    Int      // Units per Canvasser after which 120% incentive applies
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -372,8 +372,8 @@ model PriceIncentiveSlab {
 
 model TestSubmission {
   id                  String   @id @default(auto()) @map("_id") @db.ObjectId
-  secId               String?  // SEC identifier
-  phone               String?  // SEC phone number
+  canvasserId         String?  // Canvasser identifier
+  phone               String?  // Canvasser phone number
   sessionToken        String?  // Test session identifier
   testName            String?  // Name of the test taken
   responses           Json?    // Test answers/responses
@@ -386,7 +386,7 @@ model TestSubmission {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  @@index([secId])
+  @@index([canvasserId])
   @@index([phone])
   @@index([createdAt])
 }
@@ -411,8 +411,8 @@ enum SupportQueryCategory {
 model SupportQuery {
   id            String               @id @default(auto()) @map("_id") @db.ObjectId
   queryNumber   String               @unique // Q0001, Q0002, etc.
-  secId         String               @db.ObjectId
-  secUser       SEC                  @relation(fields: [secId], references: [id])
+  canvasserId   String               @db.ObjectId
+  canvasserUser Canvasser            @relation(fields: [canvasserId], references: [id])
   category      SupportQueryCategory
   description   String               // Max 500 words
   status        SupportQueryStatus   @default(PENDING)
@@ -426,7 +426,7 @@ model SupportQuery {
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
 
-  @@index([secId])
+  @@index([canvasserId])
   @@index([status])
   @@index([submittedAt])
 }

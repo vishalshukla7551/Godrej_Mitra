@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
             city: true,
           },
         },
-        secUser: {
+        canvasserUser: {
           select: {
             id: true,
             fullName: true,
@@ -122,9 +122,9 @@ export async function GET(req: NextRequest) {
       ew4: number;
     }>();
 
-    // Aggregate by canvasser (SEC)
+    // Aggregate by canvasser
     const canvasserMap = new Map<string, {
-      secId: string;
+      canvasserId: string;
       canvasserName: string;
       identifier: string; // phone or employee ID
       totalSales: number;
@@ -187,10 +187,10 @@ export async function GET(req: NextRequest) {
       }
 
       // Canvasser aggregation
-      if (report.secId && report.secUser) {
-        const secKey = report.secId;
-        if (canvasserMap.has(secKey)) {
-          const existing = canvasserMap.get(secKey)!;
+      if (report.canvasserId && report.canvasserUser) {
+        const canvasserKey = report.canvasserId;
+        if (canvasserMap.has(canvasserKey)) {
+          const existing = canvasserMap.get(canvasserKey)!;
           existing.totalSales += 1;
           existing.totalIncentive += report.spotincentiveEarned;
 
@@ -199,10 +199,10 @@ export async function GET(req: NextRequest) {
           if (isEW3) existing.ew3 += 1;
           if (isEW4) existing.ew4 += 1;
         } else {
-          canvasserMap.set(secKey, {
-            secId: report.secUser.id,
-            canvasserName: report.secUser.fullName || 'Unknown',
-            identifier: report.secUser.employeeId || report.secUser.phone,
+          canvasserMap.set(canvasserKey, {
+            canvasserId: report.canvasserUser.id,
+            canvasserName: report.canvasserUser.fullName || 'Unknown',
+            identifier: report.canvasserUser.employeeId || report.canvasserUser.phone,
             totalSales: 1,
             totalIncentive: report.spotincentiveEarned,
             ew1: isEW1 ? 1 : 0,

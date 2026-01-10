@@ -1,34 +1,34 @@
 # Store-Level Incentive Calculation Logic
 
 ## Overview
-The incentive calculation system has been updated to calculate incentives at the **store level** rather than individual SEC level. This ensures fair distribution of incentives among all SECs working at the same store.
+The incentive calculation system has been updated to calculate incentives at the **store level** rather than individual ASA Canvasser level. This ensures fair distribution of incentives among all ASA Canvassers working at the same store.
 
 Additionally, **device-specific bonuses** have been added based on the store's attach rate for premium devices (Fold and S25 series).
 
 ## Key Changes
 
-### Old Logic (Individual SEC Calculation)
-1. Fetch sales reports for a specific SEC
-2. Calculate incentive based on that SEC's sales only
-3. Each SEC gets incentive based on their individual performance
+### Old Logic (Individual ASA Canvasser Calculation)
+1. Fetch sales reports for a specific ASA Canvasser
+2. Calculate incentive based on that ASA Canvasser's sales only
+3. Each ASA Canvasser gets incentive based on their individual performance
 
-**Problem**: SECs at the same store could have vastly different incentives based on individual sales, even though they work as a team.
+**Problem**: ASA Canvassers at the same store could have vastly different incentives based on individual sales, even though they work as a team.
 
 ### New Logic (Store-Level Calculation)
 1. Fetch **ALL sales reports** for the entire store (all SECs combined)
 2. Calculate total incentive based on **store-level sales**
-3. **Divide the total incentive equally** among all SECs at that store
-4. Each SEC receives an equal share regardless of individual performance
+3. **Divide the total incentive equally** among all ASA Canvassers at that store
+4. Each ASA Canvasser receives an equal share regardless of individual performance
 
-**Benefit**: Promotes teamwork and ensures fair distribution among all SECs at a store.
+**Benefit**: Promotes teamwork and ensures fair distribution among all ASA Canvassers at a store.
 
 ## Example Calculation
 
 ### Scenario
 - **Store**: Store001
-- **Number of SECs**: 2 (SEC-A and SEC-B)
+- **Number of ASA Canvassers**: 2 (ASA-A and ASA-B)
 - **Price Slab**: 30k-40k (₹250 per unit, gate=3, volumeKicker=8)
-- **Sales**: SEC-A sold 3 units, SEC-B sold 5 units
+- **Sales**: ASA-A sold 3 units, ASA-B sold 5 units
 - **Total Store Sales**: 8 units
 
 ### Calculation Steps
@@ -42,9 +42,9 @@ Additionally, **device-specific bonuses** have been added based on the store's a
    - Apply 100% incentive on ALL 8 units
    - **Total Store Incentive** = 8 × ₹250 = ₹2,000
 
-3. **Divide Among SECs**:
-   - **SEC-A's Share** = ₹2,000 ÷ 2 = ₹1,000
-   - **SEC-B's Share** = ₹2,000 ÷ 2 = ₹1,000
+3. **Divide Among ASA Canvassers**:
+   - **ASA-A's Share** = ₹2,000 ÷ 2 = ₹1,000
+   - **ASA-B's Share** = ₹2,000 ÷ 2 = ₹1,000
 
 **Note**: Gate and Volume Kicker thresholds are now **inclusive** (>= comparison), meaning incentives apply when units reach exactly the threshold value.
 
@@ -52,10 +52,10 @@ Additionally, **device-specific bonuses** have been added based on the store's a
 
 | Metric | Old Logic (Individual) | New Logic (Store-Level) |
 |--------|----------------------|------------------------|
-| SEC-A Sales | 3 units | 3 units |
-| SEC-B Sales | 5 units | 5 units |
-| SEC-A Incentive | ₹0 (3 ≤ 6) | ₹1,000 |
-| SEC-B Incentive | ₹0 (5 ≤ 6) | ₹1,000 |
+| ASA-A Sales | 3 units | 3 units |
+| ASA-B Sales | 5 units | 5 units |
+| ASA-A Incentive | ₹0 (3 ≤ 6) | ₹1,000 |
+| ASA-B Incentive | ₹0 (5 ≤ 6) | ₹1,000 |
 | **Total Paid** | **₹0** | **₹2,000** |
 
 ## Implementation Details
@@ -65,16 +65,16 @@ Additionally, **device-specific bonuses** have been added based on the store's a
 - **Method**: `calculateMonthlyIncentive()`
 
 ### Key Updates
-1. First, fetch the SEC's store information
-2. Query ALL sales reports for that store (not just the SEC's sales)
+1. First, fetch the ASA Canvasser's store information
+2. Query ALL sales reports for that store (not just the ASA Canvasser's sales)
 3. Calculate total store incentive using existing logic
-4. Divide by `numberOfSec` to get each SEC's share
-5. Save the SEC's share to `SalesSummary.estimatedIncenetiveEarned`
+4. Divide by `numberOfAsaCanvasser` to get each ASA Canvasser's share
+5. Save the ASA Canvasser's share to `SalesSummary.estimatedIncenetiveEarned`
 
 ### Database Impact
 - No schema changes required
-- Each SEC still has their own `SalesSummary` record
-- The `estimatedIncenetiveEarned` field now stores the SEC's equal share of the store's total incentive
+- Each ASA Canvasser still has their own `SalesSummary` record
+- The `estimatedIncenetiveEarned` field now stores the ASA Canvasser's equal share of the store's total incentive
 
 ## Benefits
 
@@ -87,28 +87,28 @@ Additionally, **device-specific bonuses** have been added based on the store's a
 
 The API endpoint remains the same:
 ```
-GET /api/sec/incentive/calculate?secId=<secId>&month=<month>&year=<year>
+GET /api/canvasser/incentive/calculate?asaCanvasserId=<asaCanvasserId>&month=<month>&year=<year>
 ```
 
 However, the calculation now:
-1. Uses the SEC's store to fetch all store sales
+1. Uses the ASA Canvasser's store to fetch all store sales
 2. Calculates at store level
-3. Returns the SEC's equal share
+3. Returns the ASA Canvasser's equal share
 
 ## Frontend Display
 
 The passbook will show:
-- Each SEC's equal share of the store incentive
-- All SECs at the same store will see the same incentive amount for a given month
+- Each ASA Canvasser's equal share of the store incentive
+- All ASA Canvassers at the same store will see the same incentive amount for a given month
 - The calculation is transparent and fair
 
 ## Testing
 
 To test the new logic:
-1. Create multiple SECs at the same store
-2. Add sales reports for different SECs
-3. Calculate incentive for any SEC
-4. Verify all SECs at that store receive equal shares
+1. Create multiple ASA Canvassers at the same store
+2. Add sales reports for different ASA Canvassers
+3. Calculate incentive for any ASA Canvasser
+4. Verify all ASA Canvassers at that store receive equal shares
 
 ## Device-Specific Bonus Incentives
 
@@ -166,7 +166,7 @@ Devices are identified by concatenating `Category + ModelName` from the `Samsung
 
 3. **Total Store Incentive**: ₹2,000 + ₹2,300 = ₹4,300
 
-4. **Per SEC**: ₹4,300 ÷ 2 = ₹2,150
+4. **Per ASA Canvasser**: ₹4,300 ÷ 2 = ₹2,150
 
 ### Store Attach Rate
 The attach rate is stored in the `Store` model as `attachPercentage` (Float field). This represents the percentage of sales that include extended warranty or protection plans.

@@ -56,8 +56,8 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Also get SEC users (independent from User model)
-    const secUsers = await (prisma as any).sEC.findMany({
+    // Also get Canvasser users (independent from User model)
+    const canvasserUsers = await prisma.canvasser.findMany({
       select: {
         id: true,
         fullName: true,
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
     });
 
     const allUsers = [...aseUsers, ...abmUsers];
-    console.log(`Found ${aseUsers.length} ASE users, ${abmUsers.length} ABM users, and ${secUsers.length} SEC users`);
+    console.log(`Found ${aseUsers.length} ASE users, ${abmUsers.length} ABM users, and ${canvasserUsers.length} Canvasser users`);
 
     // Filter and process requests
     let allRequests: any[] = [];
@@ -93,28 +93,28 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Process SEC requests (independent from User model)
-    for (const sec of secUsers) {
-      const kycInfo = sec.kycInfo as any;
+    // Process Canvasser requests (independent from User model)
+    for (const canvasser of canvasserUsers) {
+      const kycInfo = canvasser.kycInfo as any;
       const request = kycInfo?.storeChangeRequest;
       
       if (request) {
-        console.log(`SEC ${sec.id} has request with status: ${request.status}`);
+        console.log(`Canvasser ${canvasser.id} has request with status: ${request.status}`);
         if (status === 'ALL' || request.status === status) {
           allRequests.push({
             ...request,
-            userId: sec.id, // Use SEC id as userId for consistency
-            userRole: 'SEC',
+            userId: canvasser.id, // Use Canvasser id as userId for consistency
+            userRole: 'CANVASSER',
             profile: {
-              id: sec.id,
-              fullName: sec.fullName,
-              phone: sec.phone
+              id: canvasser.id,
+              fullName: canvasser.fullName,
+              phone: canvasser.phone
             },
             // Keep backward compatibility
-            sec: {
-              id: sec.id,
-              fullName: sec.fullName,
-              phone: sec.phone
+            asaCanvasser: {
+              id: canvasser.id,
+              fullName: canvasser.fullName,
+              phone: canvasser.phone
             }
           });
         }
@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find all ASE, ABM users and SEC users, then filter by request ID in JavaScript
+    // Find all ASE, ABM users and ASA Canvasser users, then filter by request ID in JavaScript
     const aseUsers = await (prisma as any).user.findMany({
       where: {
         role: 'ASE'
@@ -235,8 +235,8 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Get SEC users (independent from User model)
-    const secUsers = await (prisma as any).sEC.findMany({
+    // Get Canvasser users (independent from User model)
+    const canvasserUsers = await prisma.canvasser.findMany({
       select: {
         id: true,
         fullName: true,
@@ -253,9 +253,9 @@ export async function POST(req: NextRequest) {
       return metadata?.storeChangeRequest?.id === requestId;
     });
 
-    // Also check SEC users
-    const secs = secUsers.filter((sec: any) => {
-      const kycInfo = sec.kycInfo as any;
+    // Also check Canvasser users
+    const canvassers = canvasserUsers.filter((canvasser: any) => {
+      const kycInfo = canvasser.kycInfo as any;
       return kycInfo?.storeChangeRequest?.id === requestId;
     });
 
@@ -267,8 +267,8 @@ export async function POST(req: NextRequest) {
       user = users[0];
       const metadata = user.metadata as any;
       request = metadata?.storeChangeRequest;
-    } else if (secs.length > 0) {
-      user = secs[0];
+    } else if (canvassers.length > 0) {
+      user = canvassers[0];
       const kycInfo = user.kycInfo as any;
       request = kycInfo?.storeChangeRequest;
       isSecUser = true;
@@ -297,22 +297,22 @@ export async function POST(req: NextRequest) {
     };
 
     if (isSecUser) {
-      // Update SEC user's kycInfo
+      // Update Canvasser user's kycInfo
       const updatedKycInfo = {
         ...(user.kycInfo as any || {}),
         storeChangeRequest: updatedRequest
       };
 
-      await prisma.sEC.update({
+      await prisma.canvasser.update({
         where: { id: user.id },
         data: {
           kycInfo: updatedKycInfo
         }
       });
 
-      // If approved, update SEC's store mapping
+      // If approved, update Canvasser's store mapping
       if (action === 'approve') {
-        await prisma.sEC.update({
+        await prisma.canvasser.update({
           where: { id: user.id },
           data: {
             storeId: request.requestedStoreIds[0] || null

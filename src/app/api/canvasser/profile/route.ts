@@ -3,19 +3,19 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 import { Role } from '@prisma/client';
 
-// GET /api/sec/profile
-// Get SEC profile and associated store
+// GET /api/canvasser/profile
+// Get ASA Canvasser profile and associated store
 export async function GET(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== ('SEC' as Role)) {
+    if (!authUser || authUser.role !== ('CANVASSER' as Role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Find SEC by phone (for SEC users, authUser.id is the phone number)
-    const sec = await prisma.sEC.findUnique({
+    // Find Canvasser by phone (for Canvasser users, authUser.id is the phone number)
+    const canvasser = await prisma.canvasser.findUnique({
       where: { phone: authUser.id },
       select: {
         id: true,
@@ -33,24 +33,24 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    if (!sec) {
-      return NextResponse.json({ error: 'SEC profile not found' }, { status: 404 });
+    if (!canvasser) {
+      return NextResponse.json({ error: 'Canvasser profile not found' }, { status: 404 });
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        sec: {
-          id: sec.id,
-          fullName: sec.fullName,
-          phone: sec.phone,
-          secId: sec.employeeId
+        canvasser: {
+          id: canvasser.id,
+          fullName: canvasser.fullName,
+          phone: canvasser.phone,
+          canvasserId: canvasser.employeeId
         },
-        store: sec.store
+        store: canvasser.store
       }
     });
   } catch (error) {
-    console.error('Error in GET /api/sec/profile', error);
+    console.error('Error in GET /api/canvasser/profile', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

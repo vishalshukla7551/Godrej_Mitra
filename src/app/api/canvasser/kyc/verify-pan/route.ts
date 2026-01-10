@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== 'SEC') {
+    if (!authUser || authUser.role !== 'CANVASSER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
     try {
       console.log(`Checking for duplicate PAN: ${pan}, Current phone: ${phone}`);
       
-      // Find all SEC users with KYC info
-      const allSecsWithKyc = await prisma.sEC.findMany({
+      // Find all Canvasser users with KYC info
+      const allCanvassersWithKyc = await prisma.canvasser.findMany({
         where: {
           phone: {
             not: phone // Exclude current user
@@ -190,14 +190,14 @@ export async function POST(req: NextRequest) {
 
       // Ensure Prisma-visible `updatedAt` is a BSON Date (some older records may have string values)
       try {
-        await prisma.sEC.update({ where: { phone }, data: { updatedAt: new Date() } });
+        await prisma.canvasser.update({ where: { phone }, data: { updatedAt: new Date() } });
       } catch (e) {
         // ignore - best effort
         console.warn('Failed to normalize updatedAt for SEC record', e);
       }
 
       // Get the updated record
-      const updatedSec = await prisma.sEC.findUnique({
+      const updatedCanvasser = await prisma.canvasser.findUnique({
         where: { phone },
         select: {
           id: true,
@@ -214,12 +214,12 @@ export async function POST(req: NextRequest) {
         success: true,
         message: 'PAN verified and KYC information saved successfully',
         panVerified: true,
-        fullName: updatedSec.fullName,
+        fullName: updatedCanvasser.fullName,
         kycInfo: kycInfo,
-        secUser: {
-          id: updatedSec.id,
-          phone: updatedSec.phone,
-          fullName: updatedSec.fullName,
+        canvasserUser: {
+          id: updatedCanvasser.id,
+          phone: updatedCanvasser.phone,
+          fullName: updatedCanvasser.fullName,
         },
       });
     } catch (apiError) {

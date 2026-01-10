@@ -18,7 +18,7 @@ export default function InsertQuestions() {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Insert Test Questions</h1>
-        <p className="text-sm text-gray-600 mb-6">Upload an Excel file containing test questions for SEC</p>
+        <p className="text-sm text-gray-600 mb-6">Upload an Excel file containing test questions for ASA Canvasser</p>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <h3 className="font-semibold text-blue-900 mb-2">📋 Instructions:</h3>

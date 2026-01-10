@@ -9,7 +9,7 @@ interface StoreData {
   id?: string;
   name: string;
   city?: string;
-  numberOfSec?: number;
+  numberOfCanvasser?: number;
 }
 
 async function loadStoreDataFromExcel() {
@@ -52,7 +52,7 @@ async function loadStoreDataFromExcel() {
       const storeData: StoreData = {
         name: '',
         city: undefined,
-        numberOfSec: 1 // Default to 1 SEC per store
+        numberOfCanvasser: 1 // Default to 1 Canvasser per store
       };
 
       // Handle the specific format: "STORE NAME - (CODE)"
@@ -109,7 +109,7 @@ async function loadStoreDataFromExcel() {
     // Show sample of processed data
     console.log('📋 Sample processed records:');
     storeRecords.slice(0, 3).forEach((store, index) => {
-      console.log(`  ${index + 1}. Name: "${store.name}", City: "${store.city || 'N/A'}", SECs: ${store.numberOfSec}`);
+      console.log(`  ${index + 1}. Name: "${store.name}", City: "${store.city || 'N/A'}", Canvassers: ${store.numberOfCanvasser}`);
     });
 
     // Clear existing stores
@@ -129,7 +129,7 @@ async function loadStoreDataFromExcel() {
             id: storeData.id!, // Use the simple store_001, store_002, etc.
             name: storeData.name,
             city: storeData.city,
-            numberOfSec: storeData.numberOfSec || 1,
+            numberOfCanvasser: storeData.numberOfCanvasser || 1,
             samsungIncentiveInfo: []
           }
         });

@@ -125,7 +125,7 @@ To change permissions, edit `src/app/api/rewards/send/route.ts`
 
 ### Add More Roles
 ```typescript
-if (!['ADMIN', 'ABM', 'ZSM', 'SEC'].includes(user.role)) {
+if (!['ADMIN', 'ABM', 'ZSM', 'ASA_CANVASSER'].includes(user.role)) {
   // ...
 }
 ```

@@ -38,7 +38,7 @@ export function GlobalAuthInterceptor() {
         // These endpoints are expected to return 401 for invalid credentials
         const isLoginEndpoint = 
           url.includes('/api/auth/login') || 
-          url.includes('/api/auth/sec/verify-otp') ||
+          url.includes('/api/auth/canvasser/verify-otp') ||
           url.includes('/api/auth/signup');
 
         // Debug log (remove after testing)

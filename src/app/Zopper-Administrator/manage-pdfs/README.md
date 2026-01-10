@@ -1,6 +1,6 @@
 # Manage Claim Procedure PDFs
 
-This page allows Zopper Administrators to upload, manage, and organize PDF documents for SEC claim procedures.
+This page allows Zopper Administrators to upload, manage, and organize PDF documents for ASA Canvasser claim procedures.
 
 ## Features
 
@@ -45,7 +45,7 @@ This page allows Zopper Administrators to upload, manage, and organize PDF docum
 ## Access
 
 - **Admin URL**: http://localhost:3000/Zopper-Administrator/manage-pdfs
-- **SEC View**: http://localhost:3000/SEC/claim-procedure (shows only active PDFs)
+- **ASA Canvasser View**: http://localhost:3000/canvasser/claim-procedure (shows only active PDFs)
 
 ## Notes
 

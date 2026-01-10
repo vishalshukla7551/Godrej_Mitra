@@ -1,5 +1,5 @@
 /**
- * SEC (Sales Executive Champion) Responsive Styles
+ * Canvasser (Sales Executive Champion) Responsive Styles
  * Custom breakpoints for optimal mobile-first responsive design
  * 
  * Breakpoint Strategy:
@@ -13,171 +13,171 @@
 
 /* Mobile First - Base styles for 320px and up */
 
-/* SEC Header Responsive */
-.sec-header {
+/* Canvasser Header Responsive */
+.canvasser-header {
   padding: 0.75rem 1rem;
 }
 
 @media (min-width: 375px) {
-  .sec-header {
+  .canvasser-header {
     padding: 0.875rem 1.25rem;
   }
 }
 
 @media (min-width: 640px) {
-  .sec-header {
+  .canvasser-header {
     padding: 1rem 1.5rem;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-header {
+  .canvasser-header {
     padding: 1rem 2rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .sec-header {
+  .canvasser-header {
     padding: 1.25rem 3rem;
   }
 }
 
-/* SEC Footer Responsive - Hide on desktop */
-.sec-footer {
+/* Canvasser Footer Responsive - Hide on desktop */
+.canvasser-footer {
   display: block;
 }
 
 @media (min-width: 768px) {
-  .sec-footer {
+  .canvasser-footer {
     display: none;
   }
 }
 
-/* SEC Main Content Container */
-.sec-main-container {
+/* Canvasser Main Content Container */
+.canvasser-main-container {
   max-width: 100%;
   margin: 0 auto;
 }
 
 @media (min-width: 640px) {
-  .sec-main-container {
+  .canvasser-main-container {
     max-width: 640px;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-main-container {
+  .canvasser-main-container {
     max-width: 768px;
   }
 }
 
 @media (min-width: 1024px) {
-  .sec-main-container {
+  .canvasser-main-container {
     max-width: 1024px;
   }
 }
 
 @media (min-width: 1280px) {
-  .sec-main-container {
+  .canvasser-main-container {
     max-width: 1280px;
   }
 }
 
 @media (min-width: 1536px) {
-  .sec-main-container {
+  .canvasser-main-container {
     max-width: 1536px;
   }
 }
 
 /* Banner Carousel Responsive */
-.sec-banner {
+.canvasser-banner {
   min-height: 160px;
   padding: 1rem;
 }
 
 @media (min-width: 375px) {
-  .sec-banner {
+  .canvasser-banner {
     min-height: 170px;
     padding: 1.25rem;
   }
 }
 
 @media (min-width: 640px) {
-  .sec-banner {
+  .canvasser-banner {
     min-height: 200px;
     padding: 1.5rem;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-banner {
+  .canvasser-banner {
     min-height: 240px;
     padding: 2rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .sec-banner {
+  .canvasser-banner {
     min-height: 280px;
     padding: 2.5rem;
   }
 }
 
 /* Feature Tiles Grid */
-.sec-features-grid {
+.canvasser-features-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
 }
 
 @media (min-width: 375px) {
-  .sec-features-grid {
+  .canvasser-features-grid {
     gap: 1rem;
   }
 }
 
 @media (min-width: 640px) {
-  .sec-features-grid {
+  .canvasser-features-grid {
     gap: 1.25rem;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-features-grid {
+  .canvasser-features-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .sec-features-grid {
+  .canvasser-features-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 1.75rem;
   }
 }
 
 @media (min-width: 1280px) {
-  .sec-features-grid {
+  .canvasser-features-grid {
     gap: 2rem;
   }
 }
 
 /* Feature Tile Card */
-.sec-feature-card {
+.canvasser-feature-card {
   min-height: 140px;
   padding: 0.875rem;
   border-radius: 1rem;
 }
 
 @media (min-width: 375px) {
-  .sec-feature-card {
+  .canvasser-feature-card {
     min-height: 150px;
     padding: 1rem;
   }
 }
 
 @media (min-width: 640px) {
-  .sec-feature-card {
+  .canvasser-feature-card {
     min-height: 170px;
     padding: 1.25rem;
     border-radius: 1.25rem;
@@ -185,7 +185,7 @@
 }
 
 @media (min-width: 768px) {
-  .sec-feature-card {
+  .canvasser-feature-card {
     min-height: 190px;
     padding: 1.5rem;
     border-radius: 1.5rem;
@@ -193,7 +193,7 @@
 }
 
 @media (min-width: 1024px) {
-  .sec-feature-card {
+  .canvasser-feature-card {
     min-height: 210px;
     padding: 1.75rem;
     border-radius: 1.75rem;
@@ -201,130 +201,130 @@
 }
 
 /* Typography Responsive Scaling */
-.sec-title-xl {
+.canvasser-title-xl {
   font-size: 1.25rem;
   line-height: 1.75rem;
 }
 
 @media (min-width: 375px) {
-  .sec-title-xl {
+  .canvasser-title-xl {
     font-size: 1.5rem;
     line-height: 2rem;
   }
 }
 
 @media (min-width: 640px) {
-  .sec-title-xl {
+  .canvasser-title-xl {
     font-size: 1.875rem;
     line-height: 2.25rem;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-title-xl {
+  .canvasser-title-xl {
     font-size: 2.25rem;
     line-height: 2.5rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .sec-title-xl {
+  .canvasser-title-xl {
     font-size: 2.5rem;
     line-height: 2.75rem;
   }
 }
 
 /* Leaderboard Responsive */
-.sec-leaderboard-container {
+.canvasser-leaderboard-container {
   padding: 1rem;
 }
 
 @media (min-width: 640px) {
-  .sec-leaderboard-container {
+  .canvasser-leaderboard-container {
     padding: 1.5rem;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-leaderboard-container {
+  .canvasser-leaderboard-container {
     padding: 2rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .sec-leaderboard-container {
+  .canvasser-leaderboard-container {
     padding: 2.5rem 3rem;
   }
 }
 
 /* Profile Page Responsive */
-.sec-profile-section {
+.canvasser-profile-section {
   padding: 1rem;
   margin-bottom: 1.25rem;
 }
 
 @media (min-width: 640px) {
-  .sec-profile-section {
+  .canvasser-profile-section {
     padding: 1.5rem;
     margin-bottom: 1.5rem;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-profile-section {
+  .canvasser-profile-section {
     padding: 2rem;
     margin-bottom: 2rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .sec-profile-section {
+  .canvasser-profile-section {
     padding: 2.5rem;
     margin-bottom: 2.5rem;
   }
 }
 
 /* Form Input Responsive */
-.sec-input {
+.canvasser-input {
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
 }
 
 @media (min-width: 640px) {
-  .sec-input {
+  .canvasser-input {
     padding: 0.875rem 1.25rem;
     font-size: 1rem;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-input {
+  .canvasser-input {
     padding: 1rem 1.5rem;
   }
 }
 
 /* Button Responsive */
-.sec-button {
+.canvasser-button {
   padding: 0.875rem 1.5rem;
   font-size: 0.875rem;
 }
 
 @media (min-width: 640px) {
-  .sec-button {
+  .canvasser-button {
     padding: 1rem 2rem;
     font-size: 1rem;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-button {
+  .canvasser-button {
     padding: 1.125rem 2.5rem;
   }
 }
 
 /* Desktop Sidebar Navigation (for future desktop view) */
 @media (min-width: 768px) {
-  .sec-desktop-nav {
+  .canvasser-desktop-nav {
     display: block;
     position: fixed;
     left: 0;
@@ -336,119 +336,119 @@
     overflow-y: auto;
   }
 
-  .sec-content-with-nav {
+  .canvasser-content-with-nav {
     margin-left: 240px;
   }
 }
 
 @media (min-width: 1024px) {
-  .sec-desktop-nav {
+  .canvasser-desktop-nav {
     width: 280px;
     padding: 2rem;
   }
 
-  .sec-content-with-nav {
+  .canvasser-content-with-nav {
     margin-left: 280px;
   }
 }
 
 /* Utility Classes for Responsive Spacing */
-.sec-spacing-sm {
+.canvasser-spacing-sm {
   padding: 0.75rem;
 }
 
 @media (min-width: 640px) {
-  .sec-spacing-sm {
+  .canvasser-spacing-sm {
     padding: 1rem;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-spacing-sm {
+  .canvasser-spacing-sm {
     padding: 1.5rem;
   }
 }
 
-.sec-spacing-md {
+.canvasser-spacing-md {
   padding: 1rem;
 }
 
 @media (min-width: 640px) {
-  .sec-spacing-md {
+  .canvasser-spacing-md {
     padding: 1.5rem;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-spacing-md {
+  .canvasser-spacing-md {
     padding: 2rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .sec-spacing-md {
+  .canvasser-spacing-md {
     padding: 3rem;
   }
 }
 
-.sec-spacing-lg {
+.canvasser-spacing-lg {
   padding: 1.5rem;
 }
 
 @media (min-width: 640px) {
-  .sec-spacing-lg {
+  .canvasser-spacing-lg {
     padding: 2rem;
   }
 }
 
 @media (min-width: 768px) {
-  .sec-spacing-lg {
+  .canvasser-spacing-lg {
     padding: 3rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .sec-spacing-lg {
+  .canvasser-spacing-lg {
     padding: 4rem;
   }
 }
 
 /* Responsive Table for Leaderboard */
-.sec-table-responsive {
+.canvasser-table-responsive {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 @media (min-width: 768px) {
-  .sec-table-responsive {
+  .canvasser-table-responsive {
     overflow-x: visible;
   }
 }
 
 /* Hide/Show based on screen size */
-.sec-hide-mobile {
+.canvasser-hide-mobile {
   display: none;
 }
 
 @media (min-width: 768px) {
-  .sec-hide-mobile {
+  .canvasser-hide-mobile {
     display: block;
   }
 }
 
-.sec-hide-desktop {
+.canvasser-hide-desktop {
   display: block;
 }
 
 @media (min-width: 768px) {
-  .sec-hide-desktop {
+  .canvasser-hide-desktop {
     display: none;
   }
 }
 
 /* Touch-friendly tap targets */
 @media (max-width: 767px) {
-  .sec-tap-target {
+  .canvasser-tap-target {
     min-height: 44px;
     min-width: 44px;
   }
@@ -456,7 +456,7 @@
 
 /* Smooth scrolling for mobile */
 @media (max-width: 767px) {
-  .sec-scroll-container {
+  .canvasser-scroll-container {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
   }

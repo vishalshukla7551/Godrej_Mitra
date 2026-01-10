@@ -57,9 +57,9 @@ export async function POST(req: NextRequest) {
       data: { verified: true },
     });
 
-    // Log this Canvasser login in the SEC collection (no relation to User).
+    // Log this Canvasser login in the Canvasser collection.
     // Either create a document for this phone or update its last login timestamp.
-    const secRecord: any = await prisma.sEC.upsert({
+    const canvasserRecord = await prisma.canvasser.upsert({
       where: { phone: normalized },
       update: {
         lastLoginAt: new Date(),
@@ -68,30 +68,29 @@ export async function POST(req: NextRequest) {
         phone: normalized,
         lastLoginAt: new Date(),
       },
+      include: {
+        store: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+          },
+        },
+      },
     });
 
-    // Fetch store details if storeId exists
-    let storeDetails = null;
-    if (secRecord.storeId) {
-      storeDetails = await prisma.store.findUnique({
-        where: { id: secRecord.storeId },
-        select: {
-          id: true,
-          name: true,
-          city: true,
-        },
-      });
-    }
+    // Store details are already included in the canvasserRecord
+    const storeDetails = canvasserRecord.store;
 
-    const needsName = !secRecord.fullName || secRecord.fullName.trim().length === 0;
-    const needsStore = !secRecord.storeId;
-    const needsEmployeeId = !secRecord.employeeId || (typeof secRecord.employeeId === 'string' && secRecord.employeeId.trim().length === 0);
+    const needsName = !canvasserRecord.fullName || canvasserRecord.fullName.trim().length === 0;
+    const needsStore = !canvasserRecord.storeId;
+    const needsEmployeeId = !canvasserRecord.employeeId || (typeof canvasserRecord.employeeId === 'string' && canvasserRecord.employeeId.trim().length === 0);
 
     // For simple Canvasser OTP login the runtime identity is still just the phone number.
     // We keep it in the JWT payload without linking to the main User table.
     const payload: AuthTokenPayload = {
-      secId: normalized,
-      role: 'SEC' as any,
+      canvasserId: normalized, // Use phone number as canvasserId
+      role: 'CANVASSER' as Role,
     };
 
     const accessToken = signAccessToken(payload);
@@ -101,15 +100,15 @@ export async function POST(req: NextRequest) {
       success: true,
       needsName: needsName || needsStore || needsEmployeeId,
       user: {
-        role: 'SEC',
-        id: secRecord.id,
+        role: 'CANVASSER',
+        id: canvasserRecord.id,
         phone: normalized,
-        fullName: secRecord.fullName ?? null,
-        storeId: secRecord.storeId ?? null,
+        fullName: canvasserRecord.fullName ?? null,
+        storeId: canvasserRecord.storeId ?? null,
         store: storeDetails,
-        employeeId: secRecord.employeeId ?? null,
-        AgencyName: secRecord.AgencyName ?? null,
-        AgentCode: secRecord.AgentCode ?? null,
+        employeeId: canvasserRecord.employeeId ?? null,
+        AgencyName: canvasserRecord.AgencyName ?? null,
+        AgentCode: canvasserRecord.AgentCode ?? null,
       },
     });
 

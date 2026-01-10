@@ -12,7 +12,7 @@ import { getAuthenticatedUserFromCookies } from '@/lib/auth';
  * - paymentStatus?: 'paid' | 'unpaid' | 'all'
  * - startDate?: string (YYYY-MM-DD)
  * - endDate?: string (YYYY-MM-DD)
- * - search?: string (search SEC/Store/Device/IMEI)
+ * - search?: string (search Canvasser/Store/Device/Serial Number)
  * - page?: number (pagination)
  * - limit?: number (page size)
  */
@@ -68,18 +68,11 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Search filter (SEC phone, store name, device name, IMEI)
+    // Search filter (Canvasser phone, store name, device name, Serial Number)
     if (search) {
       where.OR = [
         {
-          secUser: {
-            phone: { contains: search, mode: 'insensitive' }
-          }
-        },
-        {
-          secUser: {
-            fullName: { contains: search, mode: 'insensitive' }
-          }
+          canvasserId: { contains: search, mode: 'insensitive' }
         },
         {
           store: {
@@ -104,14 +97,6 @@ export async function GET(req: NextRequest) {
     const reports = await prisma.spotIncentiveReport.findMany({
       where,
       include: {
-        secUser: {
-          select: {
-            id: true,
-            employeeId: true,
-            phone: true,
-            fullName: true,
-          }
-        },
         store: {
           select: {
             id: true,
@@ -151,39 +136,62 @@ export async function GET(req: NextRequest) {
       return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
     };
 
-    // Transform data for frontend
-    const transformedReports = reports.map((report: any) => ({
-      id: report.id,
-      createdAt: formatDate(report.createdAt),
-      submittedAt: formatDate(report.Date_of_sale || report.createdAt),
-      imei: report.imei,
-      planPrice: report.plan.PlanPrice,
-      incentiveEarned: report.spotincentiveEarned,
-      isPaid: !!report.spotincentivepaidAt,
-      paidAt: report.spotincentivepaidAt ? formatDate(report.spotincentivepaidAt) : null,
-      voucherCode: report.voucherCode || '',
-      isCompaignActive: report.isCompaignActive,
-      secUser: {
-        secId: report.secUser.employeeId || report.secUser.id,
-        phone: report.secUser.phone,
-        name: report.secUser.fullName || 'Not Set'
+    // Get unique canvasser IDs from reports
+    const canvasserIds = [...new Set(reports.map(r => r.canvasserId).filter(Boolean))];
+    
+    // Fetch canvasser details
+    const canvassers = await prisma.canvasser.findMany({
+      where: {
+        id: { in: canvasserIds }
       },
-      store: {
-        id: report.store.id,
-        storeName: report.store.name,
-        city: report.store.city || 'Not Set'
-      },
-      samsungSKU: {
-        id: report.godrejSKU.id,
-        Category: report.godrejSKU.Category,
-        ModelName: report.godrejSKU.Category // Fallback
-      },
-      plan: {
-        id: report.plan.id,
-        planType: report.plan.planType,
-        price: report.plan.PlanPrice
+      select: {
+        id: true,
+        employeeId: true,
+        phone: true,
+        fullName: true,
       }
-    }));
+    });
+    
+    // Create canvasser lookup map
+    const canvasserMap = new Map(canvassers.map(c => [c.id, c]));
+
+    // Transform data for frontend
+    const transformedReports = reports.map((report: any) => {
+      const canvasser = canvasserMap.get(report.canvasserId);
+      
+      return {
+        id: report.id,
+        createdAt: formatDate(report.createdAt),
+        submittedAt: formatDate(report.Date_of_sale || report.createdAt),
+        serialNumber: report.imei,
+        planPrice: report.plan.PlanPrice,
+        incentiveEarned: report.spotincentiveEarned,
+        isPaid: !!report.spotincentivepaidAt,
+        paidAt: report.spotincentivepaidAt ? formatDate(report.spotincentivepaidAt) : null,
+        voucherCode: report.voucherCode || '',
+        isCompaignActive: report.isCompaignActive,
+        secUser: {
+          secId: canvasser?.employeeId || canvasser?.id || 'Unknown',
+          phone: canvasser?.phone || 'Unknown',
+          name: canvasser?.fullName || 'Not Set'
+        },
+        store: {
+          id: report.store.id,
+          storeName: report.store.name,
+          city: report.store.city || 'Not Set'
+        },
+        samsungSKU: {
+          id: report.godrejSKU.id,
+          Category: report.godrejSKU.Category,
+          ModelName: report.godrejSKU.Category // Fallback
+        },
+        plan: {
+          id: report.plan.id,
+          planType: report.plan.planType,
+          price: report.plan.PlanPrice
+        }
+      };
+    });
 
     // Calculate summary statistics
     const totalIncentiveEarned = reports.reduce((sum: number, report: any) => sum + report.spotincentiveEarned, 0);
@@ -192,7 +200,7 @@ export async function GET(req: NextRequest) {
       .reduce((sum: number, report: any) => sum + report.spotincentiveEarned, 0);
 
     const uniqueStores = new Set(reports.map((report: any) => report.storeId));
-    const uniqueSECs = new Set(reports.map((report: any) => report.secId));
+    const uniqueCanvassers = new Set(reports.map((report: any) => report.canvasserId));
 
     // Get available filters data
     const [stores, planTypes] = await Promise.all([
@@ -286,7 +294,7 @@ export async function GET(req: NextRequest) {
         summary: {
           totalReports: totalCount,
           activeStores: uniqueStores.size,
-          activeSECs: uniqueSECs.size,
+          activeSECs: uniqueCanvassers.size,
           totalIncentiveEarned,
           totalIncentivePaid,
           totalIncentivePending: totalIncentiveEarned - totalIncentivePaid

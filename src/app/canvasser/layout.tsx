@@ -9,7 +9,7 @@ export default function SECLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { loading, user } = useRequireAuth(['SEC']);
+  const { loading, user } = useRequireAuth(['CANVASSER']);
   const router = useRouter();
   const pathname = usePathname();
   const [checkingProfile, setCheckingProfile] = useState(true);
@@ -17,8 +17,8 @@ export default function SECLayout({
   useEffect(() => {
     if (loading || !user) return;
 
-    // Skip profile check if already on the onboarding page
-    if (pathname === '/canvasser/onboarding') {
+    // Skip profile check if already on the onboarding page or profile page
+    if (pathname === '/canvasser/onboarding' || pathname === '/canvasser/profile') {
       setCheckingProfile(false);
       return;
     }

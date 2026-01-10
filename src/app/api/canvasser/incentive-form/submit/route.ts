@@ -13,7 +13,7 @@ import { getAuthenticatedUserFromCookies } from '@/lib/auth';
  * {
  *   deviceId: string,
  *   planId: string,
- *   imei: string,
+ *   serialNumber: string,
  *   dateOfSale?: string (optional, defaults to now)
  * }
  */
@@ -22,12 +22,12 @@ export async function POST(req: NextRequest) {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== 'SEC') {
+    if (!authUser || authUser.role !== 'CANVASSER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
-    const { deviceId, planId, imei, dateOfSale, clientSecPhone, clientStoreId, invoicePrice } = body;
+    const { deviceId, planId, serialNumber, dateOfSale, clientSecPhone, clientStoreId, invoicePrice } = body;
 
     // Get SEC phone from authenticated user (server-side, cannot be manipulated)
     const secPhone = authUser.username;
@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find SEC user by authenticated phone
-    const secUser = await prisma.sEC.findUnique({
+    // Find Canvasser user by authenticated phone
+    const canvasserUser = await prisma.canvasser.findUnique({
       where: { phone: secPhone },
       select: {
         id: true,
@@ -51,15 +51,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (!secUser) {
+    if (!canvasserUser) {
       return NextResponse.json(
-        { error: 'SEC profile not found. Please complete onboarding first.' },
+        { error: 'Canvasser profile not found. Please complete onboarding first.' },
         { status: 404 }
       );
     }
 
-    // Get storeId from SEC profile (server-side, cannot be manipulated)
-    const storeId = secUser.storeId;
+    // Get storeId from Canvasser profile (server-side, cannot be manipulated)
+    const storeId = canvasserUser.storeId;
 
     if (!storeId) {
       return NextResponse.json(
@@ -77,38 +77,26 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate required fields
-    if (!deviceId || !planId || !imei) {
+    if (!deviceId || !planId || !serialNumber) {
       return NextResponse.json(
         { error: 'All fields are required: deviceId, planId, serialNumber' },
         { status: 400 }
       );
     }
 
-    // Validate Serial Number length (16-18 digits)
-    if (imei.length < 16 || imei.length > 18) {
+    // Simple Serial Number validation (16-18 digits only)
+    if (serialNumber.length < 16 || serialNumber.length > 18) {
       return NextResponse.json(
-        { error: 'Serial Number must be 16-18 characters long' },
+        { error: 'Serial Number must be 16-18 digits long' },
         { status: 400 }
       );
     }
 
-    // Validate Serial Number format (alphanumeric only)
-    if (!/^[A-Z0-9]+$/i.test(imei)) {
+    // Validate Serial Number format (digits only)
+    if (!/^\d+$/.test(serialNumber)) {
       return NextResponse.json(
-        { error: 'Serial Number must contain only letters and numbers' },
+        { error: 'Serial Number must contain only digits' },
         { status: 400 }
-      );
-    }
-
-    // Check if Serial Number (stored as imei) already exists in SpotIncentiveReport
-    const existingSpotReport = await prisma.spotIncentiveReport.findUnique({
-      where: { imei },
-    });
-
-    if (existingSpotReport) {
-      return NextResponse.json(
-        { error: 'This Serial Number has already been submitted' },
-        { status: 409 }
       );
     }
 
@@ -264,17 +252,17 @@ export async function POST(req: NextRequest) {
     // Create the spot incentive report (RESTRICTED TO SPOT INCENTIVE ONLY)
     const spotReport = await prisma.spotIncentiveReport.create({
       data: {
-        secId: secUser.id,
+        canvasserId: canvasserUser.id,
         storeId: store.id,
         godrejSKUId: device.id,
         planId: plan.id,
-        imei, // Keeping field name 'imei' but storing Serial Number
+        imei: serialNumber, // Store serial number in imei field
         spotincentiveEarned,
         isCompaignActive: isCampaignActive,
         Date_of_sale: saleDate,
       },
       include: {
-        secUser: {
+        canvasserUser: {
           select: {
             id: true,
             phone: true,
@@ -311,7 +299,7 @@ export async function POST(req: NextRequest) {
         message: 'Spot incentive report submitted successfully',
         salesReport: {
           id: spotReport.id,
-          imei: spotReport.imei,
+          serialNumber: spotReport.imei,
           incentiveEarned: spotReport.spotincentiveEarned,
           dateOfSale: spotReport.Date_of_sale,
           isCampaignActive: spotReport.isCompaignActive,
@@ -324,14 +312,6 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error in POST /api/sec/incentive-form/submit', error);
-
-    // Handle Prisma unique constraint violation (duplicate IMEI)
-    if (error instanceof Error && error.message.includes('Unique constraint')) {
-      return NextResponse.json(
-        { error: 'This IMEI has already been submitted' },
-        { status: 409 }
-      );
-    }
 
     return NextResponse.json(
       { error: 'Internal server error' },

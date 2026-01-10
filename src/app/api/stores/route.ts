@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
           id: true,
           name: true,
           city: true,
-          numberOfSec: true,
+          numberOfCanvasser: true,
           createdAt: true
         },
         orderBy: [
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, city, numberOfSec } = body;
+    const { name, city, numberOfCanvasser } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
         id: storeId,
         name: name.trim(),
         city: city?.trim() || null,
-        numberOfSec: numberOfSec || 1,
+        numberOfCanvasser: numberOfCanvasser || 1,
         samsungIncentiveInfo: []
       }
     });

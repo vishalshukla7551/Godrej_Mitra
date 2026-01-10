@@ -14,34 +14,44 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Find SEC user by phone
-    const secUser = await prisma.sEC.findUnique({
+    // Find Canvasser user by phone
+    const canvasserUser = await prisma.canvasser.findUnique({
       where: { phone: authUser.profile.phone },
       select: { id: true, fullName: true, phone: true }
     });
 
-    if (!secUser) {
-      return NextResponse.json({ error: 'SEC user not found' }, { status: 404 });
+    if (!canvasserUser) {
+      return NextResponse.json({ error: 'Canvasser user not found' }, { status: 404 });
     }
 
-    // Get all queries for this SEC user
+    // Get all queries for this Canvasser user
     const queries = await prisma.supportQuery.findMany({
-      where: { secId: secUser.id },
+      where: { canvasserId: canvasserUser.id },
       include: {
         messages: {
           orderBy: { sentAt: 'asc' }
         },
-        secUser: {
+        canvasserUser: {
           select: { fullName: true, phone: true }
         }
       },
       orderBy: { submittedAt: 'desc' }
     });
 
+    // Transform queries for backward compatibility (canvasserUser -> secUser)
+    const transformedQueries = queries.map(query => ({
+      ...query,
+      secUser: query.canvasserUser ? {
+        fullName: query.canvasserUser.fullName,
+        phone: query.canvasserUser.phone
+      } : null,
+      canvasserUser: undefined // Remove the original field
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
-        queries,
+        queries: transformedQueries,
         canCreateNew: !queries.some((q: any) => q.status === 'PENDING' || q.status === 'IN_PROGRESS')
       }
     });
@@ -62,20 +72,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Find SEC user by phone
-    const secUser = await prisma.sEC.findUnique({
+    // Find Canvasser user by phone
+    const canvasserUser = await prisma.canvasser.findUnique({
       where: { phone: authUser.profile.phone },
       select: { id: true, fullName: true, phone: true }
     });
 
-    if (!secUser) {
-      return NextResponse.json({ error: 'SEC user not found' }, { status: 404 });
+    if (!canvasserUser) {
+      return NextResponse.json({ error: 'Canvasser user not found' }, { status: 404 });
     }
 
     // Check if user has any pending or in-progress queries
     const existingQuery = await prisma.supportQuery.findFirst({
       where: {
-        secId: secUser.id,
+        canvasserId: canvasserUser.id,
         status: { in: ['PENDING', 'IN_PROGRESS'] }
       }
     });
@@ -117,14 +127,14 @@ export async function POST(req: NextRequest) {
     const newQuery = await prisma.supportQuery.create({
       data: {
         queryNumber,
-        secId: secUser.id,
+        canvasserId: canvasserUser.id,
         category,
         description,
         status: 'PENDING'
       },
       include: {
         messages: true,
-        secUser: {
+        canvasserUser: {
           select: { fullName: true, phone: true }
         }
       }

@@ -15,7 +15,7 @@ interface StoreChangeRequest {
   reviewedBy?: string;
   reviewedAt?: string;
   userId: string;
-  userRole: 'ASE' | 'ABM' | 'SEC';
+  userRole: 'ASE' | 'ABM' | 'ASA_CANVASSER';
   profile: {
     id: string;
     fullName: string;
@@ -32,7 +32,7 @@ interface StoreChangeRequest {
     fullName: string;
     phone: string;
   };
-  sec?: {
+  asaCanvasser?: {
     id: string;
     fullName: string;
     phone: string;
@@ -160,7 +160,7 @@ export default function StoreChangeRequestsPage() {
           <div>
             <h1 className="text-3xl font-bold text-white mb-1">Store Change Requests</h1>
             <p className="text-sm text-neutral-400">
-              Manage ASE, ABM, and SEC store mapping change requests
+              Manage ASE, ABM, and ASA Canvasser store mapping change requests
             </p>
           </div>
 
@@ -242,20 +242,20 @@ export default function StoreChangeRequestsPage() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {request.profile?.fullName || request.ase?.fullName || request.abm?.fullName || request.sec?.fullName}
+                          {request.profile?.fullName || request.ase?.fullName || request.abm?.fullName || request.asaCanvasser?.fullName}
                         </h3>
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                           request.userRole === 'ASE' ? 'bg-blue-100 text-blue-800' : 
                           request.userRole === 'ABM' ? 'bg-purple-100 text-purple-800' :
-                          request.userRole === 'SEC' ? 'bg-green-100 text-green-800' :
+                          request.userRole === 'ASA_CANVASSER' ? 'bg-green-100 text-green-800' :
                           request.ase ? 'bg-blue-100 text-blue-800' : 
                           request.abm ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
                         }`}>
-                          {request.userRole || (request.ase ? 'ASE' : request.abm ? 'ABM' : 'SEC')}
+                          {request.userRole || (request.ase ? 'ASE' : request.abm ? 'ABM' : 'ASA_CANVASSER')}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600">
-                        {request.profile?.phone || request.ase?.phone || request.abm?.phone || request.sec?.phone}
+                        {request.profile?.phone || request.ase?.phone || request.abm?.phone || request.asaCanvasser?.phone}
                       </p>
                       <p className="text-xs text-gray-500">
                         Submitted: {formatDate(request.createdAt)}

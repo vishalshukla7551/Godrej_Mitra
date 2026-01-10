@@ -108,7 +108,7 @@ The complete Canvasser Help & Support Query Management System has been implement
 
 ### API Security
 - Authentication middleware on all endpoints
-- Role-based access control (SEC vs ZOPPER_ADMINISTRATOR)
+- Role-based access control (CANVASSER vs ZOPPER_ADMINISTRATOR)
 - Input validation and sanitization
 - Proper error handling
 

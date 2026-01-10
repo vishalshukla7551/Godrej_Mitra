@@ -178,7 +178,7 @@ export default function TestResultsPage() {
         : 'Answer details not available';
 
       return {
-        'SEC ID': submission.secId,
+        'ASA Canvasser ID': submission.asaCanvasserId,
         Store: submission.storeName
           ? `${submission.storeName}, ${submission.storeCity || ''}`
           : 'N/A',
@@ -300,9 +300,9 @@ export default function TestResultsPage() {
                 <tr>
                   <th
                     className="w-[8%] px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('secId')}
+                    onClick={() => handleSort('asaCanvasserId')}
                   >
-                    SEC ID {sortBy === 'secId' && (sortOrder === 'desc' ? '↓' : '↑')}
+                    ASA Canvasser ID {sortBy === 'asaCanvasserId' && (sortOrder === 'desc' ? '↓' : '↑')}
                   </th>
                   <th className="w-[18%] px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Store

@@ -17,7 +17,6 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
   const [deviceId, setDeviceId] = useState('');
   const [applianceSubCategory, setApplianceSubCategory] = useState('');
   const [planId, setPlanId] = useState('');
-  const [imeiExists, setImeiExists] = useState(false);
   const [serialNumber, setSerialNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSecAlert, setShowSecAlert] = useState(false);
@@ -260,7 +259,7 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
         body: JSON.stringify({
           deviceId,
           planId,
-          imei: serialNumber, // Send serialNumber as imei
+          serialNumber,
           invoicePrice,
           dateOfSale: dateOfSale || undefined,
           // Send client values for security verification (server will validate)
@@ -609,7 +608,7 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
                 id="serialNumber"
                 value={serialNumber}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+                  const value = e.target.value.replace(/[^0-9]/g, '');
                   setSerialNumber(value);
                 }}
                 placeholder="Enter 16-18 digit Serial Number"
@@ -720,13 +719,6 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
               </div>
 
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Serial Number</span>
-                <span className="text-sm text-gray-900 font-medium text-right ml-4">
-                  {serialNumber}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Plan Type</span>
                 <span className="text-sm text-gray-900 font-medium text-right ml-4">
                   {plans.find(p => p.id === planId)?.label || planId}
@@ -737,6 +729,13 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
                 <span className="text-sm text-gray-500">Plan Price</span>
                 <span className="text-sm text-gray-900 font-medium">
                   ₹{plans.find(p => p.id === planId)?.price || '0'}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">Serial Number</span>
+                <span className="text-sm text-gray-900 font-medium text-right ml-4">
+                  {serialNumber}
                 </span>
               </div>
             </div>

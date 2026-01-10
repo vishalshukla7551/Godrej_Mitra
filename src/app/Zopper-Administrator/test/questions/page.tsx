@@ -18,7 +18,7 @@ export default function InsertQuestionsPage() {
     <div className="max-w-2xl mx-auto">
       <div className="bg-white rounded-xl shadow-md p-6">
         <h2 className="text-xl font-bold text-gray-800 mb-2">Insert Test Questions</h2>
-        <p className="text-sm text-gray-600 mb-6">Upload an Excel file containing test questions for SEC</p>
+        <p className="text-sm text-gray-600 mb-6">Upload an Excel file containing test questions for Canvasser</p>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <h3 className="font-semibold text-blue-900 mb-2">📋 Instructions:</h3>

@@ -21,7 +21,8 @@ const REFRESH_SECRET = process.env.REFRESH_TOKEN_SECRET || ''
 
 export interface AuthTokenPayload {
   userId?: string;
-  secId?: string;
+  canvasserId?: string;
+  secId?: string; // For SEC/Canvasser authentication
   role: Role;
 }
 
@@ -119,13 +120,13 @@ export async function getAuthenticatedUserFromCookies(
     return null;
   }
 
-  // Special handling for SEC users.
-  // For simple OTP-based SEC login we treat the SEC identity as the phone number
-  // carried in `secId` inside the JWT payload, and we do not depend on a
-  // dedicated SEC collection record.
-  if (payload.role === 'SEC') {
-    const secId = payload.secId;
-    if (!secId) {
+  // Special handling for Canvasser users.
+  // For simple OTP-based Canvasser login we treat the Canvasser identity as the phone number
+  // carried in `canvasserId` inside the JWT payload, and we do not depend on a
+  // dedicated Canvasser collection record.
+  if (payload.role === 'CANVASSER') {
+    const canvasserId = payload.canvasserId;
+    if (!canvasserId) {
       if (cookieStore && allowCookieMutation) {
         cookieStore.delete(ACCESS_TOKEN_COOKIE);
         cookieStore.delete(REFRESH_TOKEN_COOKIE);
@@ -133,12 +134,12 @@ export async function getAuthenticatedUserFromCookies(
       return null;
     }
 
-    // If we authenticated using the refresh token, rotate SEC tokens as well so
+    // If we authenticated using the refresh token, rotate Canvasser tokens as well so
     // a missing/expired access token gets recreated from a valid refresh token.
     if (authenticatedViaRefresh && cookieStore && allowCookieMutation) {
       const newPayload: AuthTokenPayload = {
-        secId,
-        role: 'SEC' as Role,
+        canvasserId,
+        role: 'CANVASSER' as Role,
       };
 
       // Rotate ONLY the access token. Refresh token keeps its original
@@ -156,14 +157,14 @@ export async function getAuthenticatedUserFromCookies(
     }
 
     const authUser: AuthenticatedUser = {
-      id: secId,
-      username: secId,
-      role: 'SEC' as Role,
+      id: canvasserId,
+      username: canvasserId,
+      role: 'CANVASSER' as Role,
       validation: 'APPROVED',
       metadata: {},
       profile: {
-        id: secId,
-        phone: secId,
+        id: canvasserId,
+        phone: canvasserId,
       },
     } as any;
 

@@ -52,8 +52,8 @@ interface LeaderboardEntry {
     storeId?: string;
     storeName?: string;
     city?: string | null;
-    // Canvasser (SEC) fields
-    secId?: string;
+    // Canvasser (ASA Canvasser) fields
+    asaCanvasserId?: string;
     canvasserName?: string;
     identifier?: string;
     // Stats
@@ -74,7 +74,7 @@ interface LeaderboardData {
 export default function LeaderboardPage() {
     const { loading } = useRequireAuth(['ZOPPER_ADMINISTRATOR']);
     const [data, setData] = useState<LeaderboardData | null>(null);
-    const [activeTab, setActiveTab] = useState<'store' | 'sec'>('store');
+    const [activeTab, setActiveTab] = useState<'store' | 'asaCanvasser'>('store');
     const [isLoading, setIsLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
     const [error, setError] = useState<string | null>(null);
@@ -166,8 +166,8 @@ export default function LeaderboardPage() {
                                 Store Wise
                             </button>
                             <button
-                                onClick={() => setActiveTab('sec')}
-                                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'sec' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+                                onClick={() => setActiveTab('asaCanvasser')}
+                                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'asaCanvasser' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'
                                     }`}
                             >
                                 Canvasser Wise

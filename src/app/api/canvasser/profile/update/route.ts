@@ -3,9 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
 /**
- * POST /api/sec/profile/update
- * Update SEC profile information (AgencyName, AgentCode)
- * Body: { agencyName?: string; agentCode?: string }
+ * POST /api/canvasser/profile/update
+ * Update Canvasser profile information
+ * Body: { fullName?: string; employeeId?: string }
  */
 export async function POST(req: NextRequest) {
   try {
@@ -14,15 +14,15 @@ export async function POST(req: NextRequest) {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== 'SEC') {
+    if (!authUser || authUser.role !== 'CANVASSER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const phone = authUser.username;
+    const phone = authUser.id;
 
     if (!phone) {
       return NextResponse.json(
-        { error: 'Missing SEC identifier' },
+        { error: 'Missing Canvasser identifier' },
         { status: 400 },
       );
     }
@@ -32,13 +32,13 @@ export async function POST(req: NextRequest) {
       updatedAt: new Date(),
     };
 
-    const secRecord = await prisma.sEC.update({
+    const canvasserRecord = await prisma.canvasser.update({
       where: { phone },
       data: updateData,
     });
 
     // Fetch the updated record with all fields
-    const updatedRecord: any = await prisma.sEC.findUnique({
+    const updatedRecord: any = await prisma.canvasser.findUnique({
       where: { phone },
     });
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     if (!updatedRecord) {
       return NextResponse.json(
-        { error: 'SEC record not found' },
+        { error: 'Canvasser record not found' },
         { status: 404 },
       );
     }
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       store: storeDetails,
     });
   } catch (error) {
-    console.error('Error in POST /api/sec/profile/update', error);
+    console.error('Error in POST /api/canvasser/profile/update', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },

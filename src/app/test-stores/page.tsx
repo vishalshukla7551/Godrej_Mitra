@@ -74,7 +74,7 @@ export default function TestStoresPage() {
               <h3 className="text-lg font-semibold text-purple-900">Avg SECs/Store</h3>
               <p className="text-3xl font-bold text-purple-600">
                 {stores.length > 0 ? 
-                  (stores.reduce((sum, store) => sum + (store.numberOfSec || 1), 0) / stores.length).toFixed(1) 
+                  (stores.reduce((sum, store) => sum + (store.numberOfCanvasser || 1), 0) / stores.length).toFixed(1) 
                   : '0'
                 }
               </p>
@@ -124,7 +124,7 @@ export default function TestStoresPage() {
                         {store.city || 'N/A'}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {store.numberOfSec || 1}
+                        {store.numberOfCanvasser || 1}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-400 font-mono">
                         {store.id}

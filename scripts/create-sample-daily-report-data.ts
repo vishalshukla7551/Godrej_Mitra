@@ -22,7 +22,7 @@ async function createSampleData() {
       select: { id: true, planType: true }
     });
 
-    const secs = await prisma.sEC.findMany({
+    const canvassers = await prisma.canvasser.findMany({
       take: 3,
       select: { id: true, fullName: true }
     });

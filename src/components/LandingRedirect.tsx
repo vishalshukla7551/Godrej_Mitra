@@ -15,7 +15,7 @@ export default function LandingRedirect({ redirectTo }: LandingRedirectProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.push(redirectTo);
-    }, 5000); // 5 seconds
+    }, 5000); // 5 seconds - as requested
 
     return () => clearTimeout(timer);
   }, [redirectTo, router]);

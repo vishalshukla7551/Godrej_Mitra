@@ -9,7 +9,7 @@ interface SpotIncentiveReport {
   id: string;
   createdAt: string;
   submittedAt: string;
-  imei: string;
+  serialNumber: string;
   planPrice: number;
   incentiveEarned: number;
   isPaid: boolean;
@@ -221,16 +221,16 @@ export default function SpotIncentiveReport() {
   const exportExcel = () => {
     const exportData = reports.map(report => ({
       'Report ID': report.id,
-      'SEC ID': report.secUser.secId || 'Not Set',
-      'SEC Phone': report.secUser.phone,
-      'SEC Name': report.secUser.name || 'Not Set',
+      'Canvasser ID': report.secUser.secId || 'Not Set',
+      'Canvasser Phone': report.secUser.phone,
+      'Canvasser Name': report.secUser.name || 'Not Set',
       'Store Name': report.store.storeName,
       'Store City': report.store.city,
       'Device Category': report.samsungSKU.Category,
       'Device Model': report.samsungSKU.ModelName,
       'Plan Type': report.plan.planType.replace(/_/g, ' '),
       'Plan Price': `₹${report.planPrice}`,
-      'IMEI': report.imei,
+      'Serial Number': report.serialNumber,
       'Incentive Earned': `₹${report.incentiveEarned}`,
       'Payment Status': report.isPaid ? 'Paid' : 'Pending',
       'Submitted Date': formatDateWithTime(report.submittedAt).date,
@@ -299,7 +299,7 @@ export default function SpotIncentiveReport() {
         <section className="flex flex-wrap items-center gap-3">
           <input
             className="flex-1 min-w-[220px] px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Search SEC / Store / Device / Serial Number"
+            placeholder="Search Canvasser / Store / Device / Serial Number"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -367,7 +367,7 @@ export default function SpotIncentiveReport() {
                     Date of Sale
                   </th>
                   <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[100px]">
-                    SEC ID
+                    Canvasser ID
                   </th>
                   <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider">
                     Store Name
@@ -440,7 +440,7 @@ export default function SpotIncentiveReport() {
                         <div className="truncate">{r.plan.planType.replace(/_/g, ' ')}</div>
                       </td>
                       <td className="p-2 md:p-3 text-neutral-500 text-xs font-mono">
-                        <div className="truncate">{r.imei}</div>
+                        <div className="truncate">{r.serialNumber}</div>
                       </td>
                       <td className="p-2 md:p-3 text-emerald-600 text-sm font-semibold">
                         ₹{r.incentiveEarned}

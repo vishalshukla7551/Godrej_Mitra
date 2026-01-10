@@ -48,7 +48,7 @@ export default function SendTestInvitesPage() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-3 py-3 text-left font-bold text-gray-800">SEC ID</th>
+                <th className="px-3 py-3 text-left font-bold text-gray-800">ASA Canvasser ID</th>
                 <th className="px-3 py-3 text-left font-bold text-gray-800">Phone</th>
                 <th className="px-3 py-3 text-left font-bold text-gray-800">Link</th>
                 <th className="px-3 py-3 text-left font-bold text-gray-800">Actions</th>

@@ -33,9 +33,9 @@ Each device sale is mapped to a price slab based on the `SamsungSKU.ModelPrice`:
   - `volumeKicker`: Units per SEC after which 120% incentive applies
 
 ### Gate Expansion
-Thresholds are multiplied by the number of SECs at the store:
-- `finalGate = gate * store.numberOfSec`
-- `finalVolumeKicker = volumeKicker * store.numberOfSec`
+Thresholds are multiplied by the number of ASA Canvassers at the store:
+- `finalGate = gate * store.numberOfAsaCanvasser`
+- `finalVolumeKicker = volumeKicker * store.numberOfAsaCanvasser`
 
 ### Incentive Tiers
 For the entire store (all SECs' sales combined):
@@ -53,8 +53,8 @@ For the entire store (all SECs' sales combined):
 
 ### Equal Distribution
 After calculating the total store incentive:
-- **Each SEC's Share = Total Store Incentive ÷ numberOfSec**
-- All SECs at the same store receive equal shares regardless of individual performance
+- **Each ASA Canvasser's Share = Total Store Incentive ÷ numberOfAsaCanvasser**
+- All ASA Canvassers at the same store receive equal shares regardless of individual performance
 
 ## Response Format
 
@@ -183,11 +183,11 @@ curl -X GET "http://localhost:3000/api/sec/incentive/calculate?secId=507f1f77bcf
 ## Database Schema Requirements
 
 ### Required Models
-- `SalesReport`: Sales data with Date_of_sale, secId, storeId, samsungSKUId
+- `SalesReport`: Sales data with Date_of_sale, asaCanvasserId, storeId, samsungSKUId
 - `SamsungSKU`: Device info with ModelPrice
-- `Store`: Store info with numberOfSec
+- `Store`: Store info with numberOfAsaCanvasser
 - `PriceIncentiveSlab`: Incentive rules with minPrice, maxPrice, incentiveAmount, gate, volumeKicker
-- `SalesSummary`: Summary storage with unique constraint on (secId, month, year)
+- `SalesSummary`: Summary storage with unique constraint on (asaCanvasserId, month, year)
 
 ### Unique Constraint
 ```prisma

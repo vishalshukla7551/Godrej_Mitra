@@ -41,9 +41,9 @@ async function main() {
     const createdAt = normalizeDate(doc.createdAt);
     const updatedAt = normalizeDate(doc.updatedAt);
 
-    // We use phone as the unique key for SEC in Prisma.
+    // We use phone as the unique key for Canvasser in Prisma.
     // Upsert ensures the script is idempotent.
-    await prisma.sEC.upsert({
+    await prisma.canvasser.upsert({
       where: { phone },
       update: {
         fullName: doc.name ?? undefined,

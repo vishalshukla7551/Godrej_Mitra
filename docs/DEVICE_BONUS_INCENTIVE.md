@@ -57,7 +57,7 @@ The attach rate is stored in the `Store` model as `attachPercentage` (Float fiel
 
 3. Total Store Incentive = Base Incentive + Device Bonuses
 
-4. Per SEC Share = Total Store Incentive ÷ numberOfSec
+4. Per ASA Canvasser Share = Total Store Incentive ÷ numberOfAsaCanvasser
 ```
 
 ## Example Calculation

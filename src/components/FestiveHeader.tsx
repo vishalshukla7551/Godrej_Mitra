@@ -33,7 +33,7 @@ export default function FestiveHeader({ userName = 'Guest', hideGreeting = false
     };
   }, []);
 
-  // Redirect SEC users without a full name to the name capture screen
+  // Redirect Canvasser users without a full name to the name capture screen
   useEffect(() => {
     if (typeof window === 'undefined') return;
 

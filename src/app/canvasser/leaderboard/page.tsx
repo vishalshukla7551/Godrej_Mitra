@@ -60,7 +60,7 @@ interface LeaderboardStore {
 
 interface LeaderboardCanvasser {
   rank: number;
-  secId: string;
+  canvasserId: string;
   canvasserName: string;
   identifier: string;
   totalSales: number;
@@ -384,7 +384,7 @@ export default function SalesChampionLeaderboardPage() {
 
                             const name = leaderboardType === 'store' ? item.storeName : item.canvasserName;
                             const subtext = leaderboardType === 'store' ? item.city : item.identifier;
-                            const id = leaderboardType === 'store' ? item.storeId : item.secId;
+                            const id = leaderboardType === 'store' ? item.storeId : item.canvasserId;
 
                             return (
                               <tr key={id} className="border-b border-gray-100 last:border-none">

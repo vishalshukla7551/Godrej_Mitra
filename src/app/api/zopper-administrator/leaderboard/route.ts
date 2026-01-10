@@ -72,14 +72,6 @@ export async function GET(req: NextRequest) {
             city: true,
           },
         },
-        secUser: {
-          select: {
-            id: true,
-            fullName: true,
-            phone: true,
-            employeeId: true,
-          },
-        },
         godrejSKU: {
           select: {
             id: true,
@@ -122,11 +114,11 @@ export async function GET(req: NextRequest) {
       }
     >();
 
-    // Aggregate by Canvasser (SEC)
-    const secMap = new Map<
+    // Aggregate by Canvasser
+    const canvasserMap = new Map<
       string,
       {
-        secId: string;
+        canvasserId: string;
         canvasserName: string;
         identifier: string; // Employee ID or Phone
         totalSales: number;
@@ -183,24 +175,24 @@ export async function GET(req: NextRequest) {
         storeMap.set(storeKey, newStore);
       }
 
-      // SEC aggregation
-      const secKey = report.secId;
-      if (secMap.has(secKey)) {
-        const existing = secMap.get(secKey)!;
+      // Canvasser aggregation
+      const canvasserKey = report.canvasserId;
+      if (canvasserMap.has(canvasserKey)) {
+        const existing = canvasserMap.get(canvasserKey)!;
         existing.totalSales += 1;
         existing.totalIncentive += report.spotincentiveEarned;
         calculateEWCounts(report.plan.planType, existing);
       } else {
-        const newSec = {
-          secId: report.secUser.id,
-          canvasserName: report.secUser.fullName || 'Unknown',
-          identifier: report.secUser.employeeId || report.secUser.phone,
+        const newCanvasser = {
+          canvasserId: report.canvasserId,
+          canvasserName: 'Unknown', // We'll fetch this separately
+          identifier: report.canvasserId, // Fallback to ID
           totalSales: 1,
           totalIncentive: report.spotincentiveEarned,
           ew1: 0, ew2: 0, ew3: 0, ew4: 0
         };
-        calculateEWCounts(report.plan.planType, newSec);
-        secMap.set(secKey, newSec);
+        calculateEWCounts(report.plan.planType, newCanvasser);
+        canvasserMap.set(canvasserKey, newCanvasser);
       }
 
       // Device aggregation
@@ -236,6 +228,31 @@ export async function GET(req: NextRequest) {
       }
     });
 
+    // Fetch canvasser details for the leaderboard
+    const canvasserIds = Array.from(canvasserMap.keys()).filter(Boolean);
+    if (canvasserIds.length > 0) {
+      const canvassers = await prisma.canvasser.findMany({
+        where: {
+          id: { in: canvasserIds }
+        },
+        select: {
+          id: true,
+          fullName: true,
+          phone: true,
+          employeeId: true,
+        }
+      });
+
+      // Update canvasser data with actual names and identifiers
+      canvassers.forEach(canvasser => {
+        const canvasserData = canvasserMap.get(canvasser.id);
+        if (canvasserData) {
+          canvasserData.canvasserName = canvasser.fullName || 'Unknown';
+          canvasserData.identifier = canvasser.employeeId || canvasser.phone;
+        }
+      });
+    }
+
     // Convert to arrays and sort by total incentive earned (descending)
     const topStores = Array.from(storeMap.values())
       .sort((a, b) => b.totalIncentive - a.totalIncentive)
@@ -246,13 +263,13 @@ export async function GET(req: NextRequest) {
         totalIncentive: store.totalIncentive > 0 ? `₹${store.totalIncentive.toLocaleString('en-IN')}` : '-',
       }));
 
-    const topCanvassers = Array.from(secMap.values())
+    const topCanvassers = Array.from(canvasserMap.values())
       .sort((a, b) => b.totalIncentive - a.totalIncentive)
       .slice(0, limit)
-      .map((sec, index) => ({
+      .map((canvasser, index) => ({
         rank: index + 1,
-        ...sec,
-        totalIncentive: sec.totalIncentive > 0 ? `₹${sec.totalIncentive.toLocaleString('en-IN')}` : '-',
+        ...canvasser,
+        totalIncentive: canvasser.totalIncentive > 0 ? `₹${canvasser.totalIncentive.toLocaleString('en-IN')}` : '-',
       }));
 
     const topDevices = Array.from(deviceMap.values())

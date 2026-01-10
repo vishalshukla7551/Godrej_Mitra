@@ -3,28 +3,28 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
 /**
- * GET /api/sec/active-campaigns
- * Get active spot incentive campaigns for SEC user's store
+ * GET /api/canvasser/active-campaigns
+ * Get active spot incentive campaigns for Canvasser user's store
  */
 export async function GET(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== 'SEC') {
+    if (!authUser || authUser.role !== 'CANVASSER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const phone = authUser.username;
     if (!phone) {
       return NextResponse.json(
-        { error: 'Missing SEC identifier' },
+        { error: 'Missing Canvasser identifier' },
         { status: 400 }
       );
     }
 
-    // Find SEC user
-    const secUser = await prisma.sEC.findUnique({
+    // Find Canvasser user
+    const canvasserUser = await prisma.canvasser.findUnique({
       where: { phone },
       include: {
         store: {
@@ -37,9 +37,9 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    if (!secUser || !secUser.store) {
+    if (!canvasserUser || !canvasserUser.store) {
       return NextResponse.json(
-        { error: 'SEC user or store not found' },
+        { error: 'Canvasser user or store not found' },
         { status: 404 }
       );
     }
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     // Get active campaigns for this store
     const activeCampaigns = await prisma.spotIncentiveCampaign.findMany({
       where: {
-        storeId: secUser.store.id,
+        storeId: canvasserUser.store.id,
         active: true,
         startDate: { lte: now },
         endDate: { gte: now },
@@ -99,15 +99,15 @@ export async function GET(req: NextRequest) {
       data: {
         campaigns: formattedCampaigns,
         store: {
-          id: secUser.store.id,
-          name: secUser.store.name,
-          city: secUser.store.city,
+          id: canvasserUser.store.id,
+          name: canvasserUser.store.name,
+          city: canvasserUser.store.city,
         },
         totalActiveCampaigns: activeCampaigns.length,
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/sec/active-campaigns', error);
+    console.error('Error in GET /api/canvasser/active-campaigns', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

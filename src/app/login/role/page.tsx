@@ -14,7 +14,7 @@ export default function RoleLogin() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Reuse SEC login phone field typography & input styles
+  // Reuse Canvasser login phone field typography & input styles
   const inputBaseClasses =
     'w-full px-3 py-2.5 rounded-lg text-base text-black placeholder:text-gray-500 transition-all duration-200 border-0 outline-none focus:outline-none';
   const labelBaseClasses = 'block text-sm font-medium text-gray-900 mb-1.5';

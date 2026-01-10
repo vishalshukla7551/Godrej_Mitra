@@ -3,17 +3,17 @@
 import { useState } from 'react';
 
 interface InviteRow {
-  secId: string;
+  canvasserId: string;
   phone: string;
   link?: string;
   status?: 'idle' | 'signed' | 'sending' | 'sent' | 'error';
 }
 
 export default function SendTestInvites() {
-  const [rows, setRows] = useState<InviteRow[]>([{ secId: '', phone: '' }]);
+  const [rows, setRows] = useState<InviteRow[]>([{ canvasserId: '', phone: '' }]);
   const [expiresHours, setExpiresHours] = useState<number>(72);
 
-  const addRow = () => setRows(prev => [...prev, { secId: '', phone: '' }]);
+  const addRow = () => setRows(prev => [...prev, { canvasserId: '', phone: '' }]);
   const removeRow = (idx: number) => setRows(prev => prev.filter((_, i) => i !== idx));
   const updateRow = (idx: number, patch: Partial<InviteRow>) => {
     setRows(prev => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
@@ -60,7 +60,7 @@ export default function SendTestInvites() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-3 py-2 text-left">SEC ID</th>
+                <th className="px-3 py-2 text-left">Canvasser ID</th>
                 <th className="px-3 py-2 text-left">Phone</th>
                 <th className="px-3 py-2 text-left">Link</th>
                 <th className="px-3 py-2 text-left">Actions</th>
@@ -73,8 +73,8 @@ export default function SendTestInvites() {
                     <input
                       className="border rounded px-2 py-1 w-40"
                       placeholder="SEC123"
-                      value={r.secId}
-                      onChange={e => updateRow(idx, { secId: e.target.value })}
+                      value={r.canvasserId}
+                      onChange={e => updateRow(idx, { canvasserId: e.target.value })}
                     />
                   </td>
                   <td className="px-3 py-2">
@@ -98,7 +98,7 @@ export default function SendTestInvites() {
                       </button>
                       <button
                         onClick={() => sendInvite(idx)}
-                        disabled={!r.secId || !r.phone || r.status === 'sending'}
+                        disabled={!r.canvasserId || !r.phone || r.status === 'sending'}
                         className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:opacity-50"
                       >
                         {r.status === 'sending' ? 'Sending...' : r.status === 'sent' ? 'Sent ✓' : 'Send'}

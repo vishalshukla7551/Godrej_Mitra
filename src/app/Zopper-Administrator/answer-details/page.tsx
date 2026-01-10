@@ -6,7 +6,7 @@ import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 
 /**
  * Admin Answer Review Page
- * Displays the detailed results of a specific SEC test submission.
+ * Displays the detailed results of a specific Canvasser test submission.
  */
 function AnswerReviewContent() {
     const router = useRouter();
@@ -38,9 +38,9 @@ function AnswerReviewContent() {
                         data = result.data;
                     }
                 }
-                // 2. Fallback to lookup by SEC ID and timestamp if no DB ID is provided
+                // 2. Fallback to lookup by Canvasser ID and timestamp if no DB ID is provided
                 else if (secId) {
-                    const response = await fetch(`/api/admin/test-submissions?secId=${encodeURIComponent(secId)}`);
+                    const response = await fetch(`/api/admin/test-submissions?canvasserId=${encodeURIComponent(secId)}`);
                     const result = await response.json();
                     if (result.success && Array.isArray(result.data)) {
                         // Find the specific submission by time if provided, else get the latest
@@ -114,7 +114,7 @@ function AnswerReviewContent() {
                                 <h1 className="text-3xl font-black text-gray-900 tracking-tight">Answer Review</h1>
                             </div>
                             <p className="text-gray-500 font-bold text-sm uppercase tracking-wide">
-                                {submission.testName || 'SEC Certification Assessment'}
+                                {submission.testName || 'Canvasser Certification Assessment'}
                             </p>
                             <div className="flex flex-wrap gap-2 pt-1">
                                 <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">

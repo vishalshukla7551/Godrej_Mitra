@@ -3,19 +3,19 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 import { Role } from '@prisma/client';
 
-// GET /api/sec/store-change-request
-// Get pending store change request for the authenticated SEC
+// GET /api/canvasser/store-change-request
+// Get pending store change request for the authenticated Canvasser
 export async function GET(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== ('SEC' as Role)) {
+    if (!authUser || authUser.role !== ('CANVASSER' as Role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Find SEC by phone (for SEC users, authUser.id is the phone number)
-    const sec = await prisma.sEC.findUnique({
+    // Find Canvasser by phone (for Canvasser users, authUser.id is the phone number)
+    const canvasser = await prisma.canvasser.findUnique({
       where: { phone: authUser.id },
       select: {
         id: true,
@@ -25,12 +25,12 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    if (!sec) {
-      return NextResponse.json({ error: 'SEC not found' }, { status: 404 });
+    if (!canvasser) {
+      return NextResponse.json({ error: 'Canvasser not found' }, { status: 404 });
     }
 
     // Check if there's a pending store change request in kycInfo
-    const kycInfo = sec.kycInfo as any;
+    const kycInfo = canvasser.kycInfo as any;
     const pendingRequest = kycInfo?.storeChangeRequest || null;
 
     return NextResponse.json({
@@ -40,19 +40,19 @@ export async function GET(req: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error in GET /api/sec/store-change-request', error);
+    console.error('Error in GET /api/canvasser/store-change-request', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// POST /api/sec/store-change-request
+// POST /api/canvasser/store-change-request
 // Create a new store change request
 export async function POST(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== ('SEC' as Role)) {
+    if (!authUser || authUser.role !== ('CANVASSER' as Role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -61,12 +61,12 @@ export async function POST(req: NextRequest) {
 
     if (!requestedStoreIds || !Array.isArray(requestedStoreIds) || requestedStoreIds.length !== 1) {
       return NextResponse.json(
-        { error: 'Exactly one store must be selected for SEC' },
+        { error: 'Exactly one store must be selected for Canvasser' },
         { status: 400 }
       );
     }
 
-    const sec = await prisma.sEC.findUnique({
+    const canvasser = await prisma.canvasser.findUnique({
       where: { phone: authUser.id },
       select: {
         id: true,
@@ -76,12 +76,12 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    if (!sec) {
-      return NextResponse.json({ error: 'SEC profile not found' }, { status: 404 });
+    if (!canvasser) {
+      return NextResponse.json({ error: 'Canvasser profile not found' }, { status: 404 });
     }
 
     // Check if there's already a pending request
-    const kycInfo = sec.kycInfo as any;
+    const kycInfo = canvasser.kycInfo as any;
     if (kycInfo?.storeChangeRequest?.status === 'PENDING') {
       return NextResponse.json(
         { error: 'You already have a pending store change request' },
@@ -109,22 +109,22 @@ export async function POST(req: NextRequest) {
     const storeChangeRequest = {
       id: `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
       requestedStoreIds,
-      currentStoreIds: sec.storeId ? [sec.storeId] : [],
+      currentStoreIds: canvasser.storeId ? [canvasser.storeId] : [],
       reason: reason || null,
       status: 'PENDING',
       createdAt: new Date().toISOString(),
-      secId: sec.id,
-      secName: sec.fullName || 'Unknown',
-      userType: 'SEC' // Identify this as a SEC request
+      canvasserId: canvasser.id,
+      canvasserName: canvasser.fullName || 'Unknown',
+      userType: 'CANVASSER' // Identify this as a Canvasser request
     };
 
-    // Update SEC's kycInfo with the store change request
+    // Update Canvasser's kycInfo with the store change request
     const updatedKycInfo = {
       ...(kycInfo || {}),
       storeChangeRequest
     };
 
-    await prisma.sEC.update({
+    await prisma.canvasser.update({
       where: { phone: authUser.id },
       data: {
         kycInfo: updatedKycInfo
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error in POST /api/sec/store-change-request', error);
+    console.error('Error in POST /api/canvasser/store-change-request', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

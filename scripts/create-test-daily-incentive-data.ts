@@ -6,8 +6,8 @@ async function createTestData() {
   try {
     console.log('🧪 Creating test Daily Incentive Report data...\n');
 
-    // Find or create a test SEC user
-    let secUser = await prisma.sEC.findFirst({
+    // Find or create a test ASA Canvasser user
+    let asaCanvasserUser = await prisma.asaCanvasser.findFirst({
       where: {
         phone: '+919999999999'
       },
@@ -16,9 +16,9 @@ async function createTestData() {
       }
     });
 
-    if (!secUser) {
-      console.log('Creating test SEC user...');
-      secUser = await prisma.sEC.create({
+    if (!asaCanvasserUser) {
+      console.log('Creating test ASA Canvasser user...');
+      asaCanvasserUser = await prisma.asaCanvasser.create({
         data: {
           phone: '+919999999999',
           fullName: 'Test SEC User',

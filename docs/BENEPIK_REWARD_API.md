@@ -180,7 +180,7 @@ To modify permissions, edit `src/app/api/rewards/send/route.ts`:
 // const user = await getAuthenticatedUserFromCookies();
 
 // Or change allowed roles
-if (!['ADMIN', 'ABM', 'ZSM', 'SEC'].includes(user.role)) {
+if (!['ADMIN', 'ABM', 'ZSM', 'ASA_CANVASSER'].includes(user.role)) {
   // ...
 }
 ```

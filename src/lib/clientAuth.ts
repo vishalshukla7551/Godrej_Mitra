@@ -55,7 +55,7 @@ export function useRequireAuth(
 
     if (!authUser || !authUser.role) {
       // No client auth – trigger global logout flow (clears cookies+storage, redirects to login)
-      void clientLogout('/login/role');
+      void clientLogout('/login/canvasser');
       return;
     }
 

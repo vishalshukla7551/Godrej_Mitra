@@ -19,7 +19,7 @@ export interface TestResponse {
 
 export interface TestSubmission {
   id?: string;
-  secId: string;
+  canvasserId: string;
   phone?: string;
   sessionToken: string;
   responses: TestResponse[];
@@ -630,13 +630,13 @@ export const sampleQuestions: Question[] = allSamsungQuestions.slice(0, 10);
 
 /**
  * Get all test submissions from API
- * @param secId Optional SEC ID to filter results for a specific user
+ * @param canvasserId Optional Canvasser ID to filter results for a specific user
  */
 import { config } from '@/lib/config';
 
-export async function getTestSubmissions(secId?: string): Promise<TestSubmission[]> {
+export async function getTestSubmissions(canvasserId?: string): Promise<TestSubmission[]> {
   try {
-    const queryParams = secId ? `?secId=${encodeURIComponent(secId)}` : '';
+    const queryParams = canvasserId ? `?canvasserId=${encodeURIComponent(canvasserId)}` : '';
     const apiUrl = `${config.apiUrl}/admin/test-submissions${queryParams}`;
     console.log('🔍 Fetching test submissions from', apiUrl);
 
@@ -666,8 +666,8 @@ export async function getTestSubmissions(secId?: string): Promise<TestSubmission
       console.log(`✅ Found ${result.data.length} test submissions`);
       return result.data.map((item: any) => ({
         id: item.id,
-        secId: item.secId,
-        phone: item.phone || (item.secId && /^\d{10}$/.test(item.secId) ? item.secId : undefined),
+        canvasserId: item.canvasserId,
+        phone: item.phone || (item.canvasserId && /^\d{10}$/.test(item.canvasserId) ? item.canvasserId : undefined),
         sessionToken: item.sessionToken,
         responses: item.responses,
         score: item.score,

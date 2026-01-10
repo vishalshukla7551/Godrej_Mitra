@@ -38,8 +38,17 @@ export function AuthGate({
   }
 
   if (loading) {
-    // Optionally show a loader instead of null
-    return null;
+    // Show loading indicator
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="text-4xl font-bold text-[#5E1846] mb-4">
+            Sales<span className="text-[#3056FF]">mitr</span>
+          </div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5E1846] mx-auto"></div>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;

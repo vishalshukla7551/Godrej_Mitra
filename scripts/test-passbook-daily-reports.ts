@@ -6,8 +6,8 @@ async function testPassbookWithDailyReports() {
   try {
     console.log('🧪 Testing SEC Passbook with DailyIncentiveReport data...\n');
 
-    // Find a SEC user with daily incentive reports
-    const secUser = await prisma.sEC.findFirst({
+    // Find a Canvasser user with daily incentive reports
+    const canvasserUser = await prisma.canvasser.findFirst({
       where: {
         storeId: { not: null }
       },

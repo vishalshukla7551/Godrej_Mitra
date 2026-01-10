@@ -9,7 +9,7 @@ interface FormData {
   device: string;
   planType: string;
   planPrice: string;
-  imei: string;
+  serialNumber: string;
 }
 
 export default function IncentivePlanSaleForm() {
@@ -20,7 +20,7 @@ export default function IncentivePlanSaleForm() {
     device: "",
     planType: "",
     planPrice: "",
-    imei: "",
+    serialNumber: "",
   });
 
   const [showModal, setShowModal] = useState(false);
@@ -66,7 +66,7 @@ export default function IncentivePlanSaleForm() {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">SEC ID</label>
+            <label className="block text-sm font-medium mb-1">Canvasser ID</label>
             <input
               type="text"
               name="secId"
@@ -142,13 +142,15 @@ export default function IncentivePlanSaleForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">IMEI</label>
+            <label className="block text-sm font-medium mb-1">Serial Number (16-18 digits)</label>
             <input
               type="text"
-              name="imei"
-              value={formData.imei}
+              name="serialNumber"
+              value={formData.serialNumber}
               onChange={handleInputChange}
               required
+              pattern="\d{16,18}"
+              title="Serial Number must be 16-18 digits"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -174,7 +176,7 @@ export default function IncentivePlanSaleForm() {
 
             <div className="space-y-5 mb-8">
               <div className="flex justify-between py-3">
-                <span className="text-base text-gray-500">SEC ID</span>
+                <span className="text-base text-gray-500">Canvasser ID</span>
                 <span className="text-base text-gray-900 font-medium">{formData.secId}</span>
               </div>
 
@@ -204,8 +206,8 @@ export default function IncentivePlanSaleForm() {
               </div>
 
               <div className="flex justify-between py-3">
-                <span className="text-base text-gray-500">IMEI</span>
-                <span className="text-base text-gray-900 font-medium">{formData.imei}</span>
+                <span className="text-base text-gray-500">Serial Number</span>
+                <span className="text-base text-gray-900 font-medium">{formData.serialNumber}</span>
               </div>
             </div>
 

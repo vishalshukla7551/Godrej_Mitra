@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
-// POST /api/sec/onboarding
+// POST /api/canvasser/onboarding
 // Body: { firstName: string; lastName?: string; storeId?: string; employeeId?: string }
-// Stores the SEC's full name, employeeId, and storeId in the SEC collection, keyed by phone.
+// Stores the ASA Canvasser's full name, employeeId, and storeId in the ASA Canvasser collection, keyed by phone.
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== 'SEC') {
+    if (!authUser || authUser.role !== 'CANVASSER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     if (!phone) {
       return NextResponse.json(
-        { error: 'Missing SEC identifier' },
+        { error: 'Missing ASA Canvasser identifier' },
         { status: 400 },
       );
     }
@@ -52,14 +52,14 @@ export async function POST(req: NextRequest) {
       const trimmedEmployId = employeeId.trim();
       if (trimmedEmployId) {
         // Check if employeeId already exists for a different user
-        const existingSEC = await prisma.sEC.findFirst({
+        const existingCanvasser = await prisma.canvasser.findFirst({
           where: { employeeId: trimmedEmployId },
           select: { phone: true },
         });
 
-        if (existingSEC && existingSEC.phone !== phone) {
+        if (existingCanvasser && existingCanvasser.phone !== phone) {
           return NextResponse.json(
-            { error: 'SEC ID already in use' },
+            { error: 'Canvasser ID already in use' },
             { status: 400 },
           );
         }
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    const secRecord = await prisma.sEC.upsert({
+    const canvasserRecord = await prisma.canvasser.upsert({
       where: { phone },
       update: updateData,
       create: createData,
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
       store: secRecord.store,
     });
   } catch (error) {
-    console.error('Error in POST /api/sec/onboarding', error);
+    console.error('Error in POST /api/canvasser/onboarding', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },

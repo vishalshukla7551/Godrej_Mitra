@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const cookies = await (await import('next/headers')).cookies();
     const authUser = await getAuthenticatedUserFromCookies(cookies as any);
 
-    if (!authUser || authUser.role !== 'SEC') {
+    if (!authUser || authUser.role !== 'CANVASSER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -23,25 +23,25 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Find SEC user with store information
-    const secUser = await prisma.sEC.findUnique({
+    // Find Canvasser user with store information
+    const canvasserUser = await prisma.canvasser.findUnique({
       where: { phone },
       include: {
         store: true,
       },
     });
 
-    if (!secUser) {
+    if (!canvasserUser) {
       return NextResponse.json(
-        { error: 'SEC user not found' },
+        { error: 'Canvasser user not found' },
         { status: 404 }
       );
     }
 
-    // Get all spot incentive reports for this SEC user
+    // Get all spot incentive reports for this Canvasser user
     const spotReports = await prisma.spotIncentiveReport.findMany({
       where: {
-        secId: secUser.id,
+        canvasserId: canvasserUser.id,
       },
       include: {
         plan: {
@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
         isCompaignActive: report.isCompaignActive,
         storeName: report.store?.name || 'Unknown Store',
         storeCity: report.store?.city || '',
-        imei: report.imei,
+        serialNumber: report.imei,
       };
     });
 
@@ -249,17 +249,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        // Add SEC and Store metadata
-        sec: {
-          id: secUser.id,
-          fullName: secUser.fullName,
-          phone: secUser.phone,
+        // Add Canvasser and Store metadata
+        canvasser: {
+          id: canvasserUser.id,
+          fullName: canvasserUser.fullName,
+          phone: canvasserUser.phone,
         },
         store: {
-          id: secUser.store?.id,
-          name: secUser.store?.name,
-          city: secUser.store?.city,
-          numberOfSec: secUser.store?.numberOfSec || 1,
+          id: canvasserUser.store?.id,
+          name: canvasserUser.store?.name,
+          city: canvasserUser.store?.city,
+          numberOfCanvasser: canvasserUser.store?.numberOfCanvasser || 1,
         },
         // Spot incentive data
         transactions,

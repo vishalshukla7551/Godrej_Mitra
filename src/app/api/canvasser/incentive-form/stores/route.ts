@@ -49,7 +49,6 @@ export async function GET(req: NextRequest) {
         id: true,
         name: true,
         city: true,
-        numberOfSec: true,
       },
       take: limit,
     });

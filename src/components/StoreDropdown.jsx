@@ -201,9 +201,9 @@ export default function StoreDropdown({
                         <div className="text-xs text-gray-500">{store.city}</div>
                       )}
                     </div>
-                    {store.numberOfSec && (
+                    {store.numberOfCanvasser && (
                       <div className="text-xs text-gray-400">
-                        {store.numberOfSec} SEC{store.numberOfSec > 1 ? 's' : ''}
+                        {store.numberOfCanvasser} Canvasser{store.numberOfCanvasser > 1 ? 's' : ''}
                       </div>
                     )}
                   </div>

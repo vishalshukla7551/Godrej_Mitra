@@ -10,7 +10,7 @@ import { getTestSubmissions, getTestStatistics, TestSubmission } from '@/lib/tes
 const MOCK_SUBMISSIONS: TestSubmission[] = [
   {
     id: '1',
-    secId: '2345',
+    canvasserId: '2345',
     phone: '2345',
     sessionToken: 'mock-session-1',
     responses: Array.from({ length: 10 }, (_, i) => ({
@@ -36,7 +36,7 @@ const MOCK_SUBMISSIONS: TestSubmission[] = [
   },
   {
     id: '2',
-    secId: '1234',
+    canvasserId: '1234',
     phone: '1234',
     sessionToken: 'mock-session-2',
     responses: Array.from({ length: 10 }, (_, i) => ({
@@ -82,7 +82,7 @@ export default function TestResults() {
     passRate: 0,
     averageTime: 0,
   });
-  const [sortBy, setSortBy] = useState<'score' | 'submittedAt' | 'secId'>('submittedAt');
+  const [sortBy, setSortBy] = useState<'score' | 'submittedAt' | 'canvasserId'>('submittedAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterScore, setFilterScore] = useState<'all' | 'pass' | 'fail'>('all');
 
@@ -135,8 +135,8 @@ export default function TestResults() {
           comparison =
             new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime();
           break;
-        case 'secId':
-          comparison = a.secId.localeCompare(b.secId);
+        case 'canvasserId':
+          comparison = a.canvasserId.localeCompare(b.canvasserId);
           break;
       }
 
@@ -182,7 +182,7 @@ export default function TestResults() {
         : 'Answer details not available';
 
       return {
-        'SEC ID': submission.secId,
+        'Canvasser ID': submission.canvasserId,
         Store: submission.storeName
           ? `${submission.storeName}, ${submission.storeCity || ''}`
           : 'N/A',
@@ -315,9 +315,9 @@ export default function TestResults() {
                 <tr>
                   <th
                     className="w-[8%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('secId')}
+                    onClick={() => handleSort('canvasserId')}
                   >
-                    SEC ID {sortBy === 'secId' && (sortOrder === 'desc' ? '↓' : '↑')}
+                    Canvasser ID {sortBy === 'canvasserId' && (sortOrder === 'desc' ? '↓' : '↑')}
                   </th>
                   <th className="w-[18%] px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Store
@@ -355,11 +355,11 @@ export default function TestResults() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredSubmissions.map((submission, i) => (
                   <tr
-                    key={submission.id || `${submission.secId}-${submission.submittedAt}-${i}`}
+                    key={submission.id || `${submission.canvasserId}-${submission.submittedAt}-${i}`}
                     className="hover:bg-gray-50"
                   >
                     <td className="px-3 py-3 text-sm font-medium text-gray-900 truncate">
-                      {submission.secId}
+                      {submission.asaCanvasserId}
                     </td>
                     <td className="px-3 py-3 text-sm text-gray-900">
                       {submission.storeName ? (
@@ -412,7 +412,7 @@ export default function TestResults() {
                             onClick={() =>
                               router.push(
                                 `/Zopper-Administrator/proctoring?phone=${encodeURIComponent(
-                                  submission.phone || submission.secId,
+                                  submission.phone || submission.asaCanvasserId,
                                 )}`,
                               )
                             }
@@ -437,7 +437,7 @@ export default function TestResults() {
                                   router.push(
                                     `/Zopper-Administrator/screenshots?sessionToken=${encodeURIComponent(
                                       submission.sessionToken,
-                                    )}&secId=${encodeURIComponent(submission.secId)}`,
+                                    )}&asaCanvasserId=${encodeURIComponent(submission.asaCanvasserId)}`,
                                   )
                                 }
                                 onError={(e) => {

@@ -61,7 +61,7 @@ export async function POST(
       where: { id: queryId },
       data: updateData,
       include: {
-        secUser: {
+        canvasserUser: {
           select: { 
             fullName: true, 
             phone: true, 
@@ -80,9 +80,21 @@ export async function POST(
       }
     });
 
+    // Transform query for backward compatibility (canvasserUser -> secUser)
+    const transformedQuery = {
+      ...updatedQuery,
+      secUser: updatedQuery.canvasserUser ? {
+        fullName: updatedQuery.canvasserUser.fullName,
+        phone: updatedQuery.canvasserUser.phone,
+        employeeId: updatedQuery.canvasserUser.employeeId,
+        store: updatedQuery.canvasserUser.store
+      } : null,
+      canvasserUser: undefined // Remove the original field
+    };
+
     return NextResponse.json({
       success: true,
-      data: updatedQuery
+      data: transformedQuery
     });
   } catch (error) {
     console.error('Error responding to support query:', error);

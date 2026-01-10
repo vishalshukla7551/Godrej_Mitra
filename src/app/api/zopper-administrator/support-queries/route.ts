@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     const queries = await prisma.supportQuery.findMany({
       where,
       include: {
-        secUser: {
+        canvasserUser: {
           select: { 
             fullName: true, 
             phone: true, 
@@ -69,10 +69,22 @@ export async function GET(req: NextRequest) {
       RESOLVED: allQueries.filter(q => q.status === 'RESOLVED').length
     };
 
+    // Transform queries for backward compatibility (canvasserUser -> secUser)
+    const transformedQueries = queries.map(query => ({
+      ...query,
+      secUser: query.canvasserUser ? {
+        fullName: query.canvasserUser.fullName,
+        phone: query.canvasserUser.phone,
+        employeeId: query.canvasserUser.employeeId,
+        store: query.canvasserUser.store
+      } : null,
+      canvasserUser: undefined // Remove the original field
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
-        queries,
+        queries: transformedQueries,
         statusCounts
       }
     });

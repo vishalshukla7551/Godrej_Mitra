@@ -48,9 +48,9 @@
    - Different price ranges have different incentive amounts
 
 2. **Gate Expansion**
-   - `finalGate = gate × store.numberOfSec`
-   - `finalVolumeKicker = volumeKicker × store.numberOfSec`
-   - Example: Store with 2 SECs → finalGate = 3 × 2 = 6 units
+   - `finalGate = gate × store.numberOfAsaCanvasser`
+   - `finalVolumeKicker = volumeKicker × store.numberOfAsaCanvasser`
+   - Example: Store with 2 ASA Canvassers → finalGate = 3 × 2 = 6 units
 
 3. **Incentive Tiers** (per store + slab group)
    - **Units ≤ finalGate**: 0% incentive
