@@ -123,7 +123,7 @@ export default function SpotIncentiveReport() {
   // Handle Mark Paid action
   const handleMarkPaid = async (reportId: string) => {
     try {
-      const response = await fetch(`/api/zopper-admin/spot-incentive-report/${reportId}/mark-paid`, {
+      const response = await fetch(`/api/zopper-administrator/spot-incentive-report/${reportId}/mark-paid`, {
         method: 'POST',
       });
 
@@ -143,7 +143,7 @@ export default function SpotIncentiveReport() {
   const handleDiscard = async (reportId: string) => {
     if (confirm('Are you sure you want to discard this report?')) {
       try {
-        const response = await fetch(`/api/zopper-admin/spot-incentive-report/${reportId}/discard`, {
+        const response = await fetch(`/api/zopper-administrator/spot-incentive-report/${reportId}/discard`, {
           method: 'POST',
         });
 
@@ -180,7 +180,7 @@ export default function SpotIncentiveReport() {
         params.append('endDate', startDate);
       }
 
-      const response = await fetch(`/api/zopper-admin/spot-incentive-report?${params}`);
+      const response = await fetch(`/api/zopper-administrator/spot-incentive-report?${params}`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
