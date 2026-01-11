@@ -14,6 +14,7 @@ async function main() {
     { id: buildStoreId(3), name: 'Vijay Sales - Pune Chinchwad', city: 'Pune' },
     { id: buildStoreId(4), name: 'Croma - Bengaluru Indiranagar', city: 'Bengaluru' },
     { id: buildStoreId(5), name: 'Croma - Delhi Rohini', city: 'Delhi' },
+    { id: 'store_140', name: 'VELACHERY - (1114)', city: 'Chennai' },
   ];
 
   for (const store of stores) {

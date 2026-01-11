@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const city = searchParams.get('city');
     const search = searchParams.get('search');
-    const limit = parseInt(searchParams.get('limit') || '100');
+    const limit = parseInt(searchParams.get('limit') || '200'); // Increased to accommodate all stores
     const offset = parseInt(searchParams.get('offset') || '0');
 
     // Build where clause
