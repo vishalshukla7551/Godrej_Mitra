@@ -84,18 +84,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Simple Serial Number validation (16-18 digits only)
+    // Simple Serial Number validation (16-18 characters only)
     if (serialNumber.length < 16 || serialNumber.length > 18) {
       return NextResponse.json(
-        { error: 'Serial Number must be 16-18 digits long' },
+        { error: 'Serial Number must be 16-18 characters long' },
         { status: 400 }
       );
     }
 
-    // Validate Serial Number format (digits only)
-    if (!/^\d+$/.test(serialNumber)) {
+    // Validate Serial Number format (alphanumeric only)
+    if (!/^[A-Za-z0-9]+$/.test(serialNumber)) {
       return NextResponse.json(
-        { error: 'Serial Number must contain only digits' },
+        { error: 'Serial Number must contain only letters and numbers' },
         { status: 400 }
       );
     }
