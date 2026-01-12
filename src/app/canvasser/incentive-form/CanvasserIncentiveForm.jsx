@@ -238,7 +238,7 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
       return;
     }
     if (serialNumber.length < 16 || serialNumber.length > 18) {
-      alert('⚠️ Serial number must be 16-18 digits');
+      alert('⚠️ Serial number must be 16-18 characters');
       return;
     }
 
@@ -407,7 +407,7 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
 
             {/* Store Name - Fixed from onboarding, read-only */}
             <div>
-              <label htmlFor="storeId" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Store Name
               </label>
 
@@ -608,10 +608,10 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
                 id="serialNumber"
                 value={serialNumber}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  const value = e.target.value.replace(/[^A-Za-z0-9]/g, '');
                   setSerialNumber(value);
                 }}
-                placeholder="Enter 16-18 digit Serial Number"
+                placeholder="Enter 16-18 character Serial Number"
                 maxLength={18}
                 className={`w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-700 text-sm focus:outline-none focus:ring-2 ${serialNumber && (serialNumber.length < 16 || serialNumber.length > 18)
                   ? 'focus:ring-red-500 border-red-300'
@@ -626,13 +626,13 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
                     : 'text-gray-500'
                   }`}>
                   {serialNumber.length > 0
-                    ? `${serialNumber.length} digits ${serialNumber.length >= 16 && serialNumber.length <= 18
+                    ? `${serialNumber.length} characters ${serialNumber.length >= 16 && serialNumber.length <= 18
                       ? '✓ Valid'
                       : serialNumber.length < 16
                         ? `(${16 - serialNumber.length} more needed)`
                         : '(Too long)'
                     }`
-                    : 'Must be 16-18 digits'}
+                    : 'Must be 16-18 characters (letters and numbers allowed)'}
                 </p>
               </div>
             </div>

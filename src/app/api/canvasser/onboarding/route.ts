@@ -125,12 +125,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      id: secRecord.id,
-      phone: secRecord.phone,
-      fullName: secRecord.fullName,
-      employeeId: secRecord.employeeId,
-      storeId: secRecord.storeId,
-      store: secRecord.store,
+      id: canvasserRecord.id,
+      phone: canvasserRecord.phone,
+      fullName: canvasserRecord.fullName,
+      employeeId: canvasserRecord.employeeId,
+      storeId: canvasserRecord.storeId,
+      store: canvasserRecord.store,
     });
   } catch (error) {
     console.error('Error in POST /api/canvasser/onboarding', error);
