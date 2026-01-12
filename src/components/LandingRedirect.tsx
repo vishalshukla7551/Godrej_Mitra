@@ -2,58 +2,70 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { clientLogout } from '@/lib/clientLogout';
+import { VALID_ROLES } from '@/lib/roleHomePath';
 import Image from 'next/image';
 
 interface LandingRedirectProps {
   redirectTo: string;
 }
 
+
 export default function LandingRedirect({ redirectTo }: LandingRedirectProps) {
   const router = useRouter();
 
   useEffect(() => {
+    console.log('=== LandingRedirect useEffect started ===');
+    console.log('redirectTo:', redirectTo);
+
+    // Check localStorage immediately
+    const authUserStr = window.localStorage.getItem('authUser');
+    console.log('authUserStr from localStorage:', authUserStr);
+
+    if (authUserStr) {
+      try {
+        const authUser = JSON.parse(authUserStr);
+        console.log('Parsed authUser:', authUser);
+        console.log('authUser.role:', authUser.role);
+        console.log('Is role valid?', VALID_ROLES.includes(authUser.role));
+
+        if (!authUser.role || !VALID_ROLES.includes(authUser.role)) {
+          console.log('INVALID ROLE - calling clientLogout');
+          clientLogout('/login/canvasser');
+          return;
+        }
+      } catch (error) {
+        console.error('Error parsing authUser:', error);
+        clientLogout('/login/canvasser');
+        return;
+      }
+    }
+
+    // Check if redirectTo indicates invalid role
+    if (redirectTo === '/invalid-role') {
+      console.log('redirectTo is /invalid-role - calling clientLogout');
+      clientLogout('/login/canvasser');
+      return;
+    }
+
+    console.log('All checks passed, redirecting to:', redirectTo);
     const timer = setTimeout(() => {
+      console.log('Redirecting via router.push to:', redirectTo);
       router.push(redirectTo);
-    }, 5000); // 5 seconds - as requested
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [redirectTo, router]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white flex-col">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.5, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{
-          duration: 1.2,
-          ease: [0.22, 1, 0.36, 1],
-          type: "spring",
-          stiffness: 100
-        }}
-        className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-[#5E1846]"
-      >
-        Sales<span className="text-[#3056FF]">mitr</span>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5, duration: 1 }}
-        className="mt-8 text-center"
-      >
-        <div className="flex items-center justify-center text-gray-500 gap-1.5 sm:gap-2">
-          <span className="text-sm sm:text-lg md:text-xl">Powered by</span>
-          <Image
-            src="/zopper-icon.png"
-            alt="Zopper icon"
-            width={32}
-            height={32}
-            className="inline-block w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8"
-          />
-          <span className="text-base sm:text-xl md:text-2xl font-bold text-gray-900">Zopper</span>
-        </div>
-      </motion.div>
+    <main className="flex min-h-screen items-center justify-center bg-white">
+      <Image
+        src="/Godrej_Enterprises_Group.svg"
+        alt="Godrej Enterprises Group"
+        width={400}
+        height={200}
+        priority
+      />
     </main>
   );
 }

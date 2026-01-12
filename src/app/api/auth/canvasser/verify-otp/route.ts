@@ -101,7 +101,6 @@ export async function POST(req: NextRequest) {
       needsName: needsName || needsStore || needsEmployeeId,
       user: {
         role: 'CANVASSER',
-        id: canvasserRecord.id,
         phone: normalized,
         fullName: canvasserRecord.fullName ?? null,
         storeId: canvasserRecord.storeId ?? null,

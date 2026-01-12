@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { clientLogout } from '@/lib/clientLogout';
-import { getHomePathForRole } from '@/lib/roleHomePath';
+import { getHomePathForRole, VALID_ROLES } from '@/lib/roleHomePath';
 
 export type ClientAuthUser = {
   role?: string;
@@ -53,8 +53,8 @@ export function useRequireAuth(
 
     const authUser = readAuthUserFromStorage();
 
-    if (!authUser || !authUser.role) {
-      // No client auth – trigger global logout flow (clears cookies+storage, redirects to login)
+    if (!authUser || !authUser.role || !VALID_ROLES.includes(authUser.role)) {
+      // No client auth or invalid role – trigger global logout flow (clears cookies+storage, redirects to login)
       void clientLogout('/login/canvasser');
       return;
     }
@@ -66,7 +66,14 @@ export function useRequireAuth(
       !requiredRoles.includes(authUser.role!)
     ) {
       const target = getHomePathForRole(authUser.role!);
-      router.replace(target);
+
+      // If the target home path is a login path, it means the user is unauthorized/role invalid
+      // so we should log them out instead of just redirecting
+      if (target.startsWith('/login/')) {
+        void clientLogout(target);
+      } else {
+        router.replace(target);
+      }
       return;
     }
 

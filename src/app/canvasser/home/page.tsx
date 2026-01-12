@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { clientLogout } from '@/lib/clientLogout';
 import LandingPage from './component/LandingPage.jsx';
 
 export default function SECHomePage() {
@@ -11,9 +12,22 @@ export default function SECHomePage() {
 
     try {
       const raw = window.localStorage.getItem('authUser');
-      if (!raw) return;
+      if (!raw) {
+        // No authUser found - logout
+        clientLogout('/login/canvasser');
+        return;
+      }
 
       const auth = JSON.parse(raw) as any;
+      
+      // Validate required fields - role must be valid
+      const VALID_ROLES = ['CANVASSER'];
+      if (!auth.role || !VALID_ROLES.includes(auth.role)) {
+        // Invalid authUser - logout
+        clientLogout('/login/canvasser');
+        return;
+      }
+
       const fullName = (auth?.fullName || '').trim();
 
       if (fullName) {
@@ -23,7 +37,8 @@ export default function SECHomePage() {
         setUserName(properCaseFirstName);
       }
     } catch {
-      // ignore JSON parse errors
+      // JSON parse error or other error - logout
+      clientLogout('/login/canvasser');
     }
   }, []);
 
