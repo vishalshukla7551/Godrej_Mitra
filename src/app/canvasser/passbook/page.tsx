@@ -5,11 +5,6 @@ import CanvasserHeader from '@/app/canvasser/CanvasserHeader';
 import CanvasserFooter from '@/app/canvasser/CanvasserFooter';
 import { downloadReport } from './downloadReport';
 
-// Filter options
-const spotFilters = ['Today', 'Yesterday'] as const;
-
-type FilterType = (typeof spotFilters)[number] | null;
-
 type SpotSale = {
   date: string;
   units: number;
@@ -80,7 +75,6 @@ export default function IncentivePassbookPage() {
 
   const currentFY = getCurrentFY();
 
-  const [activeFilter, setActiveFilter] = useState<FilterType | null>(null);
   const [search, setSearch] = useState('');
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthYear);
   const [selectedFY, setSelectedFY] = useState<string>(currentFY);
@@ -132,10 +126,6 @@ export default function IncentivePassbookPage() {
     fetchPassbookData();
   }, []);
 
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-
   // Get sales summary data
   const salesSummaryData: SpotSale[] = spotIncentiveData?.salesSummary || [];
 
@@ -171,35 +161,12 @@ export default function IncentivePassbookPage() {
   }
 
   const filteredSalesData = salesSummaryData
-    .filter((row) => {
-      const d = parseDate(row.date);
-      
-      // Apply date filter (Today/Yesterday) if selected
-      if (activeFilter === 'Today') {
-        return (
-          d.getDate() === today.getDate() &&
-          d.getMonth() === today.getMonth() &&
-          d.getFullYear() === today.getFullYear()
-        );
-      }
-      if (activeFilter === 'Yesterday') {
-        return (
-          d.getDate() === yesterday.getDate() &&
-          d.getMonth() === yesterday.getMonth() &&
-          d.getFullYear() === yesterday.getFullYear()
-        );
-      }
-      
-      // If no date filter is selected, show all data for the selected month
-      return true;
-    })
     .filter((row) =>
       selectedMonth === 'All Months' ? true : formatMonthYear(row.date) === selectedMonth
     )
     .filter((row) => {
       if (!search.trim()) return true;
       const term = search.toLowerCase();
-      // Allow searching by date (DD-MM-YYYY format)
       return row.date.toLowerCase().includes(term);
     })
     .sort((a, b) => {
@@ -280,33 +247,6 @@ export default function IncentivePassbookPage() {
             }
           `}</style>
 
-          {/* Filter chips */}
-          <div className="flex items-center gap-2 mb-4">
-            {spotFilters.map((filter) => (
-              <button
-                key={filter}
-                type="button"
-                onClick={() => setActiveFilter(activeFilter === filter ? null : filter)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border ${activeFilter === filter
-                  ? 'bg-black text-white border-black'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                  }`}
-              >
-                {filter}
-              </button>
-            ))}
-            {activeFilter && (
-              <button
-                type="button"
-                onClick={() => setActiveFilter(null)}
-                className="px-2 py-1.5 rounded-full text-xs font-medium text-gray-500 hover:text-gray-700"
-                title="Clear filter"
-              >
-                ✕ Clear
-              </button>
-            )}
-          </div>
-
           {/* Search bar */}
           <div className="mb-4">
             <div className="relative">
@@ -378,7 +318,6 @@ export default function IncentivePassbookPage() {
             setSelectedFY={setSelectedFY}
             allFYs={allFYs}
             spotIncentiveData={spotIncentiveData}
-            activeFilter={activeFilter}
             search={search}
           />
 
@@ -400,7 +339,6 @@ function SpotIncentiveSection({
   setSelectedFY,
   allFYs,
   spotIncentiveData,
-  activeFilter,
   search,
 }: {
   rows: SpotSale[];
@@ -412,7 +350,6 @@ function SpotIncentiveSection({
   setSelectedFY: (fy: string) => void;
   allFYs: string[];
   spotIncentiveData: any;
-  activeFilter: FilterType;
   search: string;
 }) {
   // Helper function to check if a date falls within a financial year
@@ -466,41 +403,8 @@ function SpotIncentiveSection({
   const allSalesData = rows || []; // Use the rows prop passed to component
   const allTransactions = transactions || [];
 
-  // Apply FY filtering
-  let filteredSalesData = allSalesData.filter((row: any) => {
-    return isDateInFY(row.date, selectedFY);
-  });
-
-  let filteredTransactions = allTransactions.filter((txn: any) => {
-    return isDateInFY(txn.date, selectedFY);
-  });
-
-  // Apply additional filters (Today/Yesterday and search)
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-
-  filteredSalesData = filteredSalesData.filter((row: any) => {
-    const d = parseDate(row.date);
-    
-    // Apply date filter (Today/Yesterday) if selected
-    if (activeFilter === 'Today') {
-      return (
-        d.getDate() === today.getDate() &&
-        d.getMonth() === today.getMonth() &&
-        d.getFullYear() === today.getFullYear()
-      );
-    }
-    if (activeFilter === 'Yesterday') {
-      return (
-        d.getDate() === yesterday.getDate() &&
-        d.getMonth() === yesterday.getMonth() &&
-        d.getFullYear() === yesterday.getFullYear()
-      );
-    }
-    
-    return true;
-  }).filter((row: any) =>
+  // Sales Summary: Filter only by month and search (NOT by FY)
+  let filteredSalesData = allSalesData.filter((row: any) =>
     selectedMonth === 'All Months' ? true : formatMonthYear(row.date) === selectedMonth
   ).filter((row: any) => {
     if (!search.trim()) return true;
@@ -508,27 +412,12 @@ function SpotIncentiveSection({
     return row.date.toLowerCase().includes(term);
   });
 
-  filteredTransactions = filteredTransactions.filter((txn: any) => {
-    const d = parseDate(txn.date);
-    
-    // Apply date filter (Today/Yesterday) if selected
-    if (activeFilter === 'Today') {
-      return (
-        d.getDate() === today.getDate() &&
-        d.getMonth() === today.getMonth() &&
-        d.getFullYear() === today.getFullYear()
-      );
-    }
-    if (activeFilter === 'Yesterday') {
-      return (
-        d.getDate() === yesterday.getDate() &&
-        d.getMonth() === yesterday.getMonth() &&
-        d.getFullYear() === yesterday.getFullYear()
-      );
-    }
-    
-    return true;
-  }).filter((txn: any) =>
+  // Transactions: Apply FY filtering first, then month and search
+  let filteredTransactions = allTransactions.filter((txn: any) => {
+    return isDateInFY(txn.date, selectedFY);
+  });
+
+  filteredTransactions = filteredTransactions.filter((txn: any) =>
     selectedMonth === 'All Months' ? true : formatMonthYear(txn.date) === selectedMonth
   ).filter((txn: any) => {
     if (!search.trim()) return true;
@@ -536,15 +425,12 @@ function SpotIncentiveSection({
     return txn.date.toLowerCase().includes(term);
   });
 
-  // Fallback: if no data for selected FY, show all data
-  if (filteredSalesData.length === 0 && allSalesData.length > 0) {
-    console.log('No sales data for', selectedFY, 'showing all data');
-    filteredSalesData = allSalesData;
-  }
-
+  // Fallback for transactions only: if no data for selected FY, show all data
   if (filteredTransactions.length === 0 && allTransactions.length > 0) {
     console.log('No transactions for', selectedFY, 'showing all transactions');
-    filteredTransactions = allTransactions;
+    filteredTransactions = allTransactions.filter((txn: any) =>
+      selectedMonth === 'All Months' ? true : formatMonthYear(txn.date) === selectedMonth
+    );
   }
 
   // Debug: Log data to console
