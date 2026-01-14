@@ -376,6 +376,12 @@ export default function SpotIncentiveReport() {
                   <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider">
                     Store Name
                   </th>
+                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[120px]">
+                    Customer Name
+                  </th>
+                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[120px]">
+                    Customer Phone
+                  </th>
                   <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider">
                     Device Name
                   </th>
@@ -399,20 +405,20 @@ export default function SpotIncentiveReport() {
               <tbody className="divide-y divide-neutral-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-neutral-500">
+                    <td colSpan={12} className="p-8 text-center text-neutral-500">
                       <FaSpinner className="animate-spin mx-auto mb-2" size={20} />
                       Loading reports...
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-red-500">
+                    <td colSpan={12} className="p-8 text-center text-red-500">
                       {error}
                     </td>
                   </tr>
                 ) : reports.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-neutral-500">
+                    <td colSpan={12} className="p-8 text-center text-neutral-500">
                       No reports found
                     </td>
                   </tr>
@@ -436,6 +442,12 @@ export default function SpotIncentiveReport() {
                       </td>
                       <td className="p-2 md:p-3 text-neutral-900 text-sm">
                         <div className="truncate">{r.store.storeName}</div>
+                      </td>
+                      <td className="p-2 md:p-3 text-neutral-900 text-sm">
+                        <div className="truncate">{r.customerName || 'Not Provided'}</div>
+                      </td>
+                      <td className="p-2 md:p-3 text-neutral-900 text-sm">
+                        <div className="truncate">{r.customerPhoneNumber || 'Not Provided'}</div>
                       </td>
                       <td className="p-2 md:p-3 text-neutral-700 text-sm">
                         <div className="truncate">{r.samsungSKU.ModelName}</div>
