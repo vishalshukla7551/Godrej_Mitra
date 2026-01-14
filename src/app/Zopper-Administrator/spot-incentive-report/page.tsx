@@ -16,6 +16,8 @@ interface SpotIncentiveReport {
   paidAt?: string;
   voucherCode: string;
   isCompaignActive: boolean;
+  customerName: string;
+  customerPhoneNumber: string;
   secUser: {
     secId: string;
     phone: string;
@@ -226,6 +228,8 @@ export default function SpotIncentiveReport() {
       'Canvasser Name': report.secUser.name || 'Not Set',
       'Store Name': report.store.storeName,
       'Store City': report.store.city,
+      'Customer Name': report.customerName || '',
+      'Customer Phone': report.customerPhoneNumber || '',
       'Device Category': report.samsungSKU.Category,
       'Device Model': report.samsungSKU.ModelName,
       'Plan Type': report.plan.planType.replace(/_/g, ' '),

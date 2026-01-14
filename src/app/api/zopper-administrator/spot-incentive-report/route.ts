@@ -170,6 +170,8 @@ export async function GET(req: NextRequest) {
         paidAt: report.spotincentivepaidAt ? formatDate(report.spotincentivepaidAt) : null,
         voucherCode: report.voucherCode || '',
         isCompaignActive: report.isCompaignActive,
+        customerName: report.customerName || '',
+        customerPhoneNumber: report.customerPhoneNumber || '',
         secUser: {
           secId: canvasser?.employeeId || canvasser?.id || 'Unknown',
           phone: canvasser?.phone || 'Unknown',

@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { deviceId, planId, serialNumber, dateOfSale, clientSecPhone, clientStoreId, invoicePrice } = body;
+    const { deviceId, planId, serialNumber, dateOfSale, clientSecPhone, clientStoreId, invoicePrice, customerName, customerPhoneNumber } = body;
 
     // Get SEC phone from authenticated user (server-side, cannot be manipulated)
     const secPhone = authUser.username;
@@ -260,6 +260,8 @@ export async function POST(req: NextRequest) {
         spotincentiveEarned,
         isCompaignActive: isCampaignActive,
         Date_of_sale: saleDate,
+        customerName: customerName || null,
+        customerPhoneNumber: customerPhoneNumber || null,
       },
       include: {
         canvasserUser: {

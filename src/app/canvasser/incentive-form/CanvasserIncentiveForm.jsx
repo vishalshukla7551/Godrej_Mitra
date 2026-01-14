@@ -18,6 +18,8 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
   const [applianceSubCategory, setApplianceSubCategory] = useState('');
   const [planId, setPlanId] = useState('');
   const [serialNumber, setSerialNumber] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhoneNumber, setCustomerPhoneNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSecAlert, setShowSecAlert] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -262,6 +264,8 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
           serialNumber,
           invoicePrice,
           dateOfSale: dateOfSale || undefined,
+          customerName: customerName || undefined,
+          customerPhoneNumber: customerPhoneNumber || undefined,
           // Send client values for security verification (server will validate)
           clientSecPhone: secPhone,
           clientStoreId: storeId,
@@ -292,6 +296,8 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
       setInvoicePrice('');
       setPlanId('');
       setSerialNumber('');
+      setCustomerName('');
+      setCustomerPhoneNumber('');
 
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -452,6 +458,50 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
                   Change store?
                 </a>
               </div>
+            </div>
+
+            {/* Customer Name */}
+            <div>
+              <label htmlFor="customerName" className="block text-sm font-medium text-gray-700 mb-2">
+                Customer Name
+              </label>
+              <input
+                type="text"
+                id="customerName"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Enter Customer Name"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+              />
+            </div>
+
+            {/* Customer Phone Number */}
+            <div>
+              <label htmlFor="customerPhoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                Customer Phone Number
+              </label>
+              <input
+                type="tel"
+                id="customerPhoneNumber"
+                value={customerPhoneNumber}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  if (value.length <= 10) {
+                    setCustomerPhoneNumber(value);
+                  }
+                }}
+                placeholder="Enter 10-digit Phone Number"
+                maxLength={10}
+                className={`w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 ${customerPhoneNumber && customerPhoneNumber.length !== 10
+                  ? 'focus:ring-red-500 border-red-300'
+                  : 'focus:ring-blue-500'
+                } placeholder:text-gray-400`}
+              />
+              {customerPhoneNumber && customerPhoneNumber.length !== 10 && (
+                <p className="mt-2 text-xs text-red-600">
+                  Phone number must be 10 digits ({customerPhoneNumber.length}/10)
+                </p>
+              )}
             </div>
 
 
@@ -710,6 +760,24 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
                   {stores.find(s => s.id === storeId)?.name || storeId}
                 </span>
               </div>
+
+              {customerName && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Customer Name</span>
+                  <span className="text-sm text-gray-900 font-medium text-right ml-4">
+                    {customerName}
+                  </span>
+                </div>
+              )}
+
+              {customerPhoneNumber && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Customer Phone</span>
+                  <span className="text-sm text-gray-900 font-medium text-right ml-4">
+                    {customerPhoneNumber}
+                  </span>
+                </div>
+              )}
 
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Device</span>

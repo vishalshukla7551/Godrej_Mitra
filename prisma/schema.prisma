@@ -91,6 +91,8 @@ model SpotIncentiveReport {
   canvasserUser           Canvasser              @relation(fields: [canvasserId], references: [id])
   storeId                 String
   store                   Store                  @relation(fields: [storeId], references: [id])
+  customerName            String?                // Customer name for the sale
+  customerPhoneNumber     String?                // Customer phone number for the sale
   godrejSKUId             String                 @db.ObjectId
   godrejSKU               GodrejSKU              @relation(fields: [godrejSKUId], references: [id])
   planId                  String                 @db.ObjectId
