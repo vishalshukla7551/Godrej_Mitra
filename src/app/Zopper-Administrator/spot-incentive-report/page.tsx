@@ -115,6 +115,7 @@ export default function SpotIncentiveReport() {
   const [startDate, setStartDate] = useState('');
   const [page, setPage] = useState(1);
   const [showIncentives, setShowIncentives] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const pageSize = 50;
 
   // API state
@@ -220,35 +221,98 @@ export default function SpotIncentiveReport() {
   const filters = data?.filters || { stores: [], planTypes: [] };
   const mrIncentives = data?.mrIncentives || [];
 
-  const exportExcel = () => {
-    const exportData = reports.map(report => ({
-      'Report ID': report.id,
-      'Canvasser ID': report.secUser.secId || 'Not Set',
-      'Canvasser Phone': report.secUser.phone,
-      'Canvasser Name': report.secUser.name || 'Not Set',
-      'Store Name': report.store.storeName,
-      'Store City': report.store.city,
-      'Customer Name': report.customerName || '',
-      'Customer Phone': report.customerPhoneNumber || '',
-      'Device Category': report.samsungSKU.Category,
-      'Device Model': report.samsungSKU.ModelName,
-      'Plan Type': report.plan.planType.replace(/_/g, ' '),
-      'Plan Price': `₹${report.planPrice}`,
-      'Serial Number': report.serialNumber,
-      'Incentive Earned': `₹${report.incentiveEarned}`,
-      'Payment Status': report.isPaid ? 'Paid' : 'Pending',
-      'Submitted Date': formatDateWithTime(report.submittedAt).date,
-      'Submitted Time': formatDateWithTime(report.submittedAt).time,
-      'Voucher Code': report.voucherCode || '',
-      'Campaign Active': report.isCampaignActive ? 'Yes' : 'No',
-      'Paid Date': report.paidAt ? formatDateWithTime(report.paidAt).date : '',
-      'Action Required': report.isPaid ? 'None' : 'Mark Paid Available'
-    }));
+  const exportExcel = async () => {
+    try {
+      setIsExporting(true);
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Spot Incentive Report');
-    XLSX.writeFile(wb, `spot-incentive-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+      // Build the same filter parameters but without pagination
+      const params = new URLSearchParams({
+        limit: '999999', // Get all records
+        page: '1'
+      });
+
+      if (query) params.append('search', query);
+      if (storeFilter) params.append('storeId', storeFilter);
+      if (planFilter) params.append('planType', planFilter);
+      if (paymentFilter !== 'all') params.append('paymentStatus', paymentFilter);
+      if (startDate) {
+        params.append('startDate', startDate);
+        params.append('endDate', startDate);
+      }
+
+      // Fetch all data for export
+      const response = await fetch(`/api/zopper-administrator/spot-incentive-report?${params}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch export data');
+      }
+
+      const result: ApiResponse = await response.json();
+      
+      if (!result.success) {
+        throw new Error('API returned error');
+      }
+
+      const allReports = result.data.reports;
+
+      // Create export data from all reports
+      const exportData = allReports.map(report => ({
+        'Report ID': report.id,
+        'Canvasser ID': report.secUser.secId || 'Not Set',
+        'Canvasser Phone': report.secUser.phone,
+        'Canvasser Name': report.secUser.name || 'Not Set',
+        'Store Name': report.store.storeName,
+        'Store City': report.store.city,
+        'Customer Name': report.customerName || '',
+        'Customer Phone': report.customerPhoneNumber || '',
+        'Device Category': report.samsungSKU.Category,
+        'Device Model': report.samsungSKU.ModelName,
+        'Plan Type': report.plan.planType.replace(/_/g, ' '),
+        'Plan Price': `₹${report.planPrice}`,
+        'Serial Number': report.serialNumber,
+        'Incentive Earned': `₹${report.incentiveEarned}`,
+        'Payment Status': report.isPaid ? 'Paid' : 'Pending',
+        'Submitted Date': formatDateWithTime(report.submittedAt).date,
+        'Submitted Time': formatDateWithTime(report.submittedAt).time,
+        'Voucher Code': report.voucherCode || '',
+        'Campaign Active': report.isCampaignActive ? 'Yes' : 'No',
+        'Paid Date': report.paidAt ? formatDateWithTime(report.paidAt).date : '',
+        'Action Required': report.isPaid ? 'None' : 'Mark Paid Available'
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Spot Incentive Report');
+      
+      // Add summary info as filename
+      const totalRecords = exportData.length;
+      const filename = `spot-incentive-report-${totalRecords}-records-${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      XLSX.writeFile(wb, filename);
+
+      // Show success message with filter info
+      let filterInfo = '';
+      if (query || storeFilter || planFilter || paymentFilter !== 'all' || startDate) {
+        const filtersList = [];
+        if (query) filtersList.push(`Search: "${query}"`);
+        if (storeFilter) {
+          const storeName = filters.stores.find(s => s.id === storeFilter)?.name || 'Unknown Store';
+          filtersList.push(`Store: ${storeName}`);
+        }
+        if (planFilter) filtersList.push(`Plan: ${planFilter.replace(/_/g, ' ')}`);
+        if (paymentFilter !== 'all') filtersList.push(`Payment: ${paymentFilter}`);
+        if (startDate) filtersList.push(`Date: ${startDate}`);
+        filterInfo = ` (Filters applied: ${filtersList.join(', ')})`;
+      }
+
+      alert(`Successfully exported ${totalRecords} records to Excel!${filterInfo}`);
+
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export data. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -264,11 +328,17 @@ export default function SpotIncentiveReport() {
                   reports.filter(r => !r.isPaid).length
                 }
               </p>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  Live
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                Live
+              </span>
+              {summary.totalReports > 0 && (
+                <span className="text-xs text-neutral-400">
+                  {summary.totalReports.toLocaleString()} total records
                 </span>
+              )}
+            </div>
 
                 <button
                   onClick={() => setShowIncentives(true)}
@@ -278,7 +348,6 @@ export default function SpotIncentiveReport() {
                   View Incentive Rules
                 </button>
               </div>
-            </div>
           </div>
 
           <button
@@ -351,10 +420,20 @@ export default function SpotIncentiveReport() {
           </select>
           <button
             onClick={exportExcel}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-[0_10px_30px_rgba(16,185,129,0.4)]"
+            disabled={isExporting}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-[0_10px_30px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FaDownload size={14} />
-            Export
+            {isExporting ? (
+              <>
+                <FaSpinner className="animate-spin" size={14} />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <FaDownload size={14} />
+                Export All
+              </>
+            )}
           </button>
         </section>
 
