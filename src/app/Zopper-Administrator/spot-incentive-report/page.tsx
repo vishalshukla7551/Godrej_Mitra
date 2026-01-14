@@ -15,7 +15,7 @@ interface SpotIncentiveReport {
   isPaid: boolean;
   paidAt?: string;
   voucherCode: string;
-  isCompaignActive: boolean;
+  isCampaignActive: boolean;
   customerName: string;
   customerPhoneNumber: string;
   secUser: {
@@ -240,7 +240,7 @@ export default function SpotIncentiveReport() {
       'Submitted Date': formatDateWithTime(report.submittedAt).date,
       'Submitted Time': formatDateWithTime(report.submittedAt).time,
       'Voucher Code': report.voucherCode || '',
-      'Campaign Active': report.isCompaignActive ? 'Yes' : 'No',
+      'Campaign Active': report.isCampaignActive ? 'Yes' : 'No',
       'Paid Date': report.paidAt ? formatDateWithTime(report.paidAt).date : '',
       'Action Required': report.isPaid ? 'None' : 'Mark Paid Available'
     }));

@@ -169,7 +169,7 @@ export async function GET(req: NextRequest) {
         isPaid: !!report.spotincentivepaidAt,
         paidAt: report.spotincentivepaidAt ? formatDate(report.spotincentivepaidAt) : null,
         voucherCode: report.voucherCode || '',
-        isCompaignActive: report.isCompaignActive,
+        isCampaignActive: report.isCampaignActive,
         customerName: report.customerName || '',
         customerPhoneNumber: report.customerPhoneNumber || '',
         secUser: {

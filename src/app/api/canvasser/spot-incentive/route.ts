@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
         paidAt: report.spotincentivepaidAt
           ? formatDate(report.spotincentivepaidAt)
           : null,
-        isCompaignActive: report.isCompaignActive,
+        isCampaignActive: report.isCampaignActive,
         storeName: report.store?.name || 'Unknown Store',
         storeCity: report.store?.city || '',
         serialNumber: report.imei,
@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
       .reduce((sum: number, report: any) => sum + (report.spotincentiveEarned || 0), 0);
     const totalPending = totalEarned - totalPaid;
     const totalUnits = spotReports.length;
-    const activeCampaignUnits = spotReports.filter((report: any) => report.isCompaignActive).length;
+    const activeCampaignUnits = spotReports.filter((report: any) => report.isCampaignActive).length;
 
     console.log('Summary calculations:', {
       totalReports: spotReports.length,

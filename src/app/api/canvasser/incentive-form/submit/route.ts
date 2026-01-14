@@ -258,7 +258,7 @@ export async function POST(req: NextRequest) {
         planId: plan.id,
         imei: serialNumber, // Store serial number in imei field
         spotincentiveEarned,
-        isCompaignActive: isCampaignActive,
+        isCampaignActive: isCampaignActive,
         Date_of_sale: saleDate,
         customerName: customerName || null,
         customerPhoneNumber: customerPhoneNumber || null,
@@ -304,7 +304,7 @@ export async function POST(req: NextRequest) {
           serialNumber: spotReport.imei,
           incentiveEarned: spotReport.spotincentiveEarned,
           dateOfSale: spotReport.Date_of_sale,
-          isCampaignActive: spotReport.isCompaignActive,
+          isCampaignActive: spotReport.isCampaignActive,
           store: spotReport.store,
           device: spotReport.godrejSKU,
           plan: spotReport.plan,
