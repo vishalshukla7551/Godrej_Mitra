@@ -84,10 +84,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Simple Serial Number validation (16-18 characters only)
-    if (serialNumber.length < 16 || serialNumber.length > 18) {
+    // Simple Serial Number validation (16 or 18 characters only, not 17)
+    if (serialNumber.length !== 16 && serialNumber.length !== 18) {
       return NextResponse.json(
-        { error: 'Serial Number must be 16-18 characters long' },
+        { error: 'Serial Number must be exactly 16 or 18 characters long' },
         { status: 400 }
       );
     }
