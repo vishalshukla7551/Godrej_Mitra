@@ -54,7 +54,15 @@ export async function GET(req: NextRequest) {
     if (paymentStatus === 'paid') {
       where.spotincentivepaidAt = { not: null };
     } else if (paymentStatus === 'unpaid') {
-      where.spotincentivepaidAt = null;
+      if (!where.AND) {
+        where.AND = [];
+      }
+      where.AND.push({
+        OR: [
+          { spotincentivepaidAt: null },
+          { spotincentivepaidAt: { isSet: false } }
+        ]
+      });
     }
 
     // Date range filter
@@ -138,7 +146,7 @@ export async function GET(req: NextRequest) {
 
     // Get unique canvasser IDs from reports
     const canvasserIds = [...new Set(reports.map(r => r.canvasserId).filter(Boolean))];
-    
+
     // Fetch canvasser details
     const canvassers = await prisma.canvasser.findMany({
       where: {
@@ -151,14 +159,14 @@ export async function GET(req: NextRequest) {
         fullName: true,
       }
     });
-    
+
     // Create canvasser lookup map
     const canvasserMap = new Map(canvassers.map(c => [c.id, c]));
 
     // Transform data for frontend
     const transformedReports = reports.map((report: any) => {
       const canvasser = canvasserMap.get(report.canvasserId);
-      
+
       return {
         id: report.id,
         createdAt: formatDate(report.createdAt),
