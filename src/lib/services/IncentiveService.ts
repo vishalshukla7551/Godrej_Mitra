@@ -296,7 +296,7 @@ export class IncentiveService {
     console.log(`   Attach Rate: Will be fetched per sale from periodicAttachRate`);
     console.log(`========================================\n`);
 
-    // Load ALL sales reports for the ENTIRE STORE in the specified month (all SECs combined)
+    // Load ALL sales reports for the ENTIRE STORE in the specified month (all canvassers combined)
     const salesReports = await (prisma as any).dailyIncentiveReport.findMany({
       where: {
         storeId: storeId,
@@ -308,7 +308,7 @@ export class IncentiveService {
       include: {
         store: true,
         samsungSKU: true,
-        secUser: true
+        canvasserUser: true
       }
     });
 
@@ -331,7 +331,7 @@ export class IncentiveService {
 
     console.log(`\n========================================`);
     console.log(`📊 PROCESSING ${salesReports.length} STORE-LEVEL SALES REPORTS`);
-    console.log(`   (All SECs at ${secUser.store?.name || storeId} combined)`);
+    console.log(`   (All Canvassers at ${canvasserUser.store?.name || storeId} combined)`);
     console.log(`========================================\n`);
 
     console.log(`\n╔════════════════════════════════════════════════════════════╗`);

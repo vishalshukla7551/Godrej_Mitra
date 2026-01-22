@@ -770,7 +770,7 @@ export default function SignUpPage() {
             </p>
           </div>
 
-          {/* Powered by Zopper - same as SEC login */}
+          {/* Powered by Zopper - same as canvasser login */}
           <div className="mt-12 text-center">
             <div className="flex items-center justify-center text-gray-500 gap-1">
               <span className="text-base">Powered by</span>

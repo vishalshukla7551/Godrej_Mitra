@@ -1,9 +1,14 @@
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 import { getHomePathForRole, VALID_ROLES } from '@/lib/roleHomePath';
 import LandingRedirect from '@/components/LandingRedirect';
-
+import Maintenance from '@/components/Maintenance';
 
 export default async function Home() {
+  const isMaintenance = process.env.IS_MAINTENANCE === 'true' || process.env.NEXT_PUBLIC_IS_MAINTENANCE === 'true';
+
+  if (isMaintenance) {
+    return <Maintenance />;
+  }
   // In page components we must not mutate cookies; pass mutateCookies: false so
   // getAuthenticatedUserFromCookies only reads tokens and does not rotate them.
   const authUser = await getAuthenticatedUserFromCookies(undefined, { mutateCookies: false });

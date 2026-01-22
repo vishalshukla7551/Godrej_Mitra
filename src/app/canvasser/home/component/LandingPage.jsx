@@ -60,7 +60,7 @@ export default function LandingPage({ userName = '' }) {
   // Feature tiles data
   const features = [
     {
-      id: 'sec-incentive',
+      id: 'canvasser-incentive',
       title: 'Canvasser Incentive Form',
       description: 'Submit sales Serial wise',
       icon: '⭐',

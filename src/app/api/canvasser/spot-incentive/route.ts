@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
 /**
- * GET /api/sec/spot-incentive
- * Get spot incentive data for SEC user
+ * GET /api/canvasser/spot-incentive
+ * Get spot incentive data for canvasser user
  */
 export async function GET(req: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const phone = authUser.username;
     if (!phone) {
       return NextResponse.json(
-        { error: 'Missing SEC identifier' },
+        { error: 'Missing canvasser identifier' },
         { status: 400 }
       );
     }
@@ -275,7 +275,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/sec/spot-incentive', error);
+    console.error('Error in GET /api/canvasser/spot-incentive', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

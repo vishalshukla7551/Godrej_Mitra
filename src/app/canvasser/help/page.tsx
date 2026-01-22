@@ -14,7 +14,7 @@ interface SupportQuery {
   lastUpdatedAt: string;
   resolvedAt?: string;
   messages: SupportQueryMessage[];
-  secUser: {
+  canvasserUser: {
     fullName: string;
     phone: string;
   };
@@ -415,10 +415,10 @@ export default function HelpPage() {
               <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                    {selectedQuery.secUser?.fullName?.charAt(0) || 'U'}
+                    {selectedQuery.canvasserUser?.fullName?.charAt(0) || 'U'}
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-gray-900">{selectedQuery.secUser?.fullName || 'Unknown User'}</p>
+                    <p className="font-medium text-sm text-gray-900">{selectedQuery.canvasserUser?.fullName || 'Unknown User'}</p>
                     <p className="text-xs text-gray-800">{formatDate(selectedQuery.submittedAt)}</p>
                   </div>
                 </div>
@@ -430,11 +430,11 @@ export default function HelpPage() {
                 <div key={message.id} className={`mb-4 p-3 rounded-lg ${message.isFromAdmin ? 'bg-green-50 ml-4' : 'bg-gray-50 mr-4'}`}>
                   <div className="flex items-center gap-2 mb-2">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${message.isFromAdmin ? 'bg-green-600' : 'bg-gray-600'}`}>
-                      {message.isFromAdmin ? 'A' : selectedQuery.secUser?.fullName?.charAt(0) || 'U'}
+                      {message.isFromAdmin ? 'A' : selectedQuery.canvasserUser?.fullName?.charAt(0) || 'U'}
                     </div>
                     <div>
                       <p className="font-medium text-sm text-gray-900">
-                        {message.isFromAdmin ? (message.adminName || 'Admin') : selectedQuery.secUser?.fullName || 'Unknown User'}
+                        {message.isFromAdmin ? (message.adminName || 'Admin') : selectedQuery.canvasserUser?.fullName || 'Unknown User'}
                       </p>
                       <p className="text-xs text-gray-800">{formatDate(message.sentAt)}</p>
                     </div>

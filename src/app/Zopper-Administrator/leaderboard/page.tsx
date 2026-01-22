@@ -65,7 +65,7 @@ interface LeaderboardEntry {
 
 interface LeaderboardData {
     stores: LeaderboardEntry[];
-    canvassers: LeaderboardEntry[]; // Used for SECs
+    canvassers: LeaderboardEntry[]; // Used for canvassers
     month: number;
     year: number;
     activeCampaignsCount: number;
@@ -331,7 +331,7 @@ export default function LeaderboardPage() {
 
                                                         const name = activeTab === 'store' ? item.storeName : item.canvasserName;
                                                         const subtext = activeTab === 'store' ? item.city : item.identifier;
-                                                        const id = activeTab === 'store' ? item.storeId : item.secId;
+                                                        const id = activeTab === 'store' ? item.storeId : item.canvasserId;
 
                                                         // Placeholder EW stats since admin endpoint doesn't return them currently
                                                         // You might want to update the admin endpoint to return these detailed stats similarly if needed.

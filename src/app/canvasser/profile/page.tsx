@@ -216,7 +216,7 @@ export default function ProfilePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          requestedStoreIds: [selectedStoreId], // SEC can only have one store
+          requestedStoreIds: [selectedStoreId], // Canvasser can only have one store
           reason: changeReason
         })
       });
@@ -335,7 +335,7 @@ export default function ProfilePage() {
               const updated = {
                 ...parsed,
                 fullName: data.fullName,
-                secId: data.secUser.id,
+                canvasserId: data.canvasserUser.id,
               };
               window.localStorage.setItem('authUser', JSON.stringify(updated));
             }

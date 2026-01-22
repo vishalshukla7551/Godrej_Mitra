@@ -7,7 +7,7 @@ import { clientLogout } from '@/lib/clientLogout';
 export default function CanvasserOnboardingPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState('');
-  const [secId, setSecId] = useState('');
+  const [canvasserId, setCanvasserId] = useState('');
   const [stores, setStores] = useState<
     { id: string; name: string; city?: string | null }[]
   >([]);
@@ -17,7 +17,7 @@ export default function CanvasserOnboardingPage() {
   const [loadingStores, setLoadingStores] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [secIdError, setSecIdError] = useState<string | null>(null);
+  const [canvasserIdError, setCanvasserIdError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -29,11 +29,11 @@ export default function CanvasserOnboardingPage() {
       const auth = JSON.parse(raw) as any;
       const storedFullName = (auth?.fullName || '').trim();
       const storedStoreId = (auth?.storeId || auth?.selectedStoreId || '').trim();
-      const storedSecId = (auth?.secId || auth?.employId || auth?.employeeId || '').trim();
+      const storedCanvasserId = (auth?.canvasserId || auth?.employId || auth?.employeeId || '').trim();
 
       if (storedFullName) setFullName(storedFullName);
       if (storedStoreId) setSelectedStoreId(storedStoreId);
-      if (storedSecId) setSecId(storedSecId);
+      if (storedCanvasserId) setCanvasserId(storedCanvasserId);
     } catch {
       // ignore
     }
@@ -86,17 +86,17 @@ export default function CanvasserOnboardingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSecIdError(null);
+    setCanvasserIdError(null);
 
     const trimmedFullName = fullName.trim();
-    const trimmedSecId = secId.trim();
+    const trimmedCanvasserId = canvasserId.trim();
 
     if (!trimmedFullName) {
       setError('Please enter your full name');
       return;
     }
 
-    if (!trimmedSecId) {
+    if (!trimmedCanvasserId) {
       setError('Please enter your Canvasser ID');
       return;
     }
@@ -116,7 +116,7 @@ export default function CanvasserOnboardingPage() {
           firstName: trimmedFullName,
           lastName: '',
           storeId: selectedStoreId,
-          employeeId: trimmedSecId,
+          employeeId: trimmedCanvasserId,
         }),
       });
 
@@ -124,9 +124,9 @@ export default function CanvasserOnboardingPage() {
         const data = await res.json().catch(() => null);
         const errorMsg = data?.error || 'Failed to save your details';
 
-        // Show SEC ID specific error below the field
-        if (errorMsg === 'SEC ID already in use') {
-          setSecIdError('Canvasser ID already in use');
+        // Show Canvasser ID specific error below the field
+        if (errorMsg === 'Canvasser ID already in use') {
+          setCanvasserIdError('Canvasser ID already in use');
           return;
         }
 
@@ -145,8 +145,8 @@ export default function CanvasserOnboardingPage() {
               fullName: responseData.fullName || trimmedFullName,
               storeId: responseData.storeId,
               store: responseData.store,
-              secId: responseData.id,
-              employeeId: responseData.employeeId || trimmedSecId,
+              canvasserId: responseData.id,
+              employeeId: responseData.employeeId || trimmedCanvasserId,
             };
             window.localStorage.setItem('authUser', JSON.stringify(updated));
             window.location.href = '/canvasser/home';
@@ -184,9 +184,9 @@ export default function CanvasserOnboardingPage() {
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-900 mb-2">Canvasser ID</label>
-            <input type="text" value={secId} onChange={(e) => { setSecId(e.target.value); setSecIdError(null); }} placeholder="Enter your Canvasser ID" className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500" />
-            {secIdError && (
-              <p className="text-sm text-red-600 mt-1">{secIdError}</p>
+            <input type="text" value={canvasserId} onChange={(e) => { setCanvasserId(e.target.value); setCanvasserIdError(null); }} placeholder="Enter your Canvasser ID" className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg text-black placeholder:text-gray-500" />
+            {canvasserIdError && (
+              <p className="text-sm text-red-600 mt-1">{canvasserIdError}</p>
             )}
           </div>
 

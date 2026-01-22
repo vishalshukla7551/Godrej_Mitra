@@ -180,8 +180,8 @@ export async function GET(req: NextRequest) {
         isCampaignActive: report.isCampaignActive,
         customerName: report.customerName || '',
         customerPhoneNumber: report.customerPhoneNumber || '',
-        secUser: {
-          secId: canvasser?.employeeId || canvasser?.id || 'Unknown',
+        canvasserUser: {
+          canvasserId: canvasser?.employeeId || canvasser?.id || 'Unknown',
           phone: canvasser?.phone || 'Unknown',
           name: canvasser?.fullName || 'Not Set'
         },
@@ -304,7 +304,7 @@ export async function GET(req: NextRequest) {
         summary: {
           totalReports: totalCount,
           activeStores: uniqueStores.size,
-          activeSECs: uniqueCanvassers.size,
+          activeCanvassers: uniqueCanvassers.size,
           totalIncentiveEarned,
           totalIncentivePaid,
           totalIncentivePending: totalIncentiveEarned - totalIncentivePaid

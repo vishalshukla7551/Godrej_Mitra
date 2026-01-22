@@ -41,21 +41,10 @@ export async function GET(
       return NextResponse.json({ error: 'Query not found' }, { status: 404 });
     }
 
-    // Transform query for backward compatibility (canvasserUser -> secUser)
-    const transformedQuery = {
-      ...query,
-      secUser: query.canvasserUser ? {
-        fullName: query.canvasserUser.fullName,
-        phone: query.canvasserUser.phone,
-        employeeId: query.canvasserUser.employeeId,
-        store: query.canvasserUser.store
-      } : null,
-      canvasserUser: undefined // Remove the original field
-    };
-
+    // Return query with canvasserUser field (no backward compatibility needed)
     return NextResponse.json({
       success: true,
-      data: transformedQuery
+      data: query
     });
   } catch (error) {
     console.error('Error fetching support query:', error);

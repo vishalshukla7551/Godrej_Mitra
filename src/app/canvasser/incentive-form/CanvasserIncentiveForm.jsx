@@ -7,10 +7,10 @@ import CanvasserHeader from '@/app/canvasser/CanvasserHeader';
 import CanvasserFooter from '@/app/canvasser/CanvasserFooter';
 import SuccessModal from '@/components/SuccessModal';
 
-export default function CanvasserIncentiveForm({ initialSecId = '' }) {
+export default function CanvasserIncentiveForm({ initialCanvasserId = '' }) {
   const router = useRouter();
-  const [secPhone, setSecPhone] = useState('');
-  const [secId, setSecId] = useState('');
+  const [canvasserPhone, setCanvasserPhone] = useState('');
+  const [canvasserId, setCanvasserId] = useState('');
   const [invoicePrice, setInvoicePrice] = useState('');
   const [dateOfSale, setDateOfSale] = useState('');
   const [storeId, setStoreId] = useState('');
@@ -21,14 +21,14 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
   const [customerName, setCustomerName] = useState('');
   const [customerPhoneNumber, setCustomerPhoneNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSecAlert, setShowSecAlert] = useState(false);
+  const [showCanvasserAlert, setShowCanvasserAlert] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [earnedIncentive, setEarnedIncentive] = useState(0);
-  const [secInput, setSecInput] = useState('');
-  const [secError, setSecError] = useState('');
-  const [showSecModal, setShowSecModal] = useState(false);
+  const [canvasserInput, setCanvasserInput] = useState('');
+  const [canvasserError, setCanvasserError] = useState('');
+  const [showCanvasserModal, setShowCanvasserModal] = useState(false);
 
   // Data from APIs
   const [stores, setStores] = useState([]);
@@ -113,13 +113,13 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
     return () => clearTimeout(timeoutId);
   }, [invoicePrice, deviceId, devices]);
 
-  // Load SEC phone and store from authUser in localStorage on mount
+  // Load canvasser phone and store from authUser in localStorage on mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const raw = window.localStorage.getItem('authUser');
       if (!raw) {
-        setShowSecAlert(true);
+        setShowCanvasserAlert(true);
         return;
       }
 
@@ -130,22 +130,22 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
       const storeDetails = auth?.store;
 
       if (phoneFromAuth) {
-        setSecPhone(phoneFromAuth);
-        setShowSecAlert(false);
+        setCanvasserPhone(phoneFromAuth);
+        setShowCanvasserAlert(false);
       } else {
-        setShowSecAlert(true);
+        setShowCanvasserAlert(true);
       }
 
       if (employeeIdFromAuth) {
-        setSecId(employeeIdFromAuth);
+        setCanvasserId(employeeIdFromAuth);
       }
 
       if (storeFromAuth) {
         setStoreId(storeFromAuth);
       }
     } catch {
-      // ignore parse errors but show alert so SEC can re-login
-      setShowSecAlert(true);
+      // ignore parse errors but show alert so canvasser can re-login
+      setShowCanvasserAlert(true);
     }
   }, []);
 
@@ -208,8 +208,8 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!secPhone) {
-      setShowSecAlert(true);
+    if (!canvasserPhone) {
+      setShowCanvasserAlert(true);
       alert('Please login to submit the form');
       return;
     }
@@ -267,7 +267,7 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
           customerName: customerName || undefined,
           customerPhoneNumber: customerPhoneNumber || undefined,
           // Send client values for security verification (server will validate)
-          clientSecPhone: secPhone,
+          clientCanvasserPhone: canvasserPhone,
           clientStoreId: storeId,
         }),
       });
@@ -324,8 +324,8 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pb-32">
         <div className="px-5 pt-4 pb-6">
-          {/* SEC ID Alert */}
-          {showSecAlert && (
+          {/* Canvasser ID Alert */}
+          {showCanvasserAlert && (
             <div className="mb-4 rounded-xl bg-[#FFF8C5] px-4 py-3 flex items-center justify-between gap-3 text-[13px] text-black">
               <span className="font-medium">
                 Please set up your Canvasser ID to continue
@@ -333,9 +333,9 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
               <button
                 type="button"
                 onClick={() => {
-                  setSecInput(secId || '');
-                  setSecError('');
-                  setShowSecModal(true);
+                  setCanvasserInput(canvasserId || '');
+                  setCanvasserError('');
+                  setShowCanvasserModal(true);
                 }}
                 className="shrink-0 px-3 py-1.5 rounded-full bg-black text-white text-xs font-semibold"
               >
@@ -356,18 +356,18 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* SEC ID - Disabled */}
+            {/* Canvasser ID - Disabled */}
             <div>
-              <label htmlFor="secId" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="canvasserId" className="block text-sm font-medium text-gray-700 mb-2">
                 Canvasser ID
               </label>
               <input
                 type="text"
-                id="secId"
-                value={secId}
+                id="canvasserId"
+                value={canvasserId}
                 disabled
                 className="w-full px-4 py-3 bg-gray-100 border-0 rounded-xl text-gray-500 text-sm"
-                placeholder="SEC Phone Number"
+                placeholder="Canvasser Phone Number"
               />
             </div>
 
@@ -748,7 +748,7 @@ export default function CanvasserIncentiveForm({ initialSecId = '' }) {
             <div className="space-y-3 mb-6">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">Canvasser ID</span>
-                <span className="text-sm text-gray-900 font-medium">{secId}</span>
+                <span className="text-sm text-gray-900 font-medium">{canvasserId}</span>
               </div>
 
               <div className="flex justify-between items-center">

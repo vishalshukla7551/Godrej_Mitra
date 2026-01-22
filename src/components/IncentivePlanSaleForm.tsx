@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 interface FormData {
-  secId: string;
+  canvasserId: string;
   dateOfSale: string;
   storeName: string;
   device: string;
@@ -14,7 +14,7 @@ interface FormData {
 
 export default function IncentivePlanSaleForm() {
   const [formData, setFormData] = useState<FormData>({
-    secId: "",
+    canvasserId: "",
     dateOfSale: "",
     storeName: "",
     device: "",
@@ -69,8 +69,8 @@ export default function IncentivePlanSaleForm() {
             <label className="block text-sm font-medium mb-1">Canvasser ID</label>
             <input
               type="text"
-              name="secId"
-              value={formData.secId}
+              name="canvasserId"
+              value={formData.canvasserId}
               onChange={handleInputChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -177,7 +177,7 @@ export default function IncentivePlanSaleForm() {
             <div className="space-y-5 mb-8">
               <div className="flex justify-between py-3">
                 <span className="text-base text-gray-500">Canvasser ID</span>
-                <span className="text-base text-gray-900 font-medium">{formData.secId}</span>
+                <span className="text-base text-gray-900 font-medium">{formData.canvasserId}</span>
               </div>
 
               <div className="flex justify-between py-3">

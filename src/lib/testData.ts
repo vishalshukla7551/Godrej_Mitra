@@ -35,7 +35,7 @@ export interface TestSubmission {
 }
 
 // Samsung Protect Max Certification Questions (The 10 standard questions)
-export const SEC_CERT_QUESTIONS: Question[] = [
+export const SAMSUNG_CERT_QUESTIONS: Question[] = [
   {
     id: 1,
     question: "What is the coverage period for Samsung Protect Max ADLD plan?",

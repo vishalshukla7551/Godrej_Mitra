@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
-// GET /api/sec/kyc/info
-// Retrieves KYC information for the authenticated SEC user
+// GET /api/canvasser/kyc/info
+// Retrieves KYC information for the authenticated canvasser user
 export async function GET(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     if (!phone) {
       return NextResponse.json(
-        { error: 'Missing SEC identifier' },
+        { error: 'Missing canvasser identifier' },
         { status: 400 }
       );
     }
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error in GET /api/sec/kyc/info', error);
+    console.error('Error in GET /api/canvasser/kyc/info', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

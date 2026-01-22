@@ -13,7 +13,7 @@ interface SupportQuery {
   lastUpdatedAt: string;
   resolvedAt?: string;
   messages: SupportQueryMessage[];
-  secUser: {
+  canvasserUser: {
     fullName: string;
     phone: string;
     employeeId?: string;
@@ -321,18 +321,18 @@ export default function CanvasserHelpRequestsPage() {
                   <div className="mb-4 p-3 bg-slate-700/30 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
-                        {query.secUser.fullName?.charAt(0) || 'U'}
+                        {query.canvasserUser.fullName?.charAt(0) || 'U'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-white truncate">
-                          {query.secUser.fullName}
+                          {query.canvasserUser.fullName}
                         </p>
                         <p className="text-sm text-slate-300">
-                          {query.secUser.phone}
+                          {query.canvasserUser.phone}
                         </p>
-                        {query.secUser.store && (
+                        {query.canvasserUser.store && (
                           <p className="text-xs text-slate-400 truncate">
-                            {query.secUser.store.name}, {query.secUser.store.city}
+                            {query.canvasserUser.store.name}, {query.canvasserUser.store.city}
                           </p>
                         )}
                       </div>
@@ -425,17 +425,17 @@ export default function CanvasserHelpRequestsPage() {
               <div className="mt-4 p-4 bg-slate-800/50 rounded-lg">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium text-lg">
-                    {selectedQuery.secUser.fullName?.charAt(0) || 'U'}
+                    {selectedQuery.canvasserUser.fullName?.charAt(0) || 'U'}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-white">{selectedQuery.secUser.fullName}</h3>
-                    <p className="text-slate-300">{selectedQuery.secUser.phone}</p>
-                    {selectedQuery.secUser.employeeId && (
-                      <p className="text-sm text-slate-400">Employee ID: {selectedQuery.secUser.employeeId}</p>
+                    <h3 className="font-medium text-white">{selectedQuery.canvasserUser.fullName}</h3>
+                    <p className="text-slate-300">{selectedQuery.canvasserUser.phone}</p>
+                    {selectedQuery.canvasserUser.employeeId && (
+                      <p className="text-sm text-slate-400">Employee ID: {selectedQuery.canvasserUser.employeeId}</p>
                     )}
-                    {selectedQuery.secUser.store && (
+                    {selectedQuery.canvasserUser.store && (
                       <p className="text-sm text-slate-400">
-                        Store: {selectedQuery.secUser.store.name}, {selectedQuery.secUser.store.city}
+                        Store: {selectedQuery.canvasserUser.store.name}, {selectedQuery.canvasserUser.store.city}
                       </p>
                     )}
                   </div>
@@ -450,11 +450,11 @@ export default function CanvasserHelpRequestsPage() {
                 <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4">
                   <div className="flex items-start gap-3 mb-3">
                     <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0">
-                      {selectedQuery.secUser.fullName?.charAt(0) || 'U'}
+                      {selectedQuery.canvasserUser.fullName?.charAt(0) || 'U'}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium text-white">{selectedQuery.secUser.fullName}</p>
+                        <p className="font-medium text-white">{selectedQuery.canvasserUser.fullName}</p>
                         <span className="text-xs text-slate-400">•</span>
                         <span className="text-xs text-slate-400">{formatDate(selectedQuery.submittedAt)}</span>
                       </div>
@@ -476,12 +476,12 @@ export default function CanvasserHelpRequestsPage() {
                       <div className={`rounded-lg p-4 ${message.isFromAdmin ? 'bg-green-900/30 border border-green-700/50' : 'bg-slate-800/50 border border-slate-700/50'}`}>
                         <div className="flex items-start gap-3 mb-2">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 ${message.isFromAdmin ? 'bg-green-600' : 'bg-slate-600'}`}>
-                            {message.isFromAdmin ? 'A' : selectedQuery.secUser.fullName?.charAt(0) || 'U'}
+                            {message.isFromAdmin ? 'A' : selectedQuery.canvasserUser.fullName?.charAt(0) || 'U'}
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <p className="font-medium text-sm text-white">
-                                {message.isFromAdmin ? (message.adminName || 'Admin') : selectedQuery.secUser.fullName}
+                                {message.isFromAdmin ? (message.adminName || 'Admin') : selectedQuery.canvasserUser.fullName}
                               </p>
                               <span className="text-xs text-slate-400">•</span>
                               <span className="text-xs text-slate-400">{formatDate(message.sentAt)}</span>

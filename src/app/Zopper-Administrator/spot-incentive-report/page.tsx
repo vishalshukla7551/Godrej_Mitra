@@ -18,8 +18,8 @@ interface SpotIncentiveReport {
   isCampaignActive: boolean;
   customerName: string;
   customerPhoneNumber: string;
-  secUser: {
-    secId: string;
+  canvasserUser: {
+    canvasserId: string;
     phone: string;
     name: string;
   };
@@ -67,7 +67,7 @@ interface ApiResponse {
     summary: {
       totalReports: number;
       activeStores: number;
-      activeSECs: number;
+      activeCanvassers: number;
       totalIncentiveEarned: number;
       totalIncentivePaid: number;
       totalIncentivePending: number;
@@ -217,7 +217,7 @@ export default function SpotIncentiveReport() {
 
   const reports = data?.reports || [];
   const pagination = data?.pagination || { page: 1, totalPages: 1, hasNext: false, hasPrev: false };
-  const summary = data?.summary || { activeStores: 0, activeSECs: 0, totalReports: 0, totalIncentiveEarned: 0, totalIncentivePaid: 0 };
+  const summary = data?.summary || { activeStores: 0, activeCanvassers: 0, totalReports: 0, totalIncentiveEarned: 0, totalIncentivePaid: 0 };
   const filters = data?.filters || { stores: [], planTypes: [] };
   const mrIncentives = data?.mrIncentives || [];
 
@@ -258,9 +258,9 @@ export default function SpotIncentiveReport() {
       // Create export data from all reports
       const exportData = allReports.map(report => ({
         'Report ID': report.id,
-        'Canvasser ID': report.secUser.secId || 'Not Set',
-        'Canvasser Phone': report.secUser.phone,
-        'Canvasser Name': report.secUser.name || 'Not Set',
+        'Canvasser ID': report.canvasserUser.canvasserId || 'Not Set',
+        'Canvasser Phone': report.canvasserUser.phone,
+        'Canvasser Name': report.canvasserUser.name || 'Not Set',
         'Store Name': report.store.storeName,
         'Store City': report.store.city,
         'Customer Name': report.customerName || '',
@@ -362,7 +362,7 @@ export default function SpotIncentiveReport() {
         {/* Key metrics */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard title="Active Stores" value={summary.activeStores.toString()} />
-          <StatCard title="SECs Active" value={summary.activeSECs.toString()} />
+          <StatCard title="Active Canvassers" value={summary.activeCanvassers.toString()} />
           <StatCard title="Reports Submitted" value={summary.totalReports.toString()} />
           <StatCard title="Incentive Earned" value={`₹${summary.totalIncentiveEarned.toLocaleString('en-IN')}`} />
           <StatCard title="Incentive Paid" value={`₹${summary.totalIncentivePaid.toLocaleString('en-IN')}`} />
@@ -517,7 +517,7 @@ export default function SpotIncentiveReport() {
                         </div>
                       </td>
                       <td className="p-2 md:p-3 text-neutral-900 text-sm font-medium">
-                        <div className="truncate">{r.secUser.secId || 'Not Set'}</div>
+                        <div className="truncate">{r.canvasserUser.canvasserId || 'Not Set'}</div>
                       </td>
                       <td className="p-2 md:p-3 text-neutral-900 text-sm">
                         <div className="truncate">{r.store.storeName}</div>

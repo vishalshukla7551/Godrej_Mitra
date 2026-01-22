@@ -261,7 +261,7 @@ export async function POST(req: NextRequest) {
 
     let user: any = null;
     let request: any = null;
-    let isSecUser = false;
+    let isCanvasserUser = false;
 
     if (users.length > 0) {
       user = users[0];
@@ -271,7 +271,7 @@ export async function POST(req: NextRequest) {
       user = canvassers[0];
       const kycInfo = user.kycInfo as any;
       request = kycInfo?.storeChangeRequest;
-      isSecUser = true;
+      isCanvasserUser = true;
     }
 
     if (!user || !request) {
@@ -296,7 +296,7 @@ export async function POST(req: NextRequest) {
       reviewNotes: reviewNotes || null
     };
 
-    if (isSecUser) {
+    if (isCanvasserUser) {
       // Update Canvasser user's kycInfo
       const updatedKycInfo = {
         ...(user.kycInfo as any || {}),

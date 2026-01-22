@@ -38,20 +38,11 @@ export async function GET(req: NextRequest) {
       orderBy: { submittedAt: 'desc' }
     });
 
-    // Transform queries for backward compatibility (canvasserUser -> secUser)
-    const transformedQueries = queries.map(query => ({
-      ...query,
-      secUser: query.canvasserUser ? {
-        fullName: query.canvasserUser.fullName,
-        phone: query.canvasserUser.phone
-      } : null,
-      canvasserUser: undefined // Remove the original field
-    }));
-
+    // Transform queries - return with canvasserUser field (no backward compatibility needed)
     return NextResponse.json({
       success: true,
       data: {
-        queries: transformedQueries,
+        queries: queries,
         canCreateNew: !queries.some((q: any) => q.status === 'PENDING' || q.status === 'IN_PROGRESS')
       }
     });

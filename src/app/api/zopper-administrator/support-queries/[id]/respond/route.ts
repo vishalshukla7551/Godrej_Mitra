@@ -80,21 +80,10 @@ export async function POST(
       }
     });
 
-    // Transform query for backward compatibility (canvasserUser -> secUser)
-    const transformedQuery = {
-      ...updatedQuery,
-      secUser: updatedQuery.canvasserUser ? {
-        fullName: updatedQuery.canvasserUser.fullName,
-        phone: updatedQuery.canvasserUser.phone,
-        employeeId: updatedQuery.canvasserUser.employeeId,
-        store: updatedQuery.canvasserUser.store
-      } : null,
-      canvasserUser: undefined // Remove the original field
-    };
-
+    // Return query with canvasserUser field (no backward compatibility needed)
     return NextResponse.json({
       success: true,
-      data: transformedQuery
+      data: updatedQuery
     });
   } catch (error) {
     console.error('Error responding to support query:', error);

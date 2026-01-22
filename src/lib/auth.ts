@@ -22,7 +22,6 @@ const REFRESH_SECRET = process.env.REFRESH_TOKEN_SECRET || ''
 export interface AuthTokenPayload {
   userId?: string;
   canvasserId?: string;
-  secId?: string; // For SEC/Canvasser authentication
   role: Role;
 }
 
@@ -169,6 +168,15 @@ export async function getAuthenticatedUserFromCookies(
     } as any;
 
     return authUser;
+  }
+
+  // Only query User table if userId exists (not for CANVASSER role)
+  if (!payload.userId) {
+    if (cookieStore && allowCookieMutation) {
+      cookieStore.delete(ACCESS_TOKEN_COOKIE);
+      cookieStore.delete(REFRESH_TOKEN_COOKIE);
+    }
+    return null;
   }
 
   const user = await prisma.user.findUnique({

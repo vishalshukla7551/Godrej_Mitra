@@ -69,22 +69,11 @@ export async function GET(req: NextRequest) {
       RESOLVED: allQueries.filter(q => q.status === 'RESOLVED').length
     };
 
-    // Transform queries for backward compatibility (canvasserUser -> secUser)
-    const transformedQueries = queries.map(query => ({
-      ...query,
-      secUser: query.canvasserUser ? {
-        fullName: query.canvasserUser.fullName,
-        phone: query.canvasserUser.phone,
-        employeeId: query.canvasserUser.employeeId,
-        store: query.canvasserUser.store
-      } : null,
-      canvasserUser: undefined // Remove the original field
-    }));
-
+    // Return queries with canvasserUser field (no backward compatibility needed)
     return NextResponse.json({
       success: true,
       data: {
-        queries: transformedQueries,
+        queries: queries,
         statusCounts
       }
     });

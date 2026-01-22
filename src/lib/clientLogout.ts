@@ -3,7 +3,7 @@ export async function clientLogout(redirectTo: string = '/login/role') {
     try {
       // Clear localStorage IMMEDIATELY so we don't depend on the fetch resolving
       window.localStorage.removeItem('authUser');
-      window.localStorage.removeItem('secUserName');
+      window.localStorage.removeItem('canvasserUserName');
       window.localStorage.removeItem('firstName');
       window.localStorage.removeItem('lastName');
     } catch (err) {

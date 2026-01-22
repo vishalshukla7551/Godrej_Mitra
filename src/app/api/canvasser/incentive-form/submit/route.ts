@@ -3,11 +3,11 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
 /**
- * POST /api/sec/incentive-form/submit
+ * POST /api/canvasser/incentive-form/submit
  * Submit a spot incentive sales report
  * 
  * RESTRICTED: Only saves to SpotIncentiveReport (not DailyIncentiveReport)
- * SECURITY: secPhone and storeId are fetched from authenticated user's profile (server-side)
+ * SECURITY: canvasserPhone and storeId are fetched from authenticated user's profile (server-side)
  * 
  * Body:
  * {
@@ -27,22 +27,22 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { deviceId, planId, serialNumber, dateOfSale, clientSecPhone, clientStoreId, invoicePrice, customerName, customerPhoneNumber } = body;
+    const { deviceId, planId, serialNumber, dateOfSale, clientCanvasserPhone, clientStoreId, invoicePrice, customerName, customerPhoneNumber } = body;
 
-    // Get SEC phone from authenticated user (server-side, cannot be manipulated)
-    const secPhone = authUser.username;
+    // Get canvasser phone from authenticated user (server-side, cannot be manipulated)
+    const canvasserPhone = authUser.username;
 
     // SECURITY CHECK: Detect if client is trying to submit with fake data
-    if (clientSecPhone && clientSecPhone !== secPhone) {
+    if (clientCanvasserPhone && clientCanvasserPhone !== canvasserPhone) {
       return NextResponse.json(
-        { error: 'Security violation: SEC phone mismatch detected. Please logout and login again.' },
+        { error: 'Security violation: Canvasser phone mismatch detected. Please logout and login again.' },
         { status: 403 }
       );
     }
 
     // Find Canvasser user by authenticated phone
     const canvasserUser = await prisma.canvasser.findUnique({
-      where: { phone: secPhone },
+      where: { phone: canvasserPhone },
       select: {
         id: true,
         phone: true,
@@ -313,7 +313,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error in POST /api/sec/incentive-form/submit', error);
+    console.error('Error in POST /api/canvasser/incentive-form/submit', error);
 
     return NextResponse.json(
       { error: 'Internal server error' },

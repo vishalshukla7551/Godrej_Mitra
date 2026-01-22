@@ -26,13 +26,13 @@ export default function CanvasserHeader() {
     };
   }, []);
 
-  // Redirect SEC users without a full name to the name capture screen
+  // Redirect canvasser users without a full name to the name capture screen
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const pathname = window.location.pathname || '';
 
-    // Only apply on SEC routes, and avoid redirect loop on the onboarding page itself
+    // Only apply on canvasser routes, and avoid redirect loop on the onboarding page itself
     if (!pathname.startsWith('/canvasser') || pathname === '/canvasser/onboarding') {
       return;
     }

@@ -7,11 +7,11 @@ export async function POST(request: NextRequest) {
     const { sessionToken, testId, questionId, selectedAnswer } = body;
 
     const cookieStore = await cookies();
-    const secId = cookieStore.get('secId')?.value || 'unknown';
+    const canvasserId = cookieStore.get('canvasserId')?.value || 'unknown';
 
     // In production, save to TestAnswer model
     // For now, just log and return success
-    console.log('Answer saved:', { secId, sessionToken, testId, questionId, selectedAnswer });
+    console.log('Answer saved:', { canvasserId, sessionToken, testId, questionId, selectedAnswer });
 
     return NextResponse.json({ success: true });
   } catch (error) {

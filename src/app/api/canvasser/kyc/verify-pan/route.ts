@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
-// POST /api/sec/kyc/verify-pan
-// Verifies PAN using Karza API and updates SEC user's name
+// POST /api/canvasser/kyc/verify-pan
+// Verifies PAN using Karza API and updates canvasser user's name
 export async function POST(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
@@ -36,12 +36,12 @@ export async function POST(req: NextRequest) {
 
     if (!phone) {
       return NextResponse.json(
-        { error: 'Missing SEC identifier' },
+        { error: 'Missing canvasser identifier' },
         { status: 400 }
       );
     }
 
-    // Check if PAN is already verified by another SEC user
+    // Check if PAN is already verified by another canvasser user
     try {
       console.log(`Checking for duplicate PAN: ${pan}, Current phone: ${phone}`);
       
@@ -63,9 +63,9 @@ export async function POST(req: NextRequest) {
       });
 
       // Check if any user has the same PAN in their kycInfo
-      const duplicateUser = allSecsWithKyc.find((sec: any) => {
-        if (sec.kycInfo && typeof sec.kycInfo === 'object') {
-          const kycData = sec.kycInfo as any;
+      const duplicateUser = allCanvassersWithKyc.find((canvasser: any) => {
+        if (canvasser.kycInfo && typeof canvasser.kycInfo === 'object') {
+          const kycData = canvasser.kycInfo as any;
           return kycData.pan === pan;
         }
         return false;
@@ -164,10 +164,10 @@ export async function POST(req: NextRequest) {
         rawPanData: panData, // store full PAN JSON as well
       };
 
-      // Update SEC user's name and KYC info in database
+      // Update canvasser user's name and KYC info in database
       // Use MongoDB's updateOne with upsert to safely update/create
       await (prisma as any).$runCommandRaw({
-        update: "SEC",
+        update: "Canvasser",
         updates: [
           {
             q: { phone: phone },
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
         await prisma.canvasser.update({ where: { phone }, data: { updatedAt: new Date() } });
       } catch (e) {
         // ignore - best effort
-        console.warn('Failed to normalize updatedAt for SEC record', e);
+        console.warn('Failed to normalize updatedAt for canvasser record', e);
       }
 
       // Get the updated record
@@ -206,8 +206,8 @@ export async function POST(req: NextRequest) {
         }
       });
 
-      if (!updatedSec) {
-        throw new Error('Failed to create or update SEC record');
+      if (!updatedCanvasser) {
+        throw new Error('Failed to create or update canvasser record');
       }
 
       return NextResponse.json({
@@ -248,7 +248,7 @@ export async function POST(req: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Error in POST /api/sec/kyc/verify-pan', error);
+    console.error('Error in POST /api/canvasser/kyc/verify-pan', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

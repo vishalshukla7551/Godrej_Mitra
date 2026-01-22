@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 import { Role } from '@prisma/client';
 
-// GET /api/sec/stores
-// Get all available stores for SEC to select from
+// GET /api/canvasser/stores
+// Get all available stores for canvasser to select from
 export async function GET(req: NextRequest) {
   try {
     const cookies = await (await import('next/headers')).cookies();
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error in GET /api/sec/stores', error);
+    console.error('Error in GET /api/canvasser/stores', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
