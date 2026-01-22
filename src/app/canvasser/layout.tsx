@@ -4,7 +4,7 @@ import { useRequireAuth } from '@/lib/clientAuth';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function SECLayout({
+export default function CanvasserLayout({
   children,
 }: {
   children: React.ReactNode;

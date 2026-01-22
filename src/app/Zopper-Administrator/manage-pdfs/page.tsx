@@ -176,7 +176,7 @@ export default function ManagePDFsPage() {
                 </h1>
               </div>
               <p className="text-neutral-400 text-sm md:text-base">
-                Upload and manage the claim procedure document for SECs
+                Upload and manage the claim procedure document for canvassers
               </p>
             </div>
 
@@ -199,7 +199,7 @@ export default function ManagePDFsPage() {
             <div>
               <h3 className="text-amber-400 font-semibold mb-1">Single PDF Policy</h3>
               <p className="text-amber-200/80 text-sm">
-                Only ONE PDF can exist at a time. Uploading a new PDF will automatically replace the existing one. This ensures SECs always see the most current claim procedure document.
+                Only ONE PDF can exist at a time. Uploading a new PDF will automatically replace the existing one. This ensures canvassers always see the most current claim procedure document.
               </p>
             </div>
           </div>

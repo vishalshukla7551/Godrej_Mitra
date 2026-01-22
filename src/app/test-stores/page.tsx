@@ -71,7 +71,7 @@ export default function TestStoresPage() {
               <p className="text-3xl font-bold text-green-600">{cities.length}</p>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold text-purple-900">Avg SECs/Store</h3>
+              <h3 className="text-lg font-semibold text-purple-900">Avg Canvassers/Store</h3>
               <p className="text-3xl font-bold text-purple-600">
                 {stores.length > 0 ? 
                   (stores.reduce((sum, store) => sum + (store.numberOfCanvasser || 1), 0) / stores.length).toFixed(1) 
@@ -107,7 +107,7 @@ export default function TestStoresPage() {
                       City
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      SECs
+                      Canvassers
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Store ID

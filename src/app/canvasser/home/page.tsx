@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { clientLogout } from '@/lib/clientLogout';
 import LandingPage from './component/LandingPage.jsx';
 
-export default function SECHomePage() {
+export default function CanvasserHomePage() {
   const [userName, setUserName] = useState('Guest');
 
   useEffect(() => {
