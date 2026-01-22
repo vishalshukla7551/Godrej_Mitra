@@ -6,6 +6,9 @@ import { cookies as nextCookies } from 'next/headers';
 const ACCESS_TOKEN_COOKIE = 'access_token';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
 
+// ✅ Project identifier - prevents token reuse across projects
+const PROJECT_ID = process.env.PROJECT_ID || 'godrej-mitra';
+
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes
 const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
@@ -23,6 +26,7 @@ export interface AuthTokenPayload {
   userId?: string;
   canvasserId?: string;
   role: Role;
+  projectId?: string; // ✅ Project identifier for multi-project security
 }
 
 export interface AuthenticatedUser {
@@ -35,16 +39,32 @@ export interface AuthenticatedUser {
 }
 
 export function signAccessToken(payload: AuthTokenPayload) {
-  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_TOKEN_TTL_SECONDS });
+  // ✅ Add projectId to payload
+  const payloadWithProject = {
+    ...payload,
+    projectId: payload.projectId || PROJECT_ID,
+  };
+  return jwt.sign(payloadWithProject, ACCESS_SECRET, { expiresIn: ACCESS_TOKEN_TTL_SECONDS });
 }
 
 export function signRefreshToken(payload: AuthTokenPayload) {
-  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_TTL_SECONDS });
+  // ✅ Add projectId to payload
+  const payloadWithProject = {
+    ...payload,
+    projectId: payload.projectId || PROJECT_ID,
+  };
+  return jwt.sign(payloadWithProject, REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_TTL_SECONDS });
 }
 
 export function verifyAccessToken(token: string): AuthTokenPayload | null {
   try {
-    return jwt.verify(token, ACCESS_SECRET) as AuthTokenPayload;
+    const payload = jwt.verify(token, ACCESS_SECRET) as AuthTokenPayload;
+    // ✅ Verify projectId matches - MUST be present and correct
+    if (!payload.projectId || payload.projectId !== PROJECT_ID) {
+      console.warn(`[auth] Token projectId invalid: ${payload.projectId} !== ${PROJECT_ID}`);
+      return null;
+    }
+    return payload;
   } catch {
     return null;
   }
@@ -52,7 +72,13 @@ export function verifyAccessToken(token: string): AuthTokenPayload | null {
 
 export function verifyRefreshToken(token: string): AuthTokenPayload | null {
   try {
-    return jwt.verify(token, REFRESH_SECRET) as AuthTokenPayload;
+    const payload = jwt.verify(token, REFRESH_SECRET) as AuthTokenPayload;
+    // ✅ Verify projectId matches - MUST be present and correct
+    if (!payload.projectId || payload.projectId !== PROJECT_ID) {
+      console.warn(`[auth] Token projectId invalid: ${payload.projectId} !== ${PROJECT_ID}`);
+      return null;
+    }
+    return payload;
   } catch {
     return null;
   }
@@ -113,8 +139,7 @@ export async function getAuthenticatedUserFromCookies(
   // No valid tokens at all – clear cookies if we can and bail out
   if (!payload) {
     if (cookieStore && allowCookieMutation) {
-      if (accessToken) cookieStore.delete(ACCESS_TOKEN_COOKIE);
-      if (refreshToken) cookieStore.delete(REFRESH_TOKEN_COOKIE);
+      clearAuthCookies(cookieStore);
     }
     return null;
   }
@@ -127,8 +152,7 @@ export async function getAuthenticatedUserFromCookies(
     const canvasserId = payload.canvasserId;
     if (!canvasserId) {
       if (cookieStore && allowCookieMutation) {
-        cookieStore.delete(ACCESS_TOKEN_COOKIE);
-        cookieStore.delete(REFRESH_TOKEN_COOKIE);
+        clearAuthCookies(cookieStore);
       }
       return null;
     }
@@ -139,6 +163,7 @@ export async function getAuthenticatedUserFromCookies(
       const newPayload: AuthTokenPayload = {
         canvasserId,
         role: 'CANVASSER' as Role,
+        // ✅ projectId automatically added by signAccessToken
       };
 
       // Rotate ONLY the access token. Refresh token keeps its original
@@ -173,8 +198,7 @@ export async function getAuthenticatedUserFromCookies(
   // Only query User table if userId exists (not for CANVASSER role)
   if (!payload.userId) {
     if (cookieStore && allowCookieMutation) {
-      cookieStore.delete(ACCESS_TOKEN_COOKIE);
-      cookieStore.delete(REFRESH_TOKEN_COOKIE);
+      clearAuthCookies(cookieStore);
     }
     return null;
   }
@@ -193,8 +217,7 @@ export async function getAuthenticatedUserFromCookies(
 
   if (!user || user.validation !== 'APPROVED') {
     if (cookieStore && allowCookieMutation) {
-      cookieStore.delete(ACCESS_TOKEN_COOKIE);
-      cookieStore.delete(REFRESH_TOKEN_COOKIE);
+      clearAuthCookies(cookieStore);
     }
     return null;
   }
@@ -205,6 +228,7 @@ export async function getAuthenticatedUserFromCookies(
     const newPayload: AuthTokenPayload = {
       userId: user.id,
       role: user.role,
+      // ✅ projectId automatically added by signAccessToken
     };
 
     // Rotate ONLY the access token. Refresh token keeps its original
@@ -245,4 +269,37 @@ export async function getAuthenticatedUserFromCookies(
   return authUser;
 }
 
-export { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS };
+// Clear auth cookies from a NextResponse or cookie store
+export function clearAuthCookies(
+  cookieStore: any,
+  options?: { httpOnly?: boolean; sameSite?: string; secure?: boolean; path?: string }
+) {
+  const defaultOptions = {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+  };
+
+  const cookieOptions = { ...defaultOptions, ...options };
+
+  // Check if this is a NextResponse cookies object (has .set method) or a cookie store (has .delete method)
+  if (cookieStore.set) {
+    // NextResponse.cookies
+    cookieStore.set(ACCESS_TOKEN_COOKIE, '', {
+      ...cookieOptions,
+      maxAge: 0,
+    });
+
+    cookieStore.set(REFRESH_TOKEN_COOKIE, '', {
+      ...cookieOptions,
+      maxAge: 0,
+    });
+  } else if (cookieStore.delete) {
+    // Cookie store from next/headers
+    cookieStore.delete(ACCESS_TOKEN_COOKIE);
+    cookieStore.delete(REFRESH_TOKEN_COOKIE);
+  }
+}
+
+export { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS, PROJECT_ID };

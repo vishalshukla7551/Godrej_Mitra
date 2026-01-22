@@ -9,7 +9,8 @@ export default function CanvasserLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { loading, user } = useRequireAuth(['CANVASSER']);
+  // Auto-detects role from URL and calls correct endpoint
+  const { loading, user } = useRequireAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [checkingProfile, setCheckingProfile] = useState(true);
@@ -17,19 +18,16 @@ export default function CanvasserLayout({
   useEffect(() => {
     if (loading || !user) return;
 
-    // Skip profile check if already on the onboarding page or profile page
     if (pathname === '/canvasser/onboarding' || pathname === '/canvasser/profile') {
       setCheckingProfile(false);
       return;
     }
 
-    // Check if fullName, store, or employeeId is missing
     const fullName = (user?.fullName || '').trim();
     const storeId = user?.storeId || user?.selectedStoreId;
     const storeName = user?.store?.name;
     const employeeId = user?.employeeId || user?.employId;
 
-    // Redirect to onboarding if fullName, store, or employeeId is missing
     if (!fullName || (!storeId && !storeName) || !employeeId) {
       router.replace('/canvasser/onboarding');
       return;
@@ -39,7 +37,7 @@ export default function CanvasserLayout({
   }, [loading, user, pathname, router]);
 
   if (loading || checkingProfile) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return <>{children}</>;

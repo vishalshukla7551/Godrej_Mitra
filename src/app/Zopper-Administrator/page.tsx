@@ -41,7 +41,7 @@ export default function ZopperAdministratorPage() {
           {/* Logout button positioned at top right */}
           <div className="flex justify-end mb-6">
             <button
-              onClick={() => clientLogout('/login/role')}
+              onClick={() => clientLogout('/login/role', false)}
               className="flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-red-900/60 transition-transform transition-colors hover:-translate-y-0.5 hover:bg-red-700"
             >
               <svg

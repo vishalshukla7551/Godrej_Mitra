@@ -9,7 +9,7 @@ export default function CanvasserHeader() {
 
   const handleLogout = () => {
     // Use shared clientLogout helper so logout behavior is consistent
-    clientLogout('/login/canvasser');
+    clientLogout('/login/canvasser', false);
   };
 
   // Close menu when clicking outside

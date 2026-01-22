@@ -8,12 +8,7 @@ datasource db {
 }
 
 enum Role {
-  ABM
-  ASE
-  ZSM
-  ZSE
   CANVASSER
-  SAMSUNG_ADMINISTRATOR
   ZOPPER_ADMINISTRATOR
 }
 

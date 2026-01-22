@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
     const payload: AuthTokenPayload = {
       canvasserId: normalized, // Use phone number as canvasserId
       role: 'CANVASSER' as Role,
+      // ✅ projectId automatically added by signAccessToken/signRefreshToken
     };
 
     const accessToken = signAccessToken(payload);

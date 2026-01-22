@@ -47,7 +47,7 @@ export function GlobalAuthInterceptor() {
         if (!isLoginEndpoint) {
           // Tokens missing/expired or user unauthorized – force a clean logout
           // Fire-and-forget; we still return the original response to callers
-          void clientLogout();
+          void clientLogout('/login/role', true);
         }
       }
 

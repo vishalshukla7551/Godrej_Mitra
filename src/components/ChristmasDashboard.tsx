@@ -55,7 +55,7 @@ export default function ChristmasDashboard({ userName, loading, cards, logoutPat
           <p className="text-neutral-50 text-3xl font-semibold">{loading ? 'Hello User,' : `Hello ${userName},`}</p>
           <p className="text-white/80 text-lg">Welcome! Choose your action below</p>
         </div>
-        <button onClick={() => clientLogout(logoutPath)} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-all shadow-lg hover:scale-105" style={{ background: 'linear-gradient(135deg, #c62828, #ff5252)' }}>
+        <button onClick={() => clientLogout(logoutPath, false)} className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-all shadow-lg hover:scale-105" style={{ background: 'linear-gradient(135deg, #c62828, #ff5252)' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M16 17L21 12L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           <span>Logout</span>
         </button>

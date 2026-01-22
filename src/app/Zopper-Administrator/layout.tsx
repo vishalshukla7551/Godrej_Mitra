@@ -12,7 +12,8 @@ export default function ZopperAdministratorLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { loading } = useRequireAuth(['ZOPPER_ADMINISTRATOR']);
+  // Auto-detects role from URL and calls correct endpoint
+  const { loading } = useRequireAuth();
 
   // Sidebar state with localStorage persistence
   const [sidebarOpen, setSidebarOpen] = useState(() => {

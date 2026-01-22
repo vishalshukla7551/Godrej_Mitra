@@ -44,7 +44,20 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Canvasser OTP] Phone ${normalized} -> ${code}`);
 
-    // Send OTP via Comify WhatsApp API
+    // Skip WhatsApp sending during localhost development
+    const isLocalhost = process.env.NODE_ENV !== 'production' && 
+                        (process.env.VERCEL_ENV === undefined || process.env.VERCEL_ENV === 'development');
+
+    if (isLocalhost) {
+      console.log(`[Canvasser OTP] Localhost mode - skipping WhatsApp send. Use OTP: ${code}`);
+      return NextResponse.json({
+        success: true,
+        message: 'OTP generated (localhost mode - WhatsApp skipped)',
+        otp: code, // Return OTP for testing purposes
+      });
+    }
+
+    // Send OTP via Comify WhatsApp API (production only)
     if (comifyService.isConfigured()) {
       try {
         await comifyService.sendOtp(normalized, code);

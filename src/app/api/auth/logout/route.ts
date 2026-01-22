@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  ACCESS_TOKEN_COOKIE,
-  REFRESH_TOKEN_COOKIE,
+  clearAuthCookies,
 } from '@/lib/auth';
 
 // POST /api/auth/logout
@@ -10,22 +9,8 @@ import {
 export async function POST(_req: NextRequest) {
   const res = NextResponse.json({ success: true });
 
-  // Clear cookies by setting them with empty value and maxAge=0
-  res.cookies.set(ACCESS_TOKEN_COOKIE, '', {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 0,
-  });
-
-  res.cookies.set(REFRESH_TOKEN_COOKIE, '', {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 0,
-  });
+  // Clear cookies using the centralized function
+  clearAuthCookies(res.cookies);
 
   return res;
 }

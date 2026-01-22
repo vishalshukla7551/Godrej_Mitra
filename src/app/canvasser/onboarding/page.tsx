@@ -72,7 +72,7 @@ export default function CanvasserOnboardingPage() {
   }, [selectedStoreId, stores]);
 
   const handleBack = async () => {
-    await clientLogout('/login/canvasser');
+    await clientLogout('/login/canvasser', false);
   };
 
   const filteredStores = stores.filter((store) => {

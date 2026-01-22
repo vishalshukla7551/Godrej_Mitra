@@ -16,7 +16,7 @@ export default function FestiveHeader({ userName = 'Guest', hideGreeting = false
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
-    clientLogout('/login/canvasser');
+    clientLogout('/login/canvasser', false);
   };
 
   // Close menu when clicking outside

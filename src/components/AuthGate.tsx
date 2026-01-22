@@ -20,6 +20,33 @@ function isPublicPath(pathname: string) {
   );
 }
 
+// Extract role from URL path
+function getRoleFromPath(pathname: string): string | null {
+  const segments = pathname.split('/').filter(Boolean);
+  if (!segments.length) return null;
+  
+  const firstSegment = segments[0].toLowerCase();
+  
+  // Map URL segments to roles
+  const roleMap: { [key: string]: string } = {
+    'canvasser': 'CANVASSER',
+    'zopper-administrator': 'ZOPPER_ADMINISTRATOR',
+  };
+  
+  return roleMap[firstSegment] || null;
+}
+
+// Map routes to their verify endpoints
+function getVerifyEndpointForPath(pathname: string): string | undefined {
+  if (pathname.startsWith('/canvasser')) {
+    return '/api/canvasser/profile';
+  }
+  if (pathname.startsWith('/Zopper-Administrator')) {
+    return '/api/zopper-administrator/profile';
+  }
+  return undefined;
+}
+
 export function AuthGate({
   children,
   requiredRoles,
@@ -30,8 +57,18 @@ export function AuthGate({
   const pathname = usePathname();
   const publicRoute = isPublicPath(pathname);
 
+  // Auto-detect role from URL if not provided
+  const roleFromUrl = getRoleFromPath(pathname);
+  const finalRequiredRoles = requiredRoles || (roleFromUrl ? [roleFromUrl] : undefined);
+
+  // Get verify endpoint based on current route
+  const verifyEndpoint = getVerifyEndpointForPath(pathname);
+
   // Only enforce auth for non-public routes
-  const { loading } = useRequireAuth(requiredRoles, { enabled: !publicRoute });
+  const { loading } = useRequireAuth(finalRequiredRoles, { 
+    enabled: !publicRoute,
+    verifyEndpoint,
+  });
 
   if (publicRoute) {
     return <>{children}</>;

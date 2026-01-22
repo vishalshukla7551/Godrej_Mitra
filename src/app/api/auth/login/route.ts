@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
 
     // Expose role and selected role-specific fields (flattened) to the client;
     // do not expose raw User model fields like id, username, metadata, etc.
+    // Note: id not included - not needed in localStorage
     const res = NextResponse.json({
       user: {
         role: rest.role,
