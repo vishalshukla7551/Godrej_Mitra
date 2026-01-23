@@ -41,21 +41,7 @@ export default function CanvasserLogin() {
     }
   }, [otpSent]);
 
-  // If already logged in, redirect away from Canvasser login.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const raw = window.localStorage.getItem('authUser');
-    if (!raw) return;
-    try {
-      const user = JSON.parse(raw) as { role?: string };
-      if (user?.role) {
-        const target = getHomePathForRole(user.role);
-        router.replace(target);
-      }
-    } catch {
-      // ignore parse errors
-    }
-  }, [router]);
+
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;

@@ -180,16 +180,35 @@ export async function getAuthenticatedUserFromCookies(
       });
     }
 
+    // Fetch full Canvasser profile from DB
+    const canvasserProfile = await prisma.canvasser.findUnique({
+      where: { phone: canvasserId },
+      include: { store: true },
+    });
+
+    if (!canvasserProfile) {
+      if (cookieStore && allowCookieMutation) {
+        clearAuthCookies(cookieStore);
+      }
+      return null;
+    }
+
     const authUser: AuthenticatedUser = {
-      id: canvasserId,
-      username: canvasserId,
+      id: canvasserProfile.id,
+      username: canvasserProfile.phone,
       role: 'CANVASSER' as Role,
       validation: 'APPROVED',
+      phone: canvasserProfile.phone,
+      fullName: canvasserProfile.fullName,
+      employeeId: canvasserProfile.employeeId,
+      email: canvasserProfile.email,
+      storeId: canvasserProfile.storeId,
+      storeName: canvasserProfile.store?.name,
+      city: canvasserProfile.city,
+      agencyName: canvasserProfile.AgencyName,
+      agentCode: canvasserProfile.AgentCode,
       metadata: {},
-      profile: {
-        id: canvasserId,
-        phone: canvasserId,
-      },
+      profile: null,
     } as any;
 
     return authUser;

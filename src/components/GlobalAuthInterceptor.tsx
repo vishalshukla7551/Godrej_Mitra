@@ -39,6 +39,7 @@ export function GlobalAuthInterceptor() {
         const isLoginEndpoint = 
           url.includes('/api/auth/login') || 
           url.includes('/api/auth/canvasser/verify-otp') ||
+          url.includes('/api/auth/verify') ||
           url.includes('/api/auth/signup');
 
         // Debug log (remove after testing)

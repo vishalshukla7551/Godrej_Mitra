@@ -1,8 +1,8 @@
 'use client';
 
-import { useRequireAuth } from '@/lib/clientAuth';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CanvasserLayout({
   children,
@@ -10,7 +10,7 @@ export default function CanvasserLayout({
   children: React.ReactNode;
 }) {
   // Auto-detects role from URL and calls correct endpoint
-  const { loading, user } = useRequireAuth();
+  const { loading, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [checkingProfile, setCheckingProfile] = useState(true);

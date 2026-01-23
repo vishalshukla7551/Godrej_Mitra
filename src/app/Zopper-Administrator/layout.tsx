@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useRequireAuth } from '@/lib/clientAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 
@@ -13,7 +13,7 @@ export default function ZopperAdministratorLayout({
 }) {
   const pathname = usePathname();
   // Auto-detects role from URL and calls correct endpoint
-  const { loading } = useRequireAuth();
+  const { loading } = useAuth();
 
   // Sidebar state with localStorage persistence
   const [sidebarOpen, setSidebarOpen] = useState(() => {

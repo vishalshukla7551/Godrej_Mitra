@@ -37,21 +37,7 @@ export default function RoleLogin() {
     }
   });
 
-  // If already logged in (authUser in localStorage), redirect to role home.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const raw = window.localStorage.getItem('authUser');
-    if (!raw) return;
-    try {
-      const user = JSON.parse(raw) as { role?: string };
-      if (user?.role) {
-        const target = getHomePathForRole(user.role);
-        router.replace(target);
-      }
-    } catch {
-      // ignore parse errors
-    }
-  }, [router]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

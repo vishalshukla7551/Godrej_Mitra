@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRequireAuth } from '@/lib/clientAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MONTHS = [
     'January',
@@ -72,7 +72,7 @@ interface LeaderboardData {
 }
 
 export default function LeaderboardPage() {
-    const { loading } = useRequireAuth(['ZOPPER_ADMINISTRATOR']);
+    const { loading } = useAuth(['ZOPPER_ADMINISTRATOR']);
     const [data, setData] = useState<LeaderboardData | null>(null);
     const [activeTab, setActiveTab] = useState<'store' | 'asaCanvasser'>('store');
     const [isLoading, setIsLoading] = useState(true);

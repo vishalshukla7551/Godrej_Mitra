@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRequireAuth } from '@/lib/clientAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SupportQuery {
   id: string;
@@ -51,7 +51,7 @@ const CATEGORY_OPTIONS = [
 ];
 
 export default function CanvasserHelpRequestsPage() {
-  const { loading: authLoading } = useRequireAuth(['ZOPPER_ADMINISTRATOR']);
+  const { loading: authLoading } = useAuth(['ZOPPER_ADMINISTRATOR']);
   
   const [queries, setQueries] = useState<SupportQuery[]>([]);
   const [statusCounts, setStatusCounts] = useState<StatusCounts>({
