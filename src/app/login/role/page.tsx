@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getHomePathForRole } from '@/lib/roleHomePath';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function RoleLogin() {
   const [username, setUsername] = useState('');
@@ -13,29 +14,40 @@ export default function RoleLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
   // Reuse Canvasser login phone field typography & input styles
   const inputBaseClasses =
     'w-full px-3 py-2.5 rounded-lg text-base text-black placeholder:text-gray-500 transition-all duration-200 border-0 outline-none focus:outline-none';
   const labelBaseClasses = 'block text-sm font-medium text-gray-900 mb-1.5';
 
-  // Apply important styles on mount
+  // Handle redirect and styling
   useEffect(() => {
-    const usernameInput = document.getElementById('username') as HTMLInputElement;
-    const passwordInput = document.getElementById('password') as HTMLInputElement;
-
-    if (usernameInput) {
-      usernameInput.style.setProperty('background-color', '#e8f0fe', 'important');
-      usernameInput.style.setProperty('border', '1px solid #d1d5db', 'important');
-      usernameInput.style.setProperty('outline', 'none', 'important');
+    // Redirect if already logged in
+    if (!authLoading && user) {
+      const target = getHomePathForRole(user.role || 'CANVASSER');
+      router.replace(target);
+      return;
     }
 
-    if (passwordInput) {
-      passwordInput.style.setProperty('background-color', '#e8f0fe', 'important');
-      passwordInput.style.setProperty('border', '1px solid #d1d5db', 'important');
-      passwordInput.style.setProperty('outline', 'none', 'important');
+    // Apply important styles on mount (only if not redirecting)
+    if (!authLoading) {
+      const usernameInput = document.getElementById('username') as HTMLInputElement;
+      const passwordInput = document.getElementById('password') as HTMLInputElement;
+
+      if (usernameInput) {
+        usernameInput.style.setProperty('background-color', '#e8f0fe', 'important');
+        usernameInput.style.setProperty('border', '1px solid #d1d5db', 'important');
+        usernameInput.style.setProperty('outline', 'none', 'important');
+      }
+
+      if (passwordInput) {
+        passwordInput.style.setProperty('background-color', '#e8f0fe', 'important');
+        passwordInput.style.setProperty('border', '1px solid #d1d5db', 'important');
+        passwordInput.style.setProperty('outline', 'none', 'important');
+      }
     }
-  });
+  }, [user, authLoading, router]);
 
 
 
@@ -90,6 +102,18 @@ export default function RoleLogin() {
       className="min-h-screen flex items-center justify-center p-4 relative"
       style={{ backgroundColor: '#F5F6F8' }}
     >
+      {/* Show loading while checking auth */}
+      {authLoading ? (
+        <div className="flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-[#5E1846] mb-4">
+              Sales<span className="text-[#3056FF]">mitr</span>
+            </div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5E1846] mx-auto"></div>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Gift Box - Fixed to page
       <Image
         src="/images/gift-box.png"
@@ -309,6 +333,8 @@ export default function RoleLogin() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

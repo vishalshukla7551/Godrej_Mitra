@@ -6,9 +6,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getHomePathForRole } from '@/lib/roleHomePath';
 import ButtonLoader from '@/components/ButtonLoader';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CanvasserLogin() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
@@ -23,25 +25,33 @@ export default function CanvasserLogin() {
     'w-full px-3 py-2.5 rounded-lg text-base text-black placeholder:text-gray-500 transition-all duration-200 border-0 outline-none focus:outline-none';
   const labelBaseClasses = 'block text-sm font-medium text-gray-900 mb-1.5';
 
-  // Apply important styles on mount
+  // Handle redirect and styling
   useEffect(() => {
-    const phoneInput = document.getElementById('phone') as HTMLInputElement;
-    const otpInput = document.getElementById('otp') as HTMLInputElement;
-
-    if (phoneInput) {
-      phoneInput.style.setProperty('background-color', '#e8f0fe', 'important');
-      phoneInput.style.setProperty('border', '1px solid #d1d5db', 'important');
-      phoneInput.style.setProperty('outline', 'none', 'important');
+    // Redirect if already logged in
+    if (!authLoading && user) {
+      const target = getHomePathForRole(user.role || 'CANVASSER');
+      router.replace(target);
+      return;
     }
 
-    if (otpInput) {
-      otpInput.style.setProperty('background-color', 'transparent', 'important');
-      otpInput.style.setProperty('border', '1px solid #d1d5db', 'important');
-      otpInput.style.setProperty('outline', 'none', 'important');
+    // Apply important styles on mount (only if not redirecting)
+    if (!authLoading) {
+      const phoneInput = document.getElementById('phone') as HTMLInputElement;
+      const otpInput = document.getElementById('otp') as HTMLInputElement;
+
+      if (phoneInput) {
+        phoneInput.style.setProperty('background-color', '#e8f0fe', 'important');
+        phoneInput.style.setProperty('border', '1px solid #d1d5db', 'important');
+        phoneInput.style.setProperty('outline', 'none', 'important');
+      }
+
+      if (otpInput) {
+        otpInput.style.setProperty('background-color', 'transparent', 'important');
+        otpInput.style.setProperty('border', '1px solid #d1d5db', 'important');
+        otpInput.style.setProperty('outline', 'none', 'important');
+      }
     }
-  }, [otpSent]);
-
-
+  }, [user, authLoading, router, otpSent]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
@@ -170,6 +180,18 @@ export default function CanvasserLogin() {
       className="h-screen flex flex-col md:flex-row items-center justify-center p-4 relative overflow-x-hidden overflow-y-auto"
       style={{ backgroundColor: '#F5F6F8' }}
     >
+      {/* Show loading while checking auth */}
+      {authLoading ? (
+        <div className="flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-[#5E1846] mb-4">
+              Sales<span className="text-[#3056FF]">mitr</span>
+            </div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5E1846] mx-auto"></div>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Card Wrapper - Anchors Santa hat and Gift box to the card */}
       <div className="relative w-full max-w-[450px] mx-auto overflow-visible">
         {/* Santa Hat - Anchored to Card Top Left - Responsive positioning
@@ -490,6 +512,8 @@ export default function CanvasserLogin() {
         </div>
         */}
       </div>
+        </>
+      )}
     </div>
   );
 }

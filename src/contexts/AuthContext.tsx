@@ -92,15 +92,46 @@ export function AuthProvider({ children, requiredRoles }: AuthProviderProps) {
   }, [showAccessDenied]);
 
   useEffect(() => {
-    const publicRoute = isPublicPath(pathname);
+    // Special handling for login pages - check if user is already logged in
+    if (pathname.startsWith('/login')) {
+      (async () => {
+        try {
+          const res = await fetch('/api/auth/verify', {
+            method: 'GET',
+            credentials: 'include',
+          });
 
-    // If public route, skip auth check
-    if (publicRoute) {
+          if (res.ok) {
+            const data = await res.json();
+            const freshUser = data.user;
+            
+            if (freshUser) {
+              setUser(freshUser);
+              setIsAuthenticated(true);
+              localStorage.setItem('authUser', JSON.stringify(freshUser));
+              
+              // Redirect to home if already logged in
+              const target = getHomePathForRole(freshUser.role || 'CANVASSER');
+              router.replace(target);
+            }
+          }
+          // ❌ If verification fails, user stays null (DON'T logout)
+        } catch (error) {
+          console.log('[auth] Login page - no valid session');
+        }
+        setLoading(false);
+      })();
+      return;
+    }
+
+    // Other public paths - skip verification
+    if (isPublicPath(pathname)) {
       setLoading(false);
       setIsAuthenticated(false);
       return;
     }
 
+    // Protected routes - verify auth
     verifyAuth();
 
     async function verifyAuth() {
@@ -108,17 +139,18 @@ export function AuthProvider({ children, requiredRoles }: AuthProviderProps) {
         // Auto-detect role from URL if not provided
         const roleFromUrl = getRoleFromPath(pathname);
         const finalRequiredRoles = requiredRoles || (roleFromUrl ? [roleFromUrl] : undefined);
-
         // Use unified verify endpoint
         const res = await fetch('/api/auth/verify', {
           method: 'GET',
           credentials: 'include',
         });
 
-
         if (!res.ok) {
           console.error('Auth verification failed:', res.status);
-          await clientLogout(undefined, true);
+         // Check if user had a previous session by looking at localStorage
+           const hasSession = typeof window !== 'undefined' && localStorage.getItem('authUser') !== null;
+        console.log("hasCookies",hasSession)
+          await clientLogout(undefined, hasSession);
           setLoading(false);
           return;
         }

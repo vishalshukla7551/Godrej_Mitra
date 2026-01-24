@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
         if (existingCanvasser && existingCanvasser.phone !== phone) {
           return NextResponse.json(
-            { error: 'Canvasser ID already in use' },
+            { error: 'Employee ID already in use' },
             { status: 400 },
           );
         }
