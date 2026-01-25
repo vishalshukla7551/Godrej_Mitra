@@ -7,6 +7,7 @@ import {
   signRefreshToken,
   AuthTokenPayload,
 } from '@/lib/auth';
+import { Role } from '@prisma/client';
 
 // POST /api/auth/canvasser/verify-otp
 // Body: { phoneNumber: string; otp: string }
@@ -119,6 +120,7 @@ export async function POST(req: NextRequest) {
       sameSite: 'lax',
       secure: isSecure,
       path: '/',
+      maxAge: 15 * 60, // 15 minutes
     });
 
     res.cookies.set(REFRESH_TOKEN_COOKIE, refreshToken, {
@@ -126,6 +128,7 @@ export async function POST(req: NextRequest) {
       sameSite: 'lax',
       secure: isSecure,
       path: '/',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
     return res;

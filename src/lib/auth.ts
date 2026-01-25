@@ -225,11 +225,6 @@ export async function getAuthenticatedUserFromCookies(
   const user = await prisma.user.findUnique({
     where: { id: payload.userId },
     include: {
-      abmProfile: true,
-      aseProfile: true,
-      zsmProfile: true,
-      zseProfile: true,
-      samsungAdminProfile: true,
       zopperAdminProfile: true,
     },
   } as any);
@@ -268,11 +263,6 @@ export async function getAuthenticatedUserFromCookies(
   const { password: _pw, ...rest } = anyUser;
 
   const profile =
-    anyUser.abmProfile ||
-    anyUser.aseProfile ||
-    anyUser.zsmProfile ||
-    anyUser.zseProfile ||
-    anyUser.samsungAdminProfile ||
     anyUser.zopperAdminProfile ||
     null;
 

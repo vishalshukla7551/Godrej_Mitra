@@ -3,32 +3,16 @@ import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/password';
 
 // GET /api/auth/signup
-// Returns options for signup form (stores, ZSM, ZSE)
+// Returns options for signup form (stores)
 export async function GET() {
   try {
-    const [stores, zsms, zses] = await Promise.all([
-      prisma.store.findMany({ orderBy: { name: 'asc' } }),
-      prisma.zSM.findMany({ orderBy: { fullName: 'asc' } }),
-      prisma.zSE.findMany({ orderBy: { fullName: 'asc' } }),
-    ]);
+    const stores = await prisma.store.findMany({ orderBy: { name: 'asc' } });
 
     return NextResponse.json({
       stores: stores.map((s) => ({
         id: s.id,
         name: s.name,
         city: s.city,
-      })),
-      zsms: zsms.map((z) => ({
-        id: z.id,
-        fullName: z.fullName,
-        phone: z.phone,
-        region: z.region,
-      })),
-      zses: zses.map((z) => ({
-        id: z.id,
-        fullName: z.fullName,
-        phone: z.phone,
-        region: z.region,
       })),
     });
   } catch (error) {

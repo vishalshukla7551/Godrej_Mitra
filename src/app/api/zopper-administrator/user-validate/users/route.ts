@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
 
-// GET /api/user-validate/users?status=PENDING|APPROVED|BLOCKED
-// Lists non-admin users (ABM/ASE/ZSM/ZSE) for the User Validation page.
-// It also flattens role-specific profile info and metadata into top-level fields
-// so the frontend can easily render name / phone / email / mappings.
+// GET /api/zopper-administrator/user-validate/users?status=PENDING|APPROVED|BLOCKED
+// Lists users for validation (currently no users to validate as only CANVASSER and ZOPPER_ADMINISTRATOR exist)
 export async function GET(req: Request) {
   try {
     const authUser = await getAuthenticatedUserFromCookies();
@@ -24,80 +22,10 @@ export async function GET(req: Request) {
       );
     }
 
-    const [users, zsms, zses] = await Promise.all([
-      prisma.user.findMany({
-        where: {
-          validation: status as any,
-          role: {
-            in: ['ABM', 'ASE', 'ZSM', 'ZSE'],
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        include: {
-          abmProfile: true,
-          aseProfile: true,
-          zsmProfile: true,
-          zseProfile: true,
-        },
-      } as any),
-      prisma.zSM.findMany({ select: { id: true, fullName: true, region: true } }),
-      prisma.zSE.findMany({ select: { id: true, fullName: true, region: true } }),
-    ]);
-
-    const zsmMap = new Map(
-      zsms.map((z) => [z.id, `${z.fullName}${z.region ? ` (${z.region})` : ''}`]),
-    );
-    const zseMap = new Map(
-      zses.map((z) => [z.id, `${z.fullName}${z.region ? ` (${z.region})` : ''}`]),
-    );
-
-    const safeUsers = users.map((u: any) => {
-      const { password: _pw, ...rest } = u;
-
-      const metadata = (u.metadata || {}) as any;
-
-      // Derive display fields from metadata first (for PENDING users),
-      // then from role-specific profile models (for APPROVED users).
-      const profile = u.abmProfile || u.aseProfile || u.zsmProfile || u.zseProfile || {};
-
-      const fullName = metadata.fullName || profile.fullName || null;
-      const phoneNumber = metadata.phoneNumber || metadata.phone || profile.phone || null;
-      const email = metadata.email || null;
-
-      const storeIds: string[] = Array.isArray(metadata.storeIds)
-        ? metadata.storeIds
-        : metadata.storeId
-        ? [metadata.storeId]
-        : Array.isArray(profile.storeIds)
-        ? profile.storeIds
-        : [];
-
-      const managerId =
-        metadata.managerId ||
-        (u.abmProfile?.zsmId ?? u.aseProfile?.zseId ?? null);
-
-      const managerName = managerId
-        ? zsmMap.get(managerId) || zseMap.get(managerId) || null
-        : null;
-
-      const roleProfileId =
-        u.abmProfile?.id ?? u.aseProfile?.id ?? null;
-
-      return {
-        ...rest,
-        fullName,
-        phoneNumber,
-        email,
-        storeIds,
-        managerId,
-        managerName,
-        roleProfileId,
-      };
-    });
-
-    return NextResponse.json({ users: safeUsers });
+    // No users to validate - only CANVASSER and ZOPPER_ADMINISTRATOR roles exist
+    return NextResponse.json({ users: [] });
   } catch (error) {
-    console.error('Error in GET /api/user-validate/users', error);
+    console.error('Error in GET /api/zopper-administrator/user-validate/users', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },

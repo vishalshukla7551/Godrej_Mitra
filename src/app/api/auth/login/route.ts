@@ -28,11 +28,6 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { username },
       include: {
-        abmProfile: true,
-        aseProfile: true,
-        zsmProfile: true,
-        zseProfile: true,
-        samsungAdminProfile: true,
         zopperAdminProfile: true,
       },
     } as any);
@@ -58,11 +53,6 @@ export async function POST(req: NextRequest) {
     const { password: _pw, ...rest } = anyUser;
 
     const rawProfile =
-      anyUser.abmProfile ||
-      anyUser.aseProfile ||
-      anyUser.zsmProfile ||
-      anyUser.zseProfile ||
-      anyUser.samsungAdminProfile ||
       anyUser.zopperAdminProfile ||
       null;
 
@@ -94,6 +84,7 @@ export async function POST(req: NextRequest) {
       sameSite: 'lax',
       secure: isSecure,
       path: '/',
+      maxAge: 15 * 60, // 15 minutes
     });
 
     res.cookies.set(REFRESH_TOKEN_COOKIE, refreshToken, {
@@ -101,6 +92,7 @@ export async function POST(req: NextRequest) {
       sameSite: 'lax',
       secure: isSecure,
       path: '/',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
     return res;
