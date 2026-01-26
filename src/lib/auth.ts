@@ -311,4 +311,25 @@ export function clearAuthCookies(
   }
 }
 
+// ✅ UAT Token verification - separate from main project tokens
+export interface UatTokenPayload {
+  clientId: string;
+  [key: string]: any;
+}
+
+export function verifyUatToken(token: string): UatTokenPayload {
+  try {
+    const uatSecret = process.env.UAT_TOKEN_SECRET;
+
+    if (!uatSecret) {
+      throw new Error('UAT_TOKEN_SECRET is not defined');
+    }
+    const payload = jwt.verify(token, uatSecret) as UatTokenPayload;
+    
+    return payload;
+  } catch (error: any) {
+    throw new Error(`UAT token verification failed: ${error.message}`);
+  }
+}
+
 export { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS, PROJECT_ID };

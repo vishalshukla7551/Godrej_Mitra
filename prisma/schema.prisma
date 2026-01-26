@@ -97,6 +97,8 @@ model SpotIncentiveReport {
   isCampaignActive        Boolean                @default(false)
   spotincentiveEarned     Int                    @default(0) // Calculated incentive amount
   voucherCode             String? // Optional voucher code for incentive redemption
+  transactionId           String?
+  transactionMetadata     Json? // Additional metadata from the transaction
   spotincentivepaidAt     DateTime? //paid for each sale
   metadata                Json? // Additional data related to the sales report
   Date_of_sale            DateTime          

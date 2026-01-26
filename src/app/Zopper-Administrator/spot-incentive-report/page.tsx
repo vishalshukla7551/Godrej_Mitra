@@ -440,34 +440,31 @@ export default function SpotIncentiveReport() {
         {/* Table */}
         <section className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full table-auto">
+            <table className="w-full table-fixed">
               <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr className="text-left">
-                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[120px]">
+                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[100px]">
                     Timestamp
                   </th>
-                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[120px]">
+                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[140px]">
                     Date of Sale
                   </th>
-                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[100px]">
-                    Canvasser ID
-                  </th>
-                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider">
-                    Store Name
-                  </th>
                   <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[120px]">
-                    Customer Name
-                  </th>
-                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[120px]">
-                    Customer Phone
-                  </th>
-                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider">
-                    Device Name
-                  </th>
-                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[120px]">
-                    Plan Type
+                    Canvasser Name
                   </th>
                   <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[140px]">
+                    Store Name
+                  </th>
+                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[130px]">
+                    Customer Name
+                  </th>
+                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[140px]">
+                    Device Name
+                  </th>
+                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[110px]">
+                    Plan Type
+                  </th>
+                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[160px]">
                     Serial Number
                   </th>
                   <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[100px]">
@@ -504,38 +501,37 @@ export default function SpotIncentiveReport() {
                 ) : (
                   reports.map((r: SpotIncentiveReport) => (
                     <tr key={r.id} className="hover:bg-neutral-50 transition">
-                      <td className="p-2 md:p-3 text-neutral-900 text-sm">
+                      <td className="p-2 md:p-3 text-neutral-900 text-sm w-[100px]">
                         <div className="text-xs">{formatDateWithTime(r.createdAt).date}</div>
                         <div className="text-neutral-500 text-xs">
                           {formatDateWithTime(r.createdAt).time}
                         </div>
                       </td>
-                      <td className="p-2 md:p-3 text-neutral-700 text-sm">
+                      <td className="p-2 md:p-3 text-neutral-700 text-sm whitespace-nowrap w-[140px]">
                         <div className="text-xs">{formatDateWithTime(r.submittedAt).date}</div>
                         <div className="text-neutral-500 text-xs">
                           {formatDateWithTime(r.submittedAt).time}
                         </div>
                       </td>
-                      <td className="p-2 md:p-3 text-neutral-900 text-sm font-medium">
-                        <div className="truncate">{r.canvasserUser.canvasserId || 'Not Set'}</div>
+                      <td className="p-2 md:p-3 text-neutral-900 text-sm font-medium w-[120px]">
+                        <div>{r.canvasserUser.name || 'Not Set'}</div>
+                        <div className="text-neutral-500 text-xs">{r.canvasserUser.phone}</div>
                       </td>
-                      <td className="p-2 md:p-3 text-neutral-900 text-sm">
-                        <div className="truncate">{r.store.storeName}</div>
+                      <td className="p-2 md:p-3 text-neutral-900 text-sm w-[140px]">
+                        <div>{r.store.storeName}</div>
                       </td>
-                      <td className="p-2 md:p-3 text-neutral-900 text-sm">
-                        <div className="truncate">{r.customerName || 'Not Provided'}</div>
+                      <td className="p-2 md:p-3 text-neutral-900 text-sm w-[130px]">
+                        <div>{r.customerName || 'Not Provided'}</div>
+                        <div className="text-neutral-500 text-xs">{r.customerPhoneNumber || 'Not Provided'}</div>
                       </td>
-                      <td className="p-2 md:p-3 text-neutral-900 text-sm">
-                        <div className="truncate">{r.customerPhoneNumber || 'Not Provided'}</div>
+                      <td className="p-2 md:p-3 text-neutral-700 text-sm w-[140px]">
+                        <div>{r.samsungSKU.ModelName}</div>
                       </td>
-                      <td className="p-2 md:p-3 text-neutral-700 text-sm">
-                        <div className="truncate">{r.samsungSKU.ModelName}</div>
+                      <td className="p-2 md:p-3 text-neutral-700 text-xs w-[110px]">
+                        <div>{r.plan.planType.replace(/_/g, ' ')}</div>
                       </td>
-                      <td className="p-2 md:p-3 text-neutral-700 text-xs">
-                        <div className="truncate">{r.plan.planType.replace(/_/g, ' ')}</div>
-                      </td>
-                      <td className="p-2 md:p-3 text-neutral-500 text-xs font-mono">
-                        <div className="truncate">{r.serialNumber}</div>
+                      <td className="p-2 md:p-3 text-neutral-500 text-xs font-mono w-[160px]">
+                        <div>{r.serialNumber}</div>
                       </td>
                       <td className="p-2 md:p-3 text-emerald-600 text-sm font-semibold">
                         ₹{r.incentiveEarned}
