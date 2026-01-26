@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyUatToken } from '@/lib/jwt';
+import { verifyUatToken } from '@/lib/auth';
 // Import from the benepik-client folder
 import { sendRewards } from '../../../../benepik-client/src/benepik.js';
 
