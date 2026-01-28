@@ -291,7 +291,7 @@ export default function SpotIncentiveReport() {
       // Show summary modal
       setBulkSummary({
         type: 'bulk',
-        success: failed === 0,
+        success: failed === 0, // Only true if ALL succeeded
         status: 200,
         data: {
           successful,
@@ -967,15 +967,6 @@ export default function SpotIncentiveReport() {
             </div>
 
             <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-              {/* Status */}
-              <div className={`p-4 rounded-lg border ${bulkSummary.success ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
-                <p className={`text-sm font-medium ${bulkSummary.success ? 'text-emerald-700' : 'text-red-700'}`}>
-                  {bulkSummary.success ? '✓ Success' : '✗ Failed'}
-                </p>
-                <p className={`text-xs mt-1 ${bulkSummary.success ? 'text-emerald-600' : 'text-red-600'}`}>
-                  HTTP Status: {bulkSummary.status}
-                </p>
-              </div>
 
               {/* Bulk Summary Stats */}
               {bulkSummary.type === 'bulk' && (

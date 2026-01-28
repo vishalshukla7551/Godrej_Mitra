@@ -181,7 +181,7 @@ export async function POST(
       success: true,
       message: 'Reward sent successfully',
       data: {
-        reportId,
+        transactionId: rewardPayload.data[0].transactionId,
         canvasserPhone: mobileNumber,
         rewardAmount,
         benepikResponse: benepikResponse.data,
