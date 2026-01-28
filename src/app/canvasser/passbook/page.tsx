@@ -640,7 +640,7 @@ function SpotIncentiveSection({
             <span>Date</span>
             <span className="text-center">Appliances</span>
             <span className="text-center">Incentive</span>
-            <span className="text-center">Action</span>
+            <span className="text-center">Payment</span>
           </div>
           {filteredTransactions.length === 0 ? (
             <div className="px-3 py-4 text-center text-gray-500 text-xs">
