@@ -21,7 +21,9 @@ type SpotVoucher = {
   planName: string;
   incentive: string;
   voucherCode: string;
+  transactionId?: string | null; // Add transaction ID
   isPaid?: boolean;
+  paidAt?: string | null; // Add paid date
   serialNumber?: string;
 };
 
@@ -352,6 +354,18 @@ function SpotIncentiveSection({
   spotIncentiveData: any;
   search: string;
 }) {
+  const [selectedTransaction, setSelectedTransaction] = useState<SpotVoucher | null>(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const handleViewClick = (transaction: SpotVoucher) => {
+    setSelectedTransaction(transaction);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedTransaction(null);
+  };
   // Helper function to check if a date falls within a financial year
   const isDateInFY = (dateStr: string, fy: string) => {
     try {
@@ -626,7 +640,7 @@ function SpotIncentiveSection({
             <span>Date</span>
             <span className="text-center">Appliances</span>
             <span className="text-center">Incentive</span>
-            <span className="text-center">Voucher Code</span>
+            <span className="text-center">Action</span>
           </div>
           {filteredTransactions.length === 0 ? (
             <div className="px-3 py-4 text-center text-gray-500 text-xs">
@@ -641,11 +655,16 @@ function SpotIncentiveSection({
                 <span className="text-[10px]">{row.date}</span>
                 <span className="text-center text-[10px]">{row.deviceName}</span>
                 <span className="text-center text-green-600 font-semibold text-[10px]">{row.incentive}</span>
-                <span className="text-center text-[10px]">
-                  {row.voucherCode && row.voucherCode.trim() && row.voucherCode !== 'N/A' ? (
-                    <span className="font-mono text-blue-600">{row.voucherCode}</span>
+                <span className="text-center">
+                  {row.isPaid ? (
+                    <button
+                      onClick={() => handleViewClick(row)}
+                      className="text-blue-600 hover:text-blue-800 font-medium text-[10px] underline"
+                    >
+                      View
+                    </button>
                   ) : (
-                    <span className="text-orange-600 font-normal">Not Released</span>
+                    <span className="text-orange-600 text-[10px]">Pending</span>
                   )}
                 </span>
               </div>
@@ -653,6 +672,90 @@ function SpotIncentiveSection({
           )}
         </div>
       </section>
+
+      {/* Payment Details Modal */}
+      {showModal && selectedTransaction && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Payment Details</h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Paid Status */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-xs text-gray-600 mb-1">Paid Status</p>
+                <p className="text-sm font-semibold text-green-600 flex items-center gap-2">
+                  <span className="text-lg">✅</span> Payment Released
+                </p>
+              </div>
+
+              {/* Payment Date */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <p className="text-xs text-gray-600 mb-1">Payment Date</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {selectedTransaction.paidAt || 'N/A'}
+                </p>
+              </div>
+
+              {/* Voucher Code (if available) */}
+              {selectedTransaction.voucherCode && 
+               selectedTransaction.voucherCode.trim() && 
+               selectedTransaction.voucherCode !== 'N/A' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-600 mb-1">Voucher Code</p>
+                  <p className="text-sm font-mono font-semibold text-blue-600">
+                    {selectedTransaction.voucherCode}
+                  </p>
+                </div>
+              )}
+
+              {/* Transaction ID (if available) */}
+              {selectedTransaction.transactionId && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-600 mb-1">Transaction ID</p>
+                      <p className="text-sm font-mono font-semibold text-green-600 break-all">
+                        {selectedTransaction.transactionId}
+                      </p>
+                    </div>
+                    <a
+                      href={`https://www.benepikplus.com/bpweb3/#/${selectedTransaction.transactionId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-3 text-blue-600 hover:text-blue-800 text-xs font-medium underline whitespace-nowrap"
+                    >
+                      View
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Incentive Amount */}
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                <p className="text-xs text-gray-600 mb-1">Incentive Amount</p>
+                <p className="text-lg font-bold text-purple-600">
+                  {selectedTransaction.incentive}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={closeModal}
+              className="w-full mt-6 bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
 
     </>

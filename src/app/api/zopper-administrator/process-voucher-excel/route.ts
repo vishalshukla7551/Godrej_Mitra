@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
+import { checkUatRestriction } from '@/lib/uatRestriction';
 import * as XLSX from 'xlsx';
 
 /**
@@ -28,6 +29,12 @@ export async function POST(req: NextRequest) {
         // Authorization check
         if (!authUser || authUser.role !== 'ZOPPER_ADMINISTRATOR') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // ✅ Restrict UAT users from processing vouchers
+        const uatRestriction = checkUatRestriction(authUser, false);
+        if (uatRestriction) {
+            return uatRestriction;
         }
 
         // Parse form data

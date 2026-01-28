@@ -21,7 +21,7 @@ const rewardPayload = {
       ccEmailAddress: "",
       bccEmailAddress: "",
       reference: "",
-      mailer: process.env.MAILER || "",
+      mailer:"1058",
       certificateId: "",
       transactionId: "TXN-" + Date.now(),
       entityId: "1063",

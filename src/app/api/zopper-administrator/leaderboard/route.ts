@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAuthenticatedUserFromCookies } from '@/lib/auth';
+import { checkUatRestriction } from '@/lib/uatRestriction';
 
 /**
  * GET /api/zopper-administrator/leaderboard
@@ -21,6 +23,15 @@ import { prisma } from '@/lib/prisma';
  */
 export async function GET(req: NextRequest) {
   try {
+    const cookies = await (await import('next/headers')).cookies();
+    const authUser = await getAuthenticatedUserFromCookies(cookies as any);
+
+    // ✅ Restrict UAT users from accessing leaderboard
+    const uatRestriction = checkUatRestriction(authUser, false);
+    if (uatRestriction) {
+      return uatRestriction;
+    }
+
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get('limit') || '10');
 

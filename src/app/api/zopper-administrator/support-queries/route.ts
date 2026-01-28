@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
+import { checkUatRestriction } from '@/lib/uatRestriction';
 
 /**
  * GET /api/zopper-administrator/support-queries
@@ -11,6 +12,12 @@ export async function GET(req: NextRequest) {
     const authUser = await getAuthenticatedUserFromCookies();
     if (!authUser || authUser.role !== 'ZOPPER_ADMINISTRATOR') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // ✅ Restrict UAT users from accessing support queries
+    const uatRestriction = checkUatRestriction(authUser, false);
+    if (uatRestriction) {
+      return uatRestriction;
     }
 
     const { searchParams } = new URL(req.url);

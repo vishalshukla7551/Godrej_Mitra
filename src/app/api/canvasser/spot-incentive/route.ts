@@ -99,6 +99,7 @@ export async function GET(req: NextRequest) {
         incentive: report.spotincentiveEarned > 0 ? `₹${report.spotincentiveEarned.toLocaleString('en-IN')}` : '-',
         incentiveAmount: report.spotincentiveEarned,
         voucherCode: report.voucherCode || 'N/A',
+        transactionId: report.transactionId || null, // Add transaction ID
         isPaid: !!report.spotincentivepaidAt,
         paidAt: report.spotincentivepaidAt
           ? formatDate(report.spotincentivepaidAt)

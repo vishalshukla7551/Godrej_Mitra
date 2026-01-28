@@ -25,6 +25,13 @@ export default function RoleLogin() {
   useEffect(() => {
     // Redirect if already logged in
     if (!authLoading && user) {
+      // ✅ Check if UAT user - redirect to spot-incentive-report
+      // const isUatUser = user?.metadata?.isUatUser === true;
+      // if (isUatUser) {
+      //   router.replace('/Zopper-Administrator/spot-incentive-report');
+      //   return;
+      // }
+
       const target = getHomePathForRole(user.role || 'CANVASSER');
       router.replace(target);
       return;

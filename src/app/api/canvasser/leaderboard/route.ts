@@ -67,16 +67,34 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // Build where clause to exclude UAT canvasser
+    const whereClause: any = {
+      Date_of_sale: { 
+        gte: startDate,
+        lte: endDate
+      },
+    };
+
+    // ✅ Exclude UAT canvasser reports from leaderboard
+    const uatCanvasserPhone = process.env.UAT_CANVASSER_PHONE;
+    if (uatCanvasserPhone) {
+      const uatCanvasser = await prisma.canvasser.findUnique({
+        where: { phone: uatCanvasserPhone },
+        select: { id: true }
+      });
+
+      if (uatCanvasser) {
+        whereClause.canvasserId = {
+          not: uatCanvasser.id
+        };
+      }
+    }
+
     // Get ALL sales reports within the date range
     // This includes both MR incentive-based sales AND campaign sales
     // The spotincentiveEarned field contains the calculated incentive amount
     const salesReports: any = await prisma.spotIncentiveReport.findMany({
-      where: {
-        Date_of_sale: { 
-          gte: startDate,
-          lte: endDate
-        },
-      },
+      where: whereClause,
       include: {
         store: {
           select: {

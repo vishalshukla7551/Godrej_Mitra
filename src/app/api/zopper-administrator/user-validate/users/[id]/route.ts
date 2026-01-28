@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUserFromCookies } from '@/lib/auth';
+import { checkUatRestriction } from '@/lib/uatRestriction';
 
 // DELETE /api/zopper-administrator/users/[id]
 // Deletes a user; role-specific profiles are removed via onDelete: Cascade in Prisma.
@@ -16,6 +17,13 @@ export async function DELETE(
     if (!authUser || authUser.role !== 'ZOPPER_ADMINISTRATOR') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // ✅ Restrict UAT users from deleting users
+    const uatRestriction = checkUatRestriction(authUser, false);
+    if (uatRestriction) {
+      return uatRestriction;
+    }
+
     const existing = await prisma.user.findUnique({ where: { id: userId } });
     if (!existing) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

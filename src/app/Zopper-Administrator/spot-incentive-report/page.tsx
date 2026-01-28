@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaDownload, FaSignOutAlt, FaSpinner, FaInfoCircle, FaTimes } from 'react-icons/fa';
+import { FaDownload, FaSignOutAlt, FaSpinner, FaInfoCircle, FaTimes, FaLock } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import { clientLogout } from '@/lib/clientLogout';
 
@@ -116,6 +116,16 @@ export default function SpotIncentiveReport() {
   const [page, setPage] = useState(1);
   const [showIncentives, setShowIncentives] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedReports, setSelectedReports] = useState<Set<string>>(new Set());
+  const [isMarkingPaidBulk, setIsMarkingPaidBulk] = useState(false);
+  const [isSendingReward, setIsSendingReward] = useState<string | null>(null);
+  const [bulkSummary, setBulkSummary] = useState<any>(null);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [pendingRewardId, setPendingRewardId] = useState<string | null>(null);
+  const [otpPhone, setOtpPhone] = useState<string | null>(null);
   const pageSize = 50;
 
   // API state
@@ -123,43 +133,193 @@ export default function SpotIncentiveReport() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Handle Mark Paid action
-  const handleMarkPaid = async (reportId: string) => {
+  const [isDiscardingBulk, setIsDiscardingBulk] = useState(false);
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
+  const [selectionMode, setSelectionMode] = useState<'send' | 'discard' | null>(null);
+
+  // Handle Send Reward (bulk only)
+  const handleSendReward = async () => {
+    if (selectedReports.size === 0) {
+      alert('Please select at least one report');
+      return;
+    }
+
+    if (!confirm(`Send rewards for ${selectedReports.size} report(s)?`)) {
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/zopper-administrator/spot-incentive-report/${reportId}/mark-paid`, {
+      // First, send OTP
+      setIsOtpLoading(true);
+      setOtpError(null);
+      setPendingRewardId('bulk'); // Mark as bulk operation
+      
+      const otpResponse = await fetch('/api/zopper-administrator/spot-incentive-report/send-reward-otp/send', {
         method: 'POST',
       });
 
-      if (response.ok) {
-        // Refresh data after successful action
-        fetchData();
-      } else {
-        alert('Failed to mark as paid');
+      const otpResult = await otpResponse.json();
+
+      if (!otpResponse.ok) {
+        setOtpError(otpResult.error || 'Failed to send OTP');
+        setIsOtpLoading(false);
+        return;
       }
+
+      // Show OTP modal only after successful OTP send
+      setOtpPhone(otpResult.data.phone);
+      setShowOtpModal(true);
+      setOtpInput('');
+      setIsOtpLoading(false);
     } catch (error) {
-      console.error('Error marking as paid:', error);
-      alert('Error marking as paid');
+      console.error('Error sending OTP:', error);
+      setOtpError('Failed to send OTP');
+      setIsOtpLoading(false);
     }
   };
 
-  // Handle Discard action
-  const handleDiscard = async (reportId: string) => {
-    if (confirm('Are you sure you want to discard this report?')) {
-      try {
-        const response = await fetch(`/api/zopper-administrator/spot-incentive-report/${reportId}/discard`, {
-          method: 'POST',
-        });
+  // Handle Discard (bulk only)
+  const handleDiscardBulk = async () => {
+    if (selectedReports.size === 0) {
+      alert('Please select at least one report');
+      return;
+    }
 
-        if (response.ok) {
-          // Refresh data after successful action
-          fetchData();
-        } else {
-          alert('Failed to discard report');
-        }
-      } catch (error) {
-        console.error('Error discarding report:', error);
-        alert('Error discarding report');
+    if (!confirm(`Discard ${selectedReports.size} report(s)? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setIsDiscardingBulk(true);
+      const reportIds = Array.from(selectedReports);
+      
+      // Discard reports using individual API calls
+      const results = await Promise.allSettled(
+        reportIds.map(id =>
+          fetch(`/api/zopper-administrator/spot-incentive-report/${id}/discard`, {
+            method: 'POST',
+          })
+        )
+      );
+
+      const successful = results.filter(r => r.status === 'fulfilled' && (r.value as Response).ok).length;
+      const failed = results.length - successful;
+
+      // Show summary modal
+      setBulkSummary({
+        type: 'discard',
+        success: failed === 0,
+        status: 200,
+        data: {
+          successful,
+          failed,
+          total: reportIds.length,
+        },
+      });
+
+      setSelectedReports(new Set());
+      setIsDiscardingBulk(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error in bulk discard:', error);
+      setBulkSummary({
+        type: 'discard',
+        success: false,
+        status: 500,
+        data: {
+          error: 'Network error',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+      setIsDiscardingBulk(false);
+    }
+  };
+
+  // Handle OTP verification
+  const handleOtpVerify = async () => {
+    if (!otpInput || otpInput.length !== 6) {
+      setOtpError('Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    try {
+      setIsOtpLoading(true);
+      setOtpError(null);
+
+      // Verify OTP
+      const verifyResponse = await fetch('/api/zopper-administrator/spot-incentive-report/send-reward-otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: otpInput }),
+      });
+
+      const verifyResult = await verifyResponse.json();
+
+      if (!verifyResponse.ok) {
+        setOtpError(verifyResult.error || 'Invalid OTP');
+        setIsOtpLoading(false);
+        return;
       }
+
+      // OTP verified, now send rewards
+      setShowOtpModal(false);
+      setIsOtpLoading(false);
+      setIsMarkingPaidBulk(true);
+      
+      const reportIds = Array.from(selectedReports);
+      
+      // Send rewards using individual API calls
+      const results = await Promise.allSettled(
+        reportIds.map(id =>
+          fetch(`/api/zopper-administrator/spot-incentive-report/${id}/send-reward`, {
+            method: 'POST',
+          })
+        )
+      );
+
+      const successful = results.filter(r => r.status === 'fulfilled' && (r.value as Response).ok).length;
+      const failed = results.length - successful;
+
+      // Show summary modal
+      setBulkSummary({
+        type: 'bulk',
+        success: failed === 0,
+        status: 200,
+        data: {
+          successful,
+          failed,
+          total: reportIds.length,
+        },
+      });
+
+      setSelectedReports(new Set());
+      setIsMarkingPaidBulk(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      setOtpError('Error verifying OTP');
+      setIsMarkingPaidBulk(false);
+    }
+  };
+
+  // Toggle report selection
+  const toggleReportSelection = (reportId: string) => {
+    const newSelected = new Set(selectedReports);
+    if (newSelected.has(reportId)) {
+      newSelected.delete(reportId);
+    } else {
+      newSelected.add(reportId);
+    }
+    setSelectedReports(newSelected);
+  };
+
+  // Toggle all reports on current page
+  const toggleAllReports = () => {
+    if (selectedReports.size === reports.length) {
+      setSelectedReports(new Set());
+    } else {
+      const allIds = new Set(reports.map(r => r.id));
+      setSelectedReports(allIds);
     }
   };
 
@@ -435,6 +595,63 @@ export default function SpotIncentiveReport() {
               </>
             )}
           </button>
+          <button
+            onClick={() => setSelectionMode(selectionMode === 'send' ? null : 'send')}
+            className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-lg transition-colors ${
+              selectionMode === 'send'
+                ? 'bg-blue-700 hover:bg-blue-800'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            {selectionMode === 'send' ? 'Hide Selection' : 'Send Rewards'}
+          </button>
+          {selectionMode === 'send' && (
+            <button
+              onClick={handleSendReward}
+              disabled={isMarkingPaidBulk || (isOtpLoading && pendingRewardId === 'bulk') || selectedReports.size === 0}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {(isOtpLoading && pendingRewardId === 'bulk') ? (
+                <>
+                  <FaSpinner className="animate-spin" size={14} />
+                  Sending OTP...
+                </>
+              ) : isMarkingPaidBulk ? (
+                <>
+                  <FaSpinner className="animate-spin" size={14} />
+                  Processing...
+                </>
+              ) : (
+                `Send (${selectedReports.size})`
+              )}
+            </button>
+          )}
+          <button
+            onClick={() => setSelectionMode(selectionMode === 'discard' ? null : 'discard')}
+            className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-lg transition-colors ${
+              selectionMode === 'discard'
+                ? 'bg-red-700 hover:bg-red-800'
+                : 'bg-red-600 hover:bg-red-700'
+            }`}
+          >
+            {selectionMode === 'discard' ? 'Hide Selection' : 'Discard'}
+          </button>
+          {selectionMode === 'discard' && (
+            <button
+              onClick={handleDiscardBulk}
+              disabled={isDiscardingBulk || selectedReports.size === 0}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isDiscardingBulk ? (
+                <>
+                  <FaSpinner className="animate-spin" size={14} />
+                  Discarding...
+                </>
+              ) : (
+                `Discard (${selectedReports.size})`
+              )}
+            </button>
+          )}
         </section>
 
         {/* Table */}
@@ -443,6 +660,16 @@ export default function SpotIncentiveReport() {
             <table className="w-full table-fixed">
               <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr className="text-left">
+                  {selectionMode && (
+                    <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[40px]">
+                      <input
+                        type="checkbox"
+                        checked={selectedReports.size === reports.length && reports.length > 0}
+                        onChange={toggleAllReports}
+                        className="w-4 h-4 cursor-pointer"
+                      />
+                    </th>
+                  )}
                   <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[100px]">
                     Timestamp
                   </th>
@@ -473,9 +700,6 @@ export default function SpotIncentiveReport() {
                   <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[80px]">
                     Status
                   </th>
-                  <th className="p-2 md:p-3 text-neutral-600 text-xs font-medium uppercase tracking-wider w-[120px]">
-                    Actions
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
@@ -501,6 +725,17 @@ export default function SpotIncentiveReport() {
                 ) : (
                   reports.map((r: SpotIncentiveReport) => (
                     <tr key={r.id} className="hover:bg-neutral-50 transition">
+                      {selectionMode && (
+                        <td className="p-2 md:p-3 w-[40px]">
+                          <input
+                            type="checkbox"
+                            checked={selectedReports.has(r.id)}
+                            onChange={() => toggleReportSelection(r.id)}
+                            disabled={selectionMode === 'send' && r.isPaid}
+                            className="w-4 h-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                        </td>
+                      )}
                       <td className="p-2 md:p-3 text-neutral-900 text-sm w-[100px]">
                         <div className="text-xs">{formatDateWithTime(r.createdAt).date}</div>
                         <div className="text-neutral-500 text-xs">
@@ -545,26 +780,6 @@ export default function SpotIncentiveReport() {
                         >
                           {r.isPaid ? 'Paid' : 'Pending'}
                         </span>
-                      </td>
-                      <td className="p-2 md:p-3">
-                        <div className="flex flex-col gap-1">
-                          <button
-                            onClick={() => handleMarkPaid(r.id)}
-                            disabled={r.isPaid}
-                            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${r.isPaid
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-blue-500 hover:bg-blue-600 text-white'
-                              }`}
-                          >
-                            Mark Paid
-                          </button>
-                          <button
-                            onClick={() => handleDiscard(r.id)}
-                            className="px-2 py-1 rounded text-xs font-medium bg-red-500 hover:bg-red-600 text-white transition-colors"
-                          >
-                            Discard
-                          </button>
-                        </div>
                       </td>
                     </tr>
                   ))
@@ -646,6 +861,152 @@ export default function SpotIncentiveReport() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* OTP Verification Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-neutral-200">
+            <div className="p-6 bg-gradient-to-r from-indigo-600 to-indigo-700">
+              <div className="flex items-center gap-3">
+                <FaLock className="text-white" size={24} />
+                <h3 className="text-2xl font-bold text-white">Verify OTP</h3>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Phone Display */}
+              <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                <p className="text-xs text-indigo-600 font-medium mb-1">OTP sent to:</p>
+                <p className="text-lg font-semibold text-indigo-900">{otpPhone}</p>
+              </div>
+
+              {/* OTP Input */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Enter 6-digit OTP
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={otpInput}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setOtpInput(value);
+                  }}
+                  className="w-full px-4 py-3 text-center text-2xl font-mono tracking-widest font-bold text-neutral-900 border-2 border-neutral-300 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 placeholder:text-neutral-400"
+                />
+              </div>
+
+              {/* Error Message */}
+              {otpError && (
+                <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                  <p className="text-sm font-medium text-red-700">{otpError}</p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setShowOtpModal(false);
+                    setOtpInput('');
+                    setOtpError(null);
+                  }}
+                  disabled={isOtpLoading}
+                  className="flex-1 px-4 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleOtpVerify}
+                  disabled={isOtpLoading || otpInput.length !== 6}
+                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                >
+                  {isOtpLoading ? (
+                    <>
+                      <FaSpinner className="animate-spin" size={14} />
+                      Verifying...
+                    </>
+                  ) : (
+                    'Verify OTP'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Action Summary Modal */}
+      {bulkSummary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-neutral-200">
+            <div className={`p-6 bg-gradient-to-r ${bulkSummary.success ? 'from-blue-600 to-blue-700' : 'from-red-600 to-red-700'}`}>
+              <h3 className="text-2xl font-bold text-white">
+                {bulkSummary.type === 'single' ? 'Reward Sent' : bulkSummary.type === 'discard' ? 'Reports Discarded' : 'Rewards Sent'}
+              </h3>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+              {/* Status */}
+              <div className={`p-4 rounded-lg border ${bulkSummary.success ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                <p className={`text-sm font-medium ${bulkSummary.success ? 'text-emerald-700' : 'text-red-700'}`}>
+                  {bulkSummary.success ? '✓ Success' : '✗ Failed'}
+                </p>
+                <p className={`text-xs mt-1 ${bulkSummary.success ? 'text-emerald-600' : 'text-red-600'}`}>
+                  HTTP Status: {bulkSummary.status}
+                </p>
+              </div>
+
+              {/* Bulk Summary Stats */}
+              {bulkSummary.type === 'bulk' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-emerald-50 rounded-lg p-4 text-center">
+                    <div className="text-3xl font-bold text-emerald-600">{bulkSummary.data.successful}</div>
+                    <div className="text-sm text-emerald-700 font-medium mt-1">Successful</div>
+                  </div>
+                  <div className={`rounded-lg p-4 text-center ${bulkSummary.data.failed > 0 ? 'bg-red-50' : 'bg-neutral-50'}`}>
+                    <div className={`text-3xl font-bold ${bulkSummary.data.failed > 0 ? 'text-red-600' : 'text-neutral-600'}`}>
+                      {bulkSummary.data.failed}
+                    </div>
+                    <div className={`text-sm font-medium mt-1 ${bulkSummary.data.failed > 0 ? 'text-red-700' : 'text-neutral-700'}`}>
+                      Failed
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Response Data */}
+              <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
+                <p className="text-xs font-semibold text-neutral-700 mb-2">Response Data:</p>
+                <pre className="text-xs text-neutral-600 overflow-x-auto whitespace-pre-wrap break-words max-h-[200px] overflow-y-auto">
+                  {JSON.stringify(bulkSummary.data, null, 2)}
+                </pre>
+              </div>
+
+              {/* Error Message if any */}
+              {bulkSummary.data.error && (
+                <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                  <p className="text-sm font-semibold text-red-700 mb-1">Error:</p>
+                  <p className="text-xs text-red-600">{bulkSummary.data.error}</p>
+                  {bulkSummary.data.message && (
+                    <p className="text-xs text-red-600 mt-1">{bulkSummary.data.message}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Close Button */}
+              <button
+                onClick={() => setBulkSummary(null)}
+                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>

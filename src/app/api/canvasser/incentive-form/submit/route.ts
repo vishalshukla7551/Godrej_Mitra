@@ -246,6 +246,24 @@ export async function POST(req: NextRequest) {
     }
 
 
+    // Check if serial number already exists
+    const existingReport = await prisma.spotIncentiveReport.findUnique({
+      where: { imei: serialNumber },
+    });
+
+    if (existingReport) {
+      return NextResponse.json(
+        { 
+          error: 'This serial number has already been registered. Each device can only be registered once.',
+          existingReport: {
+            dateOfSale: existingReport.Date_of_sale,
+            submittedAt: existingReport.createdAt,
+          }
+        },
+        { status: 409 } // 409 Conflict
+      );
+    }
+
     // Use provided dateOfSale or default to now
     const saleDate = dateOfSale ? new Date(dateOfSale) : now;
 

@@ -38,6 +38,50 @@ export async function GET(req: NextRequest) {
     // Build where clause
     const where: any = {};
 
+    // ✅ UAT user filter - only show reports for specific canvasser
+    const isUatUser = authUser.metadata?.isUatUser === true;
+    if (isUatUser) {
+      const uatCanvasserPhone = process.env.UAT_CANVASSER_PHONE;
+      if (!uatCanvasserPhone) {
+        return NextResponse.json(
+          { error: 'UAT_CANVASSER_PHONE not configured' },
+          { status: 500 }
+        );
+      }
+      
+      // Fetch canvasser by phone number
+      const canvasser = await prisma.canvasser.findUnique({
+        where: { phone: uatCanvasserPhone },
+        select: { id: true }
+      });
+
+      if (!canvasser) {
+        return NextResponse.json(
+          { error: 'UAT canvasser not found' },
+          { status: 404 }
+        );
+      }
+
+      // Filter by specific canvasser for UAT users
+      where.canvasserId = canvasser.id;
+    } else {
+      // ✅ Real Zopper Admin - exclude UAT canvasser reports
+      const uatCanvasserPhone = process.env.UAT_CANVASSER_PHONE;
+      if (uatCanvasserPhone) {
+        const uatCanvasser = await prisma.canvasser.findUnique({
+          where: { phone: uatCanvasserPhone },
+          select: { id: true }
+        });
+
+        if (uatCanvasser) {
+          // Exclude UAT canvasser reports
+          where.canvasserId = {
+            not: uatCanvasser.id
+          };
+        }
+      }
+    }
+
     // Store filter
     if (storeId) {
       where.storeId = storeId;

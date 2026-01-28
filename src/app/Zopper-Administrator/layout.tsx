@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars } from 'react-icons/fa';
 
 export default function ZopperAdministratorLayout({
   children,
@@ -12,8 +12,23 @@ export default function ZopperAdministratorLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   // Auto-detects role from URL and calls correct endpoint
-  const { loading } = useAuth();
+  const { loading, user } = useAuth();
+  const isUatUser = user?.metadata?.isUatUser === true;
+
+  // Routes restricted for UAT users
+  const uatRestrictedRoutes = [
+    '/Zopper-Administrator',
+    '/Zopper-Administrator/leaderboard',
+    '/Zopper-Administrator/validate-user',
+    '/Zopper-Administrator/store-change-requests',
+    '/Zopper-Administrator/referral',
+    '/Zopper-Administrator/help-requests',
+    '/Zopper-Administrator/process-voucher-excel',
+    '/Zopper-Administrator/manage-pdfs',
+    '/Zopper-Administrator/process-referral-vouchers',
+  ];
 
   // Sidebar state with localStorage persistence
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -29,8 +44,20 @@ export default function ZopperAdministratorLayout({
     localStorage.setItem('zopperAdminSidebarOpen', JSON.stringify(sidebarOpen));
   }, [sidebarOpen]);
 
+  // Protect routes for UAT users
+  useEffect(() => {
+    if (!loading && isUatUser && uatRestrictedRoutes.includes(pathname)) {
+      router.replace('/Zopper-Administrator/spot-incentive-report');
+    }
+  }, [loading, isUatUser, pathname, router]);
+
   if (loading) {
     return null; // or a loading spinner
+  }
+
+  // Prevent rendering restricted content for UAT users
+  if (isUatUser && uatRestrictedRoutes.includes(pathname)) {
+    return null;
   }
 
   const isActive = (path: string) => pathname === path;
@@ -97,33 +124,33 @@ export default function ZopperAdministratorLayout({
         {/* Navigation */}
         <nav className="flex-1 pt-4 text-sm font-normal overflow-y-auto">
           <div className="space-y-1 px-3">
-            {/* Home */}
-            <Link
-              href="/Zopper-Administrator"
-              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator')
-                ? 'bg-blue-600 text-white font-semibold'
-                : 'text-white hover:bg-white/5'
-                }`}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="shrink-0"
+            {/* Home - Hide for UAT users */}
+            {!isUatUser && (
+              <Link
+                href="/Zopper-Administrator"
+                className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
+                  }`}
               >
-                <path
-                  d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"
-                  fill="white"
-                />
-              </svg>
-              <span className="text-sm leading-normal">Home</span>
-            </Link>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="shrink-0"
+                >
+                  <path
+                    d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"
+                    fill="white"
+                  />
+                </svg>
+                <span className="text-sm leading-normal">Home</span>
+              </Link>
+            )}
 
-
-
-            {/* Spot Incentive Report */}
+            {/* Spot Incentive Report - Show for all */}
             <Link
               href="/Zopper-Administrator/spot-incentive-report"
               className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/spot-incentive-report')
@@ -135,77 +162,89 @@ export default function ZopperAdministratorLayout({
               <span className="text-sm leading-normal">Spot Incentive Report</span>
             </Link>
 
-            {/* View Leaderboard */}
-            <Link
-              href="/Zopper-Administrator/leaderboard"
-              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/leaderboard')
-                ? 'bg-blue-600 text-white font-semibold'
-                : 'text-white hover:bg-white/5'
-                }`}
-            >
-              <span className="text-lg shrink-0">🏆</span>
-              <span className="text-sm leading-normal">View Leaderboard</span>
-            </Link>
+            {/* View Leaderboard - Hide for UAT users */}
+            {!isUatUser && (
+              <Link
+                href="/Zopper-Administrator/leaderboard"
+                className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/leaderboard')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
+                  }`}
+              >
+                <span className="text-lg shrink-0">🏆</span>
+                <span className="text-sm leading-normal">View Leaderboard</span>
+              </Link>
+            )}
 
-            {/* User Validation */}
-            <Link
-              href="/Zopper-Administrator/validate-user"
-              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/validate-user')
-                ? 'bg-blue-600 text-white font-semibold'
-                : 'text-white hover:bg-white/5'
-                }`}
-            >
-              <span className="text-lg shrink-0">👤</span>
-              <span className="text-sm leading-normal">User Validation</span>
-            </Link>
+            {/* User Validation - Hide for UAT users */}
+            {!isUatUser && (
+              <Link
+                href="/Zopper-Administrator/validate-user"
+                className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/validate-user')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
+                  }`}
+              >
+                <span className="text-lg shrink-0">👤</span>
+                <span className="text-sm leading-normal">User Validation</span>
+              </Link>
+            )}
 
-            {/* Store Change Requests */}
-            <Link
-              href="/Zopper-Administrator/store-change-requests"
-              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/store-change-requests')
-                ? 'bg-blue-600 text-white font-semibold'
-                : 'text-white hover:bg-white/5'
-                }`}
-            >
-              <span className="text-lg shrink-0">🏪</span>
-              <span className="text-sm leading-normal">Store Change Requests</span>
-            </Link>
+            {/* Store Change Requests - Hide for UAT users */}
+            {!isUatUser && (
+              <Link
+                href="/Zopper-Administrator/store-change-requests"
+                className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/store-change-requests')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
+                  }`}
+              >
+                <span className="text-lg shrink-0">🏪</span>
+                <span className="text-sm leading-normal">Store Change Requests</span>
+              </Link>
+            )}
 
-            {/* Referral */}
-            <Link
-              href="/Zopper-Administrator/referral"
-              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${pathname?.startsWith('/Zopper-Administrator/referral')
-                ? 'bg-blue-600 text-white font-semibold'
-                : 'text-white hover:bg-white/5'
+            {/* Referral - Hide for UAT users */}
+            {!isUatUser && (
+              <Link
+                href="/Zopper-Administrator/referral"
+                className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${pathname?.startsWith('/Zopper-Administrator/referral')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
                 }`}
-            >
-              <span className="text-lg shrink-0">📄</span>
-              <span className="text-sm leading-normal">Referral</span>
-            </Link>
+              >
+                <span className="text-lg shrink-0">📄</span>
+                <span className="text-sm leading-normal">Referral</span>
+              </Link>
+            )}
 
-            {/* Canvasser Help Requests */}
-            <Link
-              href="/Zopper-Administrator/help-requests"
-              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/help-requests')
-                ? 'bg-blue-600 text-white font-semibold'
-                : 'text-white hover:bg-white/5'
-                }`}
-            >
-              <span className="text-lg shrink-0">🆘</span>
-              <span className="text-sm leading-normal">Canvasser Help Requests</span>
-            </Link>
+            {/* Canvasser Help Requests - Hide for UAT users */}
+            {!isUatUser && (
+              <Link
+                href="/Zopper-Administrator/help-requests"
+                className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/help-requests')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
+                  }`}
+              >
+                <span className="text-lg shrink-0">🆘</span>
+                <span className="text-sm leading-normal">Canvasser Help Requests</span>
+              </Link>
+            )}
 
-            {/* Process Voucher Excel */}
-            <Link
-              href="/Zopper-Administrator/process-voucher-excel"
-              className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/process-voucher-excel')
-                ? 'bg-blue-600 text-white font-semibold'
-                : 'text-white hover:bg-white/5'
-                }`}
-            >
-              <span className="text-lg shrink-0">📊</span>
-              <span className="text-sm leading-normal">Process Voucher Excel</span>
-            </Link>
+            {/* Process Voucher Excel - Hide for UAT users */}
+            {!isUatUser && (
+              <Link
+                href="/Zopper-Administrator/process-voucher-excel"
+                className={`w-full flex items-center space-x-3 rounded-lg py-2.5 px-3 select-none ${isActive('/Zopper-Administrator/process-voucher-excel')
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-white hover:bg-white/5'
+                  }`}
+              >
+                <span className="text-lg shrink-0">📊</span>
+                <span className="text-sm leading-normal">Process Voucher Excel</span>
+              </Link>
+            )}
 
 
 
