@@ -595,22 +595,25 @@ export default function SpotIncentiveReport() {
               </>
             )}
           </button>
-          <button
-            onClick={() => setSelectionMode(selectionMode === 'send' ? null : 'send')}
-            className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-lg transition-colors ${
-              selectionMode === 'send'
-                ? 'bg-blue-700 hover:bg-blue-800'
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {selectionMode === 'send' ? 'Hide Selection' : 'Send Rewards'}
-          </button>
-          {selectionMode === 'send' && (
-            <button
-              onClick={handleSendReward}
-              disabled={isMarkingPaidBulk || (isOtpLoading && pendingRewardId === 'bulk') || selectedReports.size === 0}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+          {/* Send Rewards button - Only for UAT testing */}
+          {data?.isUatAdmin && (
+            <>
+              <button
+                onClick={() => setSelectionMode(selectionMode === 'send' ? null : 'send')}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-lg transition-colors ${
+                  selectionMode === 'send'
+                    ? 'bg-blue-700 hover:bg-blue-800'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {selectionMode === 'send' ? 'Hide Selection' : 'Send Rewards'}
+              </button>
+              {selectionMode === 'send' && (
+                <button
+                  onClick={handleSendReward}
+                  disabled={isMarkingPaidBulk || (isOtpLoading && pendingRewardId === 'bulk') || selectedReports.size === 0}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
               {(isOtpLoading && pendingRewardId === 'bulk') ? (
                 <>
                   <FaSpinner className="animate-spin" size={14} />
@@ -624,7 +627,9 @@ export default function SpotIncentiveReport() {
               ) : (
                 `Send (${selectedReports.size})`
               )}
-            </button>
+                </button>
+              )}
+            </>
           )}
           <button
             onClick={() => setSelectionMode(selectionMode === 'discard' ? null : 'discard')}

@@ -336,6 +336,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
+        isUatAdmin: isUatUser, // Add this flag for frontend
         reports: transformedReports,
         pagination: {
           page,
