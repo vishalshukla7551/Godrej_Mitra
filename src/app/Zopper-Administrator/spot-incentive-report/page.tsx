@@ -215,6 +215,7 @@ export default function SpotIncentiveReport() {
           failed,
           total: reportIds.length,
         },
+        rawResponse: results, // Store raw API responses
       });
 
       setSelectedReports(new Set());
@@ -270,14 +271,21 @@ export default function SpotIncentiveReport() {
       
       // Send rewards using individual API calls
       const results = await Promise.allSettled(
-        reportIds.map(id =>
-          fetch(`/api/zopper-administrator/spot-incentive-report/${id}/send-reward`, {
+        reportIds.map(async (id) => {
+          const response = await fetch(`/api/zopper-administrator/spot-incentive-report/${id}/send-reward`, {
             method: 'POST',
-          })
-        )
+          });
+          const responseBody = await response.json();
+          return {
+            reportId: id,
+            status: response.status,
+            ok: response.ok,
+            body: responseBody,
+          };
+        })
       );
 
-      const successful = results.filter(r => r.status === 'fulfilled' && (r.value as Response).ok).length;
+      const successful = results.filter(r => r.status === 'fulfilled' && r.value.ok).length;
       const failed = results.length - successful;
 
       // Show summary modal
@@ -290,6 +298,7 @@ export default function SpotIncentiveReport() {
           failed,
           total: reportIds.length,
         },
+        rawResponse: results, // Store raw API responses
       });
 
       setSelectedReports(new Set());
@@ -986,12 +995,36 @@ export default function SpotIncentiveReport() {
                 </div>
               )}
 
-              {/* Response Data */}
+              {/* API Response */}
               <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
-                <p className="text-xs font-semibold text-neutral-700 mb-2">Response Data:</p>
-                <pre className="text-xs text-neutral-600 overflow-x-auto whitespace-pre-wrap break-words max-h-[200px] overflow-y-auto">
-                  {JSON.stringify(bulkSummary.data, null, 2)}
-                </pre>
+                <p className="text-xs font-semibold text-neutral-700 mb-2">API Response:</p>
+                <div className="text-xs text-neutral-600 overflow-x-auto whitespace-pre-wrap break-words max-h-[300px] overflow-y-auto font-mono bg-white p-3 rounded border border-neutral-300">
+                  {bulkSummary.rawResponse ? (
+                    bulkSummary.rawResponse.map((result: any, idx: number) => (
+                      <div key={idx} className="mb-3 pb-3 border-b border-neutral-200 last:border-b-0">
+                        <div className="font-semibold text-neutral-800 mb-1">
+                          Report #{idx + 1}:
+                        </div>
+                        {result.status === 'fulfilled' ? (
+                          <div>
+                            <div className={`font-semibold mb-1 ${result.value.ok ? 'text-green-600' : 'text-red-600'}`}>
+                              {result.value.ok ? '✓' : '✗'} HTTP {result.value.status}
+                            </div>
+                            <pre className="text-[10px] bg-gray-100 p-2 rounded overflow-x-auto">
+                              {JSON.stringify(result.value.body, null, 2)}
+                            </pre>
+                          </div>
+                        ) : (
+                          <div className="text-red-600 font-semibold">
+                            ✗ Error: {result.reason?.message || 'Request failed'}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div>No response data</div>
+                  )}
+                </div>
               </div>
 
               {/* Error Message if any */}
