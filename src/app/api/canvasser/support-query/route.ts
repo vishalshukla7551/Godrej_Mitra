@@ -14,9 +14,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get canvasser phone from authenticated user
+    const phone = authUser.username;
+    if (!phone) {
+      return NextResponse.json({ error: 'Phone number not found in auth' }, { status: 400 });
+    }
+
     // Find Canvasser user by phone
     const canvasserUser = await prisma.canvasser.findUnique({
-      where: { phone: authUser.profile.phone },
+      where: { phone },
       select: { id: true, fullName: true, phone: true }
     });
 
@@ -63,9 +69,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get canvasser phone from authenticated user
+    const phone = authUser.username;
+    if (!phone) {
+      return NextResponse.json({ error: 'Phone number not found in auth' }, { status: 400 });
+    }
+
     // Find Canvasser user by phone
     const canvasserUser = await prisma.canvasser.findUnique({
-      where: { phone: authUser.profile.phone },
+      where: { phone },
       select: { id: true, fullName: true, phone: true }
     });
 

@@ -124,8 +124,8 @@ export async function POST(req: NextRequest) {
     const rewardPayload = {
       source: '0',
       isSms: '1',
-      isWhatsApp: '1',
-      isEmail: '1',
+      isWhatsApp: '0',
+      isEmail: '0',
       data: benepikData,
     };
 
