@@ -5,7 +5,7 @@ const crypto = require('crypto');
  * Sends a REWARD_PROCESSED webhook payload with HMAC signature verification
  * 
  * Usage:
- * BENEPIK_WEBHOOK_SECRET="your-secret" node test-benepik-webhook.js
+ * node test-benepik-webhook.js
  */
 
 async function testBenepikWebhook() {
@@ -31,13 +31,15 @@ async function testBenepikWebhook() {
   // Convert payload to JSON string
   const rawBody = JSON.stringify(payload);
 
-  //Get webhook secret from environment
-  const webhookSecret = process.env.BENEPIK_WEBHOOK_SECRET;
+  // Get webhook secret from environment
+  const webhookSecret = 'Yh73@8Jsk#28!dfjWm91zPqL7v6$Bnq02XakNfVp';
   if (!webhookSecret) {
     console.error('❌ BENEPIK_WEBHOOK_SECRET not set in environment');
-    console.log('Set it with: export BENEPIK_WEBHOOK_SECRET="your-secret-key"');
+    console.log('Make sure it is set in your .env file');
     process.exit(1);
   }
+
+  console.log('🔐 Webhook Secret loaded:', webhookSecret.substring(0, 10) + '...');
 
   // Generate HMAC signature
   const signature = crypto
@@ -45,17 +47,16 @@ async function testBenepikWebhook() {
     .update(rawBody)
     .digest('hex');
 
-  console.log('📨 Webhook Test Payload:');
+  console.log('\n📨 Webhook Test Payload:');
   console.log('Event Type:', payload.eventType);
   console.log('Transaction ID:', payload.rewardTransactionDetails[0].transactionId);
   console.log('Reward Amount:', payload.rewardTransactionDetails[0].rewardAmount);
-  console.log('Disburse Amount:', payload.rewardTransactionDetails[0].disbursedAmount);
   console.log('\n🔐 HMAC Signature:', signature);
-  console.log('\n📤 Sending webhook to http://localhost:3000/api/webhooks/benepik\n');
+  console.log('\n📤 Sending webhook to https://salesmitr.com/api/webhooks/benepik');
 
   try {
     // Send webhook to local server
-    const response = await fetch('http://localhost:3000/api/webhooks/benepik', {
+    const response = await fetch('https://salesmitr.com/api/webhooks/benepik', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -75,11 +76,19 @@ async function testBenepikWebhook() {
       process.exit(0);
     } else {
       console.log('\n❌ Webhook test failed!');
+      console.log('Status:', response.status);
+      console.log('Error:', result.error);
+      if (result.details) {
+        console.log('Details:', result.details);
+      }
       process.exit(1);
     }
   } catch (error) {
     console.error('❌ Error sending webhook:', error.message);
-    console.log('\nMake sure your server is running on http://localhost:3000');
+    console.log('\nMake sure:');
+    console.log('1. Your Next.js server is running on http://localhost:3000');
+    console.log('2. BENEPIK_WEBHOOK_SECRET is set in .env');
+    console.log('3. Transaction ID TXN-1769597054758 exists in database');
     process.exit(1);
   }
 }

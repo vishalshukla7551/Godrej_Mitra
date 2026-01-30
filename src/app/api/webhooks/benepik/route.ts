@@ -29,7 +29,9 @@ export async function POST(req: NextRequest) {
     }
     // Verify HMAC signature
     const webhookSecret = process.env.BENEPIK_WEBHOOK_SECRET;
-    console.log("webhookSecret",webhookSecret);
+    console.log("webhookSecret full:", webhookSecret);
+    console.log("webhookSecret length:", webhookSecret?.length);
+    console.log("webhookSecret chars:", webhookSecret?.split('').map((c, i) => `${i}:${c}`).join(', '));
     if (!webhookSecret) {
       console.error('❌ BENEPIK_WEBHOOK_SECRET not configured');
       return NextResponse.json(
