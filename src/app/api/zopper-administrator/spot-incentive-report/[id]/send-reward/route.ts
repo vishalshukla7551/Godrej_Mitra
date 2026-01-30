@@ -134,57 +134,117 @@ export async function POST(
 
     console.log('✅ Benepik API Response:', benepikResponse.data);
 
-    // 6. Validate Benepik response - success only if code is 1000 and HTTP 200
-    // Handle nested response structure
-    const benepikData = benepikResponse.data?.data || benepikResponse.data;
-    const isSuccessful = 
-      benepikResponse.status === 200 && 
-      benepikData?.code === 1000 && 
-      benepikData?.success === 1;
-
-    if (!isSuccessful) {
-      console.error('❌ Benepik API returned non-success response:', {
+    // 6. Validate top-level response
+    // Top-level code 1000 means request was processed (not necessarily reward succeeded)
+    const benepikResponseData = benepikResponse.data?.data || benepikResponse.data;
+    
+    if (benepikResponse.status !== 200 || benepikResponseData?.code !== 1000) {
+      console.error('❌ Benepik API returned error response:', {
         status: benepikResponse.status,
-        code: benepikData?.code,
-        success: benepikData?.success,
-        message: benepikData?.message,
+        code: benepikResponseData?.code,
+        message: benepikResponseData?.message,
       });
 
       return NextResponse.json(
         {
-          error: 'Reward processing failed',
+          error: 'Benepik API request failed',
           details: {
-            code: benepikData?.code,
-            message: benepikData?.message,
-            batchResponse: benepikData?.batchResponse,
+            code: benepikResponseData?.code,
+            message: benepikResponseData?.message,
+            batchResponse: benepikResponseData?.batchResponse,
           },
         },
         { status: 400 }
       );
     }
 
-    // 7. Update report with transaction ID if successful
+    // 7. Check individual batch response for this reward
+    const batchResponse = benepikResponseData?.batchResponse?.[0];
+    
+    if (!batchResponse) {
+      console.error('❌ No batch response received from Benepik');
+      return NextResponse.json(
+        {
+          error: 'Invalid Benepik response format',
+          message: 'No batch response data received',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check individual reward processing status
+    const rewardProcessed = batchResponse.code === 1000 && batchResponse.success === 1;
+    const isInsufficientBalance = batchResponse.code === 1012 && batchResponse.success === 0;
+    
+    if (!rewardProcessed && !isInsufficientBalance) {
+      console.error('❌ Individual reward processing failed:', {
+        code: batchResponse.code,
+        success: batchResponse.success,
+        message: batchResponse.message,
+      });
+
+      return NextResponse.json(
+        {
+          error: 'Reward processing failed',
+          code: batchResponse.code,
+          message: batchResponse.message,
+          details: {
+            batchResponse: batchResponse,
+            benepikResponse: benepikResponse.data,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    // 8. Update report with transaction ID
+    const txnId = batchResponse.txns?.[0]?.transactionId || rewardPayload.data[0].transactionId;
+    
+    // For code 1012 (insufficient balance), mark as pending - will retry when balance is added
+    const updateData: any = {
+      transactionId: txnId,
+      transactionMetadata: {
+        payload: rewardPayload.data[0],
+        benepikResponse: benepikResponse.data,
+        sentAt: new Date().toISOString(),
+        status: rewardProcessed ? 'SUCCESS' : 'PENDING_BALANCE', // PENDING_BALANCE for code 1012
+      },
+    };
+
+    // Only set spotincentivepaidAt if reward was actually processed
+    if (rewardProcessed) {
+      updateData.spotincentivepaidAt = new Date();
+    }
+    
     await prisma.spotIncentiveReport.update({
       where: { id: reportId },
-      data: {
-        spotincentivepaidAt: new Date(),
-        transactionId: rewardPayload.data[0].transactionId,
-        transactionMetadata: {
-          payload: rewardPayload.data[0],
-          benepikResponse: benepikResponse.data,
-          sentAt: new Date().toISOString(),
-        },
-      },
+      data: updateData,
     });
+
+    // Return appropriate response based on status
+    if (isInsufficientBalance) {
+      return NextResponse.json({
+        success: false,
+        message: 'Reward processing pending - Insufficient balance',
+        code: 1012,
+        data: {
+          transactionId: txnId,
+          canvasserPhone: mobileNumber,
+          rewardAmount,
+          status: 'PENDING_BALANCE',
+          reason: batchResponse.message,
+        },
+      }, { status: 202 }); // 202 Accepted - processing pending
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Reward sent successfully',
       data: {
-        transactionId: rewardPayload.data[0].transactionId,
+        transactionId: txnId,
         canvasserPhone: mobileNumber,
         rewardAmount,
-        benepikResponse: benepikResponse.data,
+        status: 'SUCCESS',
       },
     });
 
@@ -194,7 +254,7 @@ export async function POST(
       const status = error.response.status;
       const data = error.response.data;
       
-      console.error('Zopper API Error:', {
+      console.error('Benepik API Error:', {
         status,
         code: data?.code,
         message: data?.message,
@@ -202,42 +262,11 @@ export async function POST(
         rawData: typeof data === 'string' ? data.substring(0, 200) : data,
       });
 
-      // Map Benepik error codes to user-friendly messages
-      const errorMessages: Record<number, string> = {
-        1001: 'Unauthorized IP Address',
-        1002: 'Invalid Client Code',
-        1003: 'Client Code Missing',
-        1004: 'Missing/Invalid Bearer Token',
-        1005: 'Authentication Failed',
-        1006: 'Token Expired',
-        1007: 'Checksum Required',
-        1008: 'Invalid Checksum',
-        1009: 'Required Parameter Missing',
-        1010: 'Input Error',
-        1011: 'Unauthorized Access',
-        1012: 'Insufficient Balance',
-        1013: 'No Rewards to Process',
-        1050: 'Pending/Request Accept - Cannot Reinitiate',
-        1020: 'HMAC Header Missing',
-        1021: 'Request Expired',
-        1022: 'Replay Request',
-        1023: 'Invalid Signature or Rate Limit Exceeded',
-        1024: 'IP Blocked',
-        503: 'Benepik Service Temporarily Unavailable',
-        502: 'Bad Gateway',
-        504: 'Gateway Timeout',
-      };
-
-      const errorMessage = errorMessages[status] || 
-                          errorMessages[data?.code] || 
-                          data?.message || 
-                          'Unknown error';
-
       return NextResponse.json(
         {
           error: 'Benepik API error',
           code: data?.code || status,
-          message: errorMessage,
+          message: data?.message || 'Unknown error',
           details: data,
           httpStatus: status,
         },

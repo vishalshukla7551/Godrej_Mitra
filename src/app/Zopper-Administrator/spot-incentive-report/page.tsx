@@ -18,6 +18,10 @@ interface SpotIncentiveReport {
   isCampaignActive: boolean;
   customerName: string;
   customerPhoneNumber: string;
+  transactionMetadata?: {
+    status?: 'SUCCESS' | 'PENDING_BALANCE' | 'PENDING';
+    [key: string]: any;
+  };
   canvasserUser: {
     canvasserId: string;
     phone: string;
@@ -786,14 +790,20 @@ export default function SpotIncentiveReport() {
                         ₹{r.incentiveEarned}
                       </td>
                       <td className="p-2 md:p-3">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${r.isPaid
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-amber-50 text-amber-700'
-                            }`}
-                        >
-                          {r.isPaid ? 'Paid' : 'Pending'}
-                        </span>
+                        {r.transactionMetadata?.status === 'PENDING_BALANCE' ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 flex items-center gap-1">
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                            Transaction Pending
+                          </span>
+                        ) : r.isPaid ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                            Paid
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
+                            Pending
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))

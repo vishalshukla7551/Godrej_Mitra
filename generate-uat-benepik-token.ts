@@ -5,8 +5,10 @@ import jwt from 'jsonwebtoken';
  * Run: npx ts-node generate-uat-benepik-token.ts
  */
 
-const UAT_TOKEN_SECRET = process.env.UAT_TOKEN_SECRET || 'eyJ4A9kLmP7qT9sK2wF3zP8dR0uV6xY4';
-const UAT_CLIENT_ID = process.env.UAT_CLIENT_ID || 'benepik-uat-client';
+const UAT_TOKEN_SECRET = process.env.UAT_TOKEN_SECRET||"Kf7A9mQ2ZrB6xD5P";
+console.log
+('UAT_TOKEN_SECRET', UAT_TOKEN_SECRET);
+const UAT_CLIENT_ID = process.env.UAT_CLIENT_ID;
 
 const payload = {
   clientId: UAT_CLIENT_ID,

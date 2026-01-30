@@ -164,25 +164,20 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ Benepik API Response:', benepikResponse.data);
 
-    // 5. Validate Benepik response - success only if code is 1000 and HTTP 200
-    // Handle nested response structure
+    // 5. Validate top-level response
+    // Top-level code 1000 means request was processed (not necessarily all rewards succeeded)
     const benepikResponseData = benepikResponse.data?.data || benepikResponse.data;
-    const isSuccessful = 
-      benepikResponse.status === 200 && 
-      benepikResponseData?.code === 1000 && 
-      benepikResponseData?.success === 1;
-
-    if (!isSuccessful) {
-      console.error('❌ Benepik API returned non-success response:', {
+    
+    if (benepikResponse.status !== 200 || benepikResponseData?.code !== 1000) {
+      console.error('❌ Benepik API returned error response:', {
         status: benepikResponse.status,
         code: benepikResponseData?.code,
-        success: benepikResponseData?.success,
         message: benepikResponseData?.message,
       });
 
       return NextResponse.json(
         {
-          error: 'Reward processing failed',
+          error: 'Benepik API request failed',
           details: {
             code: benepikResponseData?.code,
             message: benepikResponseData?.message,
@@ -193,35 +188,134 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 6. Update all reports with transaction IDs
-    const updatePromises = reports.map((report, index) => {
+    // 6. Process batch responses - check individual reward statuses
+    const batchResponses = benepikResponseData?.batchResponse || [];
+    
+    if (!Array.isArray(batchResponses) || batchResponses.length === 0) {
+      console.error('❌ No batch responses received from Benepik');
+      return NextResponse.json(
+        {
+          error: 'Invalid Benepik response format',
+          message: 'No batch response data received',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Map batch error codes to messages
+    const batchErrorMessages: Record<number, string> = {
+      1012: 'Insufficient Balance - Client does not have sufficient balance',
+      1013: 'No Rewards to Process - Rewards already processed or none available',
+      1050: 'Pending/Request Accept - Cannot reinitiate, request already in process',
+      1009: 'Required Parameter Missing - One or more mandatory fields missing',
+    };
+
+    // Separate successful and failed rewards
+    const successfulRewards: Array<{ reportId: string; batchResponse: any; txnId: string }> = [];
+    const pendingRewards: Array<{ reportId: string; batchResponse: any; txnId: string; error: string }> = [];
+    const failedRewards: Array<{ reportId: string; batchResponse: any; error: string }> = [];
+
+    batchResponses.forEach((batchResp: any, index: number) => {
+      const report = reports[index];
+      const txnId = batchResp.txns?.[0]?.transactionId || benepikData[index].transactionId;
+      
+      if (batchResp.code === 1000 && batchResp.success === 1) {
+        successfulRewards.push({
+          reportId: report.id,
+          batchResponse: batchResp,
+          txnId: txnId,
+        });
+      } else if (batchResp.code === 1012 && batchResp.success === 0) {
+        // Code 1012 = Insufficient Balance - treat as pending, not failed
+        pendingRewards.push({
+          reportId: report.id,
+          batchResponse: batchResp,
+          txnId: txnId,
+          error: batchResp.message,
+        });
+      } else {
+        failedRewards.push({
+          reportId: report.id,
+          batchResponse: batchResp,
+          error: batchErrorMessages[batchResp.code] || batchResp.message,
+        });
+      }
+    });
+
+    console.log(`✅ Successful: ${successfulRewards.length}, ⏳ Pending: ${pendingRewards.length}, ❌ Failed: ${failedRewards.length}`);
+
+    // 7. Update successfully processed reports
+    const successUpdatePromises = successfulRewards.map((reward) => {
+      const reportIndex = reports.findIndex(r => r.id === reward.reportId);
       return prisma.spotIncentiveReport.update({
-        where: { id: report.id },
+        where: { id: reward.reportId },
         data: {
           spotincentivepaidAt: new Date(),
-          transactionId: benepikData[index].transactionId,
+          transactionId: reward.txnId,
           transactionMetadata: {
-            payload: benepikData[index],
+            payload: benepikData[reportIndex],
             benepikResponse: benepikResponse.data,
             sentAt: new Date().toISOString(),
+            status: 'SUCCESS',
           },
         },
       });
     });
 
-    await Promise.all(updatePromises);
-
-    console.log(`✅ Successfully processed ${reports.length} reward(s)`);
-
-    return NextResponse.json({
-      success: true,
-      message: `Rewards sent successfully for ${reports.length} report(s)`,
-      data: {
-        processed: reports.length,
-        benepikResponse: benepikResponse.data,
-        transactionIds: benepikData.map(d => d.transactionId),
-      },
+    // Update pending balance reports (code 1012)
+    const pendingUpdatePromises = pendingRewards.map((reward) => {
+      const reportIndex = reports.findIndex(r => r.id === reward.reportId);
+      return prisma.spotIncentiveReport.update({
+        where: { id: reward.reportId },
+        data: {
+          transactionId: reward.txnId,
+          transactionMetadata: {
+            payload: benepikData[reportIndex],
+            benepikResponse: benepikResponse.data,
+            sentAt: new Date().toISOString(),
+            status: 'PENDING_BALANCE',
+          },
+        },
+      });
     });
+
+    await Promise.all([...successUpdatePromises, ...pendingUpdatePromises]);
+
+    // 8. Return response with successes, pending, and failures
+    const hasFailures = failedRewards.length > 0;
+    
+    return NextResponse.json({
+      success: !hasFailures,
+      message: 
+        failedRewards.length > 0
+          ? `Partial success: ${successfulRewards.length} processed, ${pendingRewards.length} pending balance, ${failedRewards.length} failed`
+          : pendingRewards.length > 0
+          ? `${successfulRewards.length} processed, ${pendingRewards.length} pending balance (awaiting balance)`
+          : `All ${successfulRewards.length} rewards sent successfully`,
+      data: {
+        processed: successfulRewards.length,
+        pending: pendingRewards.length,
+        failed: failedRewards.length,
+        successfulRewards: successfulRewards.map(r => ({
+          reportId: r.reportId,
+          transactionId: r.txnId,
+          status: 'SUCCESS',
+        })),
+        pendingRewards: pendingRewards.map(r => ({
+          reportId: r.reportId,
+          transactionId: r.txnId,
+          status: 'PENDING_BALANCE',
+          reason: r.error,
+        })),
+        failedRewards: failedRewards.map(r => ({
+          reportId: r.reportId,
+          code: r.batchResponse.code,
+          error: r.error,
+          message: r.batchResponse.message,
+        })),
+        benepikResponse: benepikResponse.data,
+      },
+    }, { status: hasFailures ? 207 : 200 });
 
   } catch (error: any) {
     console.error('❌ Error sending rewards:', error.message);
@@ -238,42 +332,11 @@ export async function POST(req: NextRequest) {
         rawData: typeof data === 'string' ? data.substring(0, 200) : data,
       });
 
-      // Map Benepik error codes to user-friendly messages
-      const errorMessages: Record<number, string> = {
-        1001: 'Unauthorized IP Address',
-        1002: 'Invalid Client Code',
-        1003: 'Client Code Missing',
-        1004: 'Missing/Invalid Bearer Token',
-        1005: 'Authentication Failed',
-        1006: 'Token Expired',
-        1007: 'Checksum Required',
-        1008: 'Invalid Checksum',
-        1009: 'Required Parameter Missing',
-        1010: 'Input Error',
-        1011: 'Unauthorized Access',
-        1012: 'Insufficient Balance',
-        1013: 'No Rewards to Process',
-        1050: 'Pending/Request Accept - Cannot Reinitiate',
-        1020: 'HMAC Header Missing',
-        1021: 'Request Expired',
-        1022: 'Replay Request',
-        1023: 'Invalid Signature or Rate Limit Exceeded',
-        1024: 'IP Blocked',
-        503: 'Benepik Service Temporarily Unavailable',
-        502: 'Bad Gateway',
-        504: 'Gateway Timeout',
-      };
-
-      const errorMessage = errorMessages[status] || 
-                          errorMessages[data?.code] || 
-                          data?.message || 
-                          'Unknown error';
-
       return NextResponse.json(
         {
           error: 'Benepik API error',
           code: data?.code || status,
-          message: errorMessage,
+          message: data?.message || 'Unknown error',
           details: data,
           httpStatus: status,
         },

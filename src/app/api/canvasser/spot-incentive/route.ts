@@ -100,6 +100,7 @@ export async function GET(req: NextRequest) {
         incentiveAmount: report.spotincentiveEarned,
         voucherCode: report.voucherCode || 'N/A',
         transactionId: report.transactionId || null, // Add transaction ID
+        transactionMetadata: report.transactionMetadata, // Add transaction metadata
         isPaid: !!report.spotincentivepaidAt,
         paidAt: report.spotincentivepaidAt
           ? formatDate(report.spotincentivepaidAt)

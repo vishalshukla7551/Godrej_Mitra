@@ -25,6 +25,10 @@ type SpotVoucher = {
   isPaid?: boolean;
   paidAt?: string | null; // Add paid date
   serialNumber?: string;
+  transactionMetadata?: {
+    status?: 'SUCCESS' | 'PENDING_BALANCE' | 'PENDING';
+    [key: string]: any;
+  };
 };
 
 
@@ -656,7 +660,7 @@ function SpotIncentiveSection({
                 <span className="text-center text-[10px]">{row.deviceName}</span>
                 <span className="text-center text-green-600 font-semibold text-[10px]">{row.incentive}</span>
                 <span className="text-center">
-                  {row.isPaid ? (
+                  {row.isPaid && row.transactionMetadata?.status !== 'PENDING_BALANCE' ? (
                     <button
                       onClick={() => handleViewClick(row)}
                       className="text-blue-600 hover:text-blue-800 font-medium text-[10px] underline"

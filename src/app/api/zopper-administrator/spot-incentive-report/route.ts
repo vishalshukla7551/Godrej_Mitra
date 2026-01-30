@@ -224,6 +224,7 @@ export async function GET(req: NextRequest) {
         isCampaignActive: report.isCampaignActive,
         customerName: report.customerName || '',
         customerPhoneNumber: report.customerPhoneNumber || '',
+        transactionMetadata: report.transactionMetadata, // Include transaction metadata
         canvasserUser: {
           canvasserId: canvasser?.employeeId || canvasser?.id || 'Unknown',
           phone: canvasser?.phone || 'Unknown',
